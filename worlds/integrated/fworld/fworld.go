@@ -12,6 +12,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
+
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
 	"github.com/Astera-org/worlds/network_agent"
@@ -20,11 +26,6 @@ import (
 	"github.com/goki/gi/gimain"
 	"github.com/goki/gi/gist"
 	"github.com/goki/gi/giv"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
 
 	"github.com/emer/emergent/env"
 	"github.com/emer/emergent/erand"
@@ -194,7 +195,7 @@ func (ev *FWorld) ConfigPats() {
 		t.SetShape([]int{ev.PatSize.Y, ev.PatSize.X}, nil, []string{"Y", "X"})
 		ev.Pats[a] = t
 	}
-	ev.OpenPats("integrated/fworld/pats.json") // hand crafted..
+	ev.OpenPats("pats.json") // TODO add to the .cfg
 	for _, a := range ev.Acts {
 		ev.ActPats[a] = ev.Pats[a]
 	}
@@ -1255,10 +1256,15 @@ func (ev FWorld) PossiblyGetTeachingSignal(agentChosenAction int) (chosenAction 
 // GetActionIdFromVL decodes a tensor from VL.
 func (ev FWorld) GetActionIdFromVL(actions map[string]agent.Action) (actionId int) {
 	vt := etensor.Float32{} // TODO This data type conversion should be cleaned up
-	vt.Values = make([]float32, actions["VL"].Vector.Len())
-	vt.CopyFrom(actions["VL"].Vector)
-	agentActionId := ev.DecodeAct(vt)
-	return agentActionId
+	val, ok := actions["VL"]
+	if ok {
+		vt.Values = make([]float32, val.Vector.Len())
+		vt.CopyFrom(val.Vector)
+		agentActionId := ev.DecodeAct(vt)
+		return agentActionId
+	} else {
+		return 0
+	}
 }
 
 // ApplyTeachingFunction gets the teaching signal.

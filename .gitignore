@@ -1,1 +1,4 @@
 /models/integrated/protobrain/*.exe
+/run
+/worlds/integrated/fworld/*.exe
+/worlds/integrated/fworld
