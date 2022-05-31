@@ -1,0 +1,6 @@
+[submodule "axon"]
+	path = axon
+	url = https://github.com/emer/axon.git
+[submodule "emergent"]
+	path = emergent
+	url = https://github.com/emer/emergent.git
