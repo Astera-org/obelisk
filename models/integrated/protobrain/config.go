@@ -10,7 +10,8 @@ import (
 // LATER move parts of this to a separate package
 
 type Config struct {
-	GUI bool
+	GUI     bool
+	PROFILE bool
 }
 
 func (config *Config) Load() {
@@ -21,5 +22,6 @@ func (config *Config) Load() {
 		fmt.Fprintln(os.Stderr, "Using defaults")
 
 		config.GUI = true
+		config.PROFILE = false
 	}
 }

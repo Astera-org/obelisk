@@ -15,6 +15,7 @@ import (
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
+	"github.com/pkg/profile"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -25,6 +26,10 @@ var gConfig Config
 
 func main() {
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
+
+	if gConfig.PROFILE {
+		defer profile.Start(profile.ProfilePath(".")).Stop()
+	}
 
 	var sim Sim
 	sim.Net = sim.ConfigNet()
