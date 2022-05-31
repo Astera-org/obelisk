@@ -1,0 +1,30 @@
+bone_config.yaml
+configs/bone_config.yaml
+.idea/
+.DS_Store
+*.pt
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+
+# Data files
+*.json
+*.tsv
+
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg

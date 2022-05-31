@@ -1,0 +1,11 @@
+wandb_key: "" #wandb log if you want to do online logging
+projectname: "RA25" #what is the project name
+projectpath: "ra25" #what is the path to the project
+variable_to_optimize: "|LastZero" #what metric are we trying to optimize
+use_average_value: true
+num_epochs: 3
+num_runs: 1
+num_trials: 4
+num_parallel: 5 # This must be at least 2
+minimize: true
+go_args: "" #variables passed to go file
