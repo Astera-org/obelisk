@@ -90,12 +90,23 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
 		// TODO Iterate over all input layers instead.
-		for name, _ := range ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations {
-			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return ss.WorldEnv.Observe(name)
-			})
-		}
+		/*
+			for name, _ := range ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations {
+				axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+					return ss.WorldEnv.Observe(name)
+				})
+			}
+		*/
 
+		pixels, _ := ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations["world"]
+		fmt.Println("pixels ", pixels)
+		name := "V2Wd"
+		shape := ss.Net.LayerByName(name).Shape()
+		fmt.Println("depth ", shape)
+		depthMap := pixelsToDepth(pixels.(*etensor.Float64), shape)
+		axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+			return depthMap
+		})
 	})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
@@ -112,6 +123,12 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	return manager
+}
+
+func pixelsToDepth(pixels *etensor.Float64, shape *etensor.Shape) etensor.Tensor {
+	res := etensor.NewFloat64Shape(shape, nil)
+	res.Values = pixels.Values[:shape.Len()]
+	return res
 }
 
 // NewRun intializes a new run of the model, using the WorldMailbox.GetCounter(etime.Run) counter for the new run value
