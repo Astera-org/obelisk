@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/emer/emergent/emer"
 
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
@@ -89,8 +90,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
-		// TODO Iterate over all input layers instead.
-		for name, _ := range ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations {
+		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
 			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return ss.WorldEnv.Observe(name)
 			})
