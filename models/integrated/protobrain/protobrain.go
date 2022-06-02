@@ -28,6 +28,7 @@ func main() {
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
 
 	if gConfig.PROFILE {
+		fmt.Println("Starting profiling")
 		defer profile.Start(profile.ProfilePath(".")).Stop()
 	}
 
