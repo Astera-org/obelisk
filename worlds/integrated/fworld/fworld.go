@@ -23,6 +23,7 @@ import (
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/emergent/agent"
 	"github.com/emer/etable/etview"
+	"github.com/goki/gi/colormap"
 	"github.com/goki/gi/gimain"
 	"github.com/goki/gi/gist"
 	"github.com/goki/gi/giv"
@@ -1539,9 +1540,9 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 
 func (ev *FWorld) ConfigWorldView(tg *etview.TensorGrid) {
 	cnm := "FWorldColors"
-	cm, ok := giv.AvailColorMaps[cnm]
+	cm, ok := colormap.AvailMaps[cnm]
 	if !ok {
-		cm = &giv.ColorMap{}
+		cm = &colormap.Map{}
 		cm.Name = cnm
 		cm.Indexed = true
 		nc := len(ev.Mats)
@@ -1550,12 +1551,12 @@ func (ev *FWorld) ConfigWorldView(tg *etview.TensorGrid) {
 		for i, cnm := range ev.MatColors {
 			cm.Colors[i].SetString(cnm, nil)
 		}
-		ch := giv.AvailColorMaps["ColdHot"]
+		ch := colormap.AvailMaps["ColdHot"]
 		for i := 0; i < ev.NRotAngles; i++ {
 			nv := float64(i) / float64(ev.NRotAngles-1)
 			cm.Colors[nc+i] = ch.Map(nv) // color map of rotation
 		}
-		giv.AvailColorMaps[cnm] = cm
+		colormap.AvailMaps[cnm] = cm
 	}
 	tg.Disp.Defaults()
 	tg.Disp.ColorMap = giv.ColorMapName(cnm)

@@ -7,11 +7,13 @@ package main
 import (
 	"fmt"
 
+	"github.com/emer/emergent/emer"
+
+	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"
-	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
@@ -25,6 +27,9 @@ import (
 var gConfig Config
 
 func main() {
+	// note: uncomment this to get debugging on vulkan gui issues
+	// vkos.VkOsDebug = true
+
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
 
 	if gConfig.PROFILE {
@@ -38,14 +43,14 @@ func main() {
 	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
 	sim.WorldEnv = world
 
-	userInterface := egui.UserInterface{
+	userInterface := autoui.AutoUI{
 		StructForView:             &sim,
 		Looper:                    sim.Loops,
 		Network:                   sim.Net.EmerNet,
 		AppName:                   "Protobrain solves FWorld",
 		AppTitle:                  "Protobrain",
 		AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-		AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
+		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
 		DoLogging:                 true,
 		HaveGui:                   gConfig.GUI,
 		StartAsServer:             true,
@@ -72,9 +77,8 @@ func (ss *Sim) ConfigNet() *deep.Network {
 
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
-	manager := looper.Manager{}.Init()
-	manager.Stacks[etime.Train] = &looper.Stack{}
-	manager.Stacks[etime.Train].Init().AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
+	manager := looper.NewManager()
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
 	axon.AddPlusAndMinusPhases(manager, &ss.Time, ss.Net.AsAxon())
 
 	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
@@ -90,8 +94,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
-		// TODO Iterate over all input layers instead.
-		for name, _ := range ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations {
+		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
 			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return ss.WorldEnv.Observe(name)
 			})
@@ -103,7 +106,6 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	axon.AddDefaultLoopSimLogic(manager, &ss.Time, ss.Net.AsAxon())
 
 	// Initialize and print loop structure, then add to Sim
-	manager.Init()
 	fmt.Println(manager.DocString())
 
 	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("Sim:Trial:QuickScore", func() {
