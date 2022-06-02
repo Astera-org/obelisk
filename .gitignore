@@ -2,3 +2,6 @@
 /run
 /worlds/integrated/fworld/*.exe
 /worlds/integrated/fworld
+*.exe
+.idea/
+.DS_Store
