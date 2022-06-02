@@ -2,7 +2,6 @@ module github.com/Astera-org/models
 
 go 1.17
 
-
 require (
 	github.com/anthonynsimon/bild v0.13.0
 	github.com/emer/axon v1.3.31
@@ -56,6 +55,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jinzhu/copier v0.3.2 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pkg/profile v1.6.0 // indirect
 	github.com/srwiley/rasterx v0.0.0-20210519020934-456a8d69b780 // indirect
 	github.com/srwiley/scanx v0.0.0-20190309010443-e94503791388 // indirect
 	golang.org/x/exp v0.0.0-20211012155715-ffe10e552389 // indirect
