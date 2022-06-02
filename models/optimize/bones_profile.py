@@ -62,6 +62,9 @@ def profile_bones():
         print("OBSERVATION TOOK TIME", obs_duration)
         sugg_durations.append(sugg_duration)
         obs_durations.append(obs_duration)
+        if i % 100 == 0:
+            print("SUGGESTION DURATIONS:", sugg_durations)
+            print("OBSERVATION DURATIONS:", obs_durations)
     # In seconds
     print("SUGGESTION DURATIONS:", sugg_durations)
     print("OBSERVATION DURATIONS:", obs_durations)
