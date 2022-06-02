@@ -1511,12 +1511,17 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 			// Step the agent
 			actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
 			move, ok := actions["move"] // This contains a discrete option.
-			if ok {
-				// We've received a discrete action and can use it directly to StepWorld.
-				ev.StepWorld(int(move.DiscreteOption), false)
+			if actions == nil {         //if no action was received from the networks, it is not successfully connecting
+				fmt.Println("Failed to connect")
+				break
 			} else {
-				// Assume VL is in actions and treat it continuously and also apply the teaching function.
-				ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+				if ok {
+					// We've received a discrete action and can use it directly to StepWorld.
+					ev.StepWorld(int(move.DiscreteOption), false)
+				} else {
+					// Assume VL is in actions and treat it continuously and also apply the teaching function.
+					ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+				}
 			}
 		}
 	})
