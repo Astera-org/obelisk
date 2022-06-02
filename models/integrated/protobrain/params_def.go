@@ -153,9 +153,7 @@ var ParamSets = params.Sets{
 				}},
 			{Sel: "#SMA", Desc: "",
 				Params: params.Params{
-					"Layer.Act.Noise.Dist": "Gaussian",
-					"Layer.Act.Noise.Var":  "0.01", // 0.02 too high, 0.005 == 0.01 performance-wise
-					"Layer.Act.Noise.Type": "GeNoise",
+					// todo: update the noises to new kind..
 				}},
 			{Sel: "#SMAP", Desc: "pulv",
 				Params: params.Params{
@@ -178,9 +176,6 @@ var ParamSets = params.Sets{
 				Params: params.Params{
 					"Layer.Inhib.ActAvg.Init": "0.12",
 					"Layer.Inhib.Layer.Gi":    "1.1", // reg
-					"Layer.Act.Noise.Dist":    "Gaussian",
-					"Layer.Act.Noise.Var":     "0.01", // 0.01 orig -- some noise essential for 1 self
-					"Layer.Act.Noise.Type":    "NoNoise",
 				}},
 			{Sel: "#M1P", Desc: "m1 pulvinar",
 				Params: params.Params{
@@ -247,8 +242,7 @@ var ParamSets = params.Sets{
 					"Prjn.SWt.Init.Sym":     "false",
 					"Prjn.SWt.Adapt.On":     "false",
 					"Prjn.PrjnScale.Abs":    "0.3", // .1 = .2, slower blowup
-					"Prjn.PrjnScale.Adapt":  "false",
-					"Prjn.IncGain":          "1", // .5 def
+					"Prjn.IncGain":          "1",   // .5 def
 				}},
 			{Sel: ".Lateral", Desc: "default for lateral -- not using",
 				Params: params.Params{

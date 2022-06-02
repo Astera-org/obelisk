@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/emer/emergent/emer"
 
 	"github.com/Astera-org/worlds/network_agent"
@@ -26,6 +27,9 @@ import (
 var gConfig Config
 
 func main() {
+	// note: uncomment this to get debugging on vulkan gui issues
+	// vkos.VkOsDebug = true
+
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
 
 	if gConfig.PROFILE {
