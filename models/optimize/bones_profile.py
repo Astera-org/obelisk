@@ -11,14 +11,15 @@ from bones import ObservationInParam
 from bones import LinearSpace
 
 
+# This is a nonsense function. It is fast to compute.
 def func_to_optimize(vec):
     sum = 0
     i = 0
     for val in vec:
         i += 1
-        # print(val)
         sugg = vec[val]
         if isinstance(sugg, str):
+            # The suggestion might contain metadata.
             continue
         sum += math.pow(i - sugg, i/3.0)
     return sum
