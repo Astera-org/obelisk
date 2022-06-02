@@ -1502,19 +1502,18 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 		agent := network.MakeClient()
 		var defaultCtx = context.Background()
 
-		agent.Init(defaultCtx, nil, nil)
+		default_action, _ := agent.Init(defaultCtx, nil, nil)
 		fmt.Println("Initializing FWorld") // TODO Delete
+		if default_action == nil {
+			fmt.Println("failed to connect")
+		} else { //if successfully connected
+			// This is the main loop.
+			for {
+				observations := ev.getAllObservations()
+				// Step the agent
+				actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
+				move, ok := actions["move"] // This contains a discrete option.
 
-		// This is the main loop.
-		for {
-			observations := ev.getAllObservations()
-			// Step the agent
-			actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
-			move, ok := actions["move"] // This contains a discrete option.
-			if actions == nil {         //if no action was received from the networks, it is not successfully connecting
-				fmt.Println("Failed to connect")
-				break
-			} else {
 				if ok {
 					// We've received a discrete action and can use it directly to StepWorld.
 					ev.StepWorld(int(move.DiscreteOption), false)
@@ -1522,6 +1521,7 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 					// Assume VL is in actions and treat it continuously and also apply the teaching function.
 					ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
 				}
+
 			}
 		}
 	})
