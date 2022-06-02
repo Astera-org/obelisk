@@ -1512,10 +1512,13 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 				observations := ev.getAllObservations()
 				// Step the agent
 				actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
-				move, ok := actions["move"] // This contains a discrete option.
 				if actions == nil {
 					fmt.Println("disconnected from agent, exiting")
+					break
 				}
+
+				move, ok := actions["move"] // This contains a discrete option.
+
 				if ok {
 					// We've received a discrete action and can use it directly to StepWorld.
 					ev.StepWorld(int(move.DiscreteOption), false)
