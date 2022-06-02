@@ -22,7 +22,7 @@ import (
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
 // It is not reward motivated, and instead it learns to approximate a behavior heuristic. It is intended to be used with
-// the world found in github.com/Astera-org/worlds/integrated/example_worlds.
+// the world found in github.com/Astera-org/obelisk//worlds/integrated/fworld.
 
 var gConfig Config
 
