@@ -16,16 +16,12 @@ from torch.distributions import Categorical
 
 from network.genpy.env.ttypes import ETensor, Action
 from network.thrift_agent_server import setup_server
+import pandas as pd
 
 # FWorld
 
 SEED = 1
-
-
 torch.manual_seed(SEED)
-
-
-
 
 class Policy(nn.Module):
     """
@@ -40,6 +36,7 @@ class Policy(nn.Module):
         self.save_full_actions = []
         self.best_action = [] #actions it should take
         self.best_action_history = [] #all best actions it should take
+        self.chosen_action_history = []
         self.rewards = []
 
     def forward(self, x):
@@ -53,12 +50,12 @@ class Policy(nn.Module):
         return action_prob
 
     def delete_history(self):
-        del self.model.rewards[:]
-        del self.model.saved_actions[:]
+        del self.rewards[:]
+        del self.saved_actions[:]
         #if len(model.best_action) > 0:
         #    model.best_action_history.append(model.best_action[-1].detach())
-        del self.model.best_action[:]
-        del self.model.save_full_actions[:]
+        del self.best_action[:]
+        del self.save_full_actions[:]
 
 def select_action(model:nn.Module, state:np.array):
     state = torch.from_numpy(state).float()
@@ -79,14 +76,27 @@ def select_action(model:nn.Module, state:np.array):
     return action.item()
 
 
+def quick_analysis(model):
+    actions = pd.DataFrame(0)
+    actions["ground_truth"] = model.best_action_history
+    actions["predicted"] = model.chosen_action_history
+    bins = pd.cut(actions.index,bins = 10)
+    actions["bins"]=[bin.left for bin in bins ]
+
+    for name, group in actions.groupby("bins"):
+        print(group["ground_truth"].value_counts())
+        print(group["predicted"].value_counts())
+
 def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     current_actions =model.save_full_actions[0].float() #torch.tensor(model.save_full_actions)
     current_actions = current_actions.view(1,current_actions.shape[-1])
     best_actions  = torch.tensor([model.best_action[-1]]).long()
     loss = nn.CrossEntropyLoss()
+
     the_error = loss(current_actions,best_actions)
     the_error.backward()
     optimizer.step()
+    optimizer.zero_grad()
     #record performance
     model.best_action_history.append(model.best_action[-1])
 
@@ -95,7 +105,7 @@ class FWorldHandler:
 
     def __init__(self, model: nn.Module, optimizer: optim.Optimizer):
         self.name: str = "AgentZero"
-        self.model: nn.Module = model
+        self.model: Policy = model
         self.optimizer: optim.Optimizer = optimizer
 
         self._number_to_action= {0:"Forward",1:"Left",2:"Right",3:"Eat",4:"Drink"} #quickly hard coded
@@ -127,8 +137,10 @@ class FWorldHandler:
             self.model.rewards.append(reward)
             self.ep_reward += reward
             self.model.best_action.append(observations["Heuristic"].values[0])
+
             #finish_episode()
             supervised_finish_episode(self.model,self.optimizer)
+            self.model.delete_history()
 
         # select action from policy
         world_state = np.array(observations["V2Wd"].values)
@@ -137,13 +149,17 @@ class FWorldHandler:
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
+        if (i_episode>1):
+            self.model.chosen_action_history.append(action)
+
+
         return {"move":Action(discreteOption=action)}
 
 
 if __name__ == '__main__':
-    model: nn.Module = Policy()
-    optimizer: optim.Optimizer  = optim.Adam(model.parameters(), lr=.00001)
-    handler:FWorldHandler = FWorldHandler(model,optimizer)
+    model_m: nn.Module = Policy()
+    optimizer_o: optim.Optimizer  = optim.Adam(model_m.parameters(), lr=.00001)
+    handler:FWorldHandler = FWorldHandler(model_m,optimizer_o)
     server = setup_server(handler)
     server.serve()
 

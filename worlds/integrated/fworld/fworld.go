@@ -196,7 +196,9 @@ func (ev *FWorld) ConfigPats() {
 		t.SetShape([]int{ev.PatSize.Y, ev.PatSize.X}, nil, []string{"Y", "X"})
 		ev.Pats[a] = t
 	}
+
 	ev.OpenPats("pats.json") // TODO add to the .cfg
+
 	for _, a := range ev.Acts {
 		ev.ActPats[a] = ev.Pats[a]
 	}
@@ -1298,12 +1300,12 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 	}, Values: []float64{float64(reward)}}
 }
 
-func (ev FWorld) intToETensor(action int) *net_env.ETensor {
+func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
 	// TODO Maybe treat Hydra and Energy differently since they're temporally discounted or something.
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
-		Names:  []string{"Reward"},
+		Names:  []string{"name"},
 	}, Values: []float64{float64(action)}}
 }
 
@@ -1321,7 +1323,7 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	genAction := ev.Acts[expectedAction]
 	actionTensor := ev.Pats[genAction]
 	obs["VL"] = network_agent.FromTensor(actionTensor)
-	obs["Heuristic"] = ev.intToETensor(expectedAction)
+	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction)
 	ev.calculateAndRecordReward(&obs) // Add reward.
 
 	return obs
