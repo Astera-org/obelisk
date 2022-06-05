@@ -2,10 +2,14 @@
 //Use of this source code is governed by a BSD-style
 //license that can be found in the LICENSE file.
 
+//go:build notused
+
 package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/Astera-org/models/library/common"
 	"github.com/Astera-org/models/library/sim"
 	"github.com/emer/axon/axon"
@@ -21,7 +25,6 @@ import (
 	"github.com/emer/etable/etensor"
 	"github.com/goki/gi/gi"
 	"github.com/goki/gi/gimain"
-	"log"
 )
 
 var TestEnv = EnvRa25{}
@@ -126,15 +129,15 @@ func ConfigParams(ss *sim.Sim) {
 						"Layer.Act.NMDA.Voff":     "5",
 						"Layer.Act.GABAB.Gbar":    "0.18", // 0.2 > 0.15  importance: 7
 					}, Hypers: params.Hypers{
-					// These shouldn't be set without also searching for the same value in specific layers like #Input, because it'll clobber them, since it's in a separate Params sheet.
-					//"Layer.Inhib.Layer.Gi":    {"StdDev": "0.15"},
-					//"Layer.Inhib.ActAvg.Init": {"StdDev": "0.02", "Min": "0.01"},
+						// These shouldn't be set without also searching for the same value in specific layers like #Input, because it'll clobber them, since it's in a separate Params sheet.
+						//"Layer.Inhib.Layer.Gi":    {"StdDev": "0.15"},
+						//"Layer.Inhib.ActAvg.Init": {"StdDev": "0.02", "Min": "0.01"},
 
-					//"Layer.Act.Dend.GbarExp":  {"StdDev": "0.05"},
-					//"Layer.Act.Dend.GbarR":    {"StdDev": "1"},
-					"Layer.Act.NMDA.Gbar":  {"StdDev": "0.05"},
-					"Layer.Act.GABAB.Gbar": {"StdDev": "0.05"},
-				}},
+						//"Layer.Act.Dend.GbarExp":  {"StdDev": "0.05"},
+						//"Layer.Act.Dend.GbarR":    {"StdDev": "1"},
+						"Layer.Act.NMDA.Gbar":  {"StdDev": "0.05"},
+						"Layer.Act.GABAB.Gbar": {"StdDev": "0.05"},
+					}},
 				{Sel: "#Input", Desc: "critical now to specify the activity level",
 					Params: params.Params{
 						"Layer.Inhib.Layer.Gi":    "0.94", // 0.9 > 1.0
