@@ -1,0 +1,27 @@
+vision1:
+  name: "V2Wd"
+  shape: [8,13,4,1]
+vision2:
+  name: "V2Fd"
+  shape: [8,3,4,1]
+reward:
+  name: "Reward"
+  shape: [1]
+vision_near:
+  name: "V1F"
+  shape: [1,3,5,5]
+sensory_local:
+  name: "S1S"
+  shape: [1,4,2,1]
+sensory_local2:
+  name: "S1V"
+  shape: [1,2,16,1]
+internal_state:
+  name: "Ins"
+  shape: [1,5,16,1]
+best_action:
+  name: "VL"
+  shape: [5,5]
+no_clue:
+  name: "Act"
+  shape: [5,5]
