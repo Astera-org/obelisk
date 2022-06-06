@@ -4,6 +4,9 @@ use ./emergent
 use ./axon
 use ./models
 use ./worlds
-use ./infra/worker
+use ./infra
+use ./infra/gengo/infra
+
+//replace github.com/Astera-org/obelisk/infra/gengo/infra => ./infra/gengo/infra
 
 
