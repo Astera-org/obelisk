@@ -17,7 +17,6 @@ type WorldDesc struct {
 type Config struct {
 	WORKER_NAME   string
 	INSTANCE_NAME string
-	JOBDIR_ROOT   string
 	JOBCZAR_IP    string
 	AGENTS        map[string]AgentDesc
 	WORLDS        map[string]WorldDesc
@@ -37,7 +36,6 @@ func (config *Config) Load() {
 func (config *Config) setDefaults() {
 	config.WORKER_NAME = ""
 	config.INSTANCE_NAME = "?"
-	config.JOBDIR_ROOT = "jobs"
 	config.JOBCZAR_IP = "127.0.0.1"
 }
 
