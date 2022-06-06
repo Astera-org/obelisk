@@ -11,6 +11,9 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     model_name VARCHAR(10),model_version INT DEFAULT 0,
     env_name VARCHAR(10),env_version INT DEFAULT 0,
     num_runs INT, num_trials INT, num_steps INT,
-    model_param LONGBLOB, env_param LONGBLOB, score DOUBLE DEFAULT 0);
+    model_param LONGBLOB, env_param LONGBLOB, bail BOOLEAN, score DOUBLE DEFAULT 0);
+
+create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_name VARCHAR(10));
+
 
 
