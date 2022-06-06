@@ -80,7 +80,6 @@ type NetworkDeets struct { // TODO(refactor): Remove a lot of this stuff
 	SaveWts      bool                        `view:"-" desc:"for command-line run only, auto-save final weights after each run"`
 	SaveARFs     bool                        `view:"-" desc:"for command-line run only, auto-save receptive field data"`
 	LogSetParams bool                        `view:"-" desc:"if true, print message for all params that are set"`
-	RndSeed      int64                       `view:"-" desc:"the current random seed"`
 	UseMPI       bool                        `view:"-" desc:"if true, use MPI to distribute computation across nodes"`
 	SaveProcLog  bool                        `view:"-" desc:"if true, save logs per processor"`
 	Comm         *mpi.Comm                   `view:"-" desc:"mpi communicator"`
@@ -120,7 +119,7 @@ func (deets *NetworkDeets) DefineSimVariables() { // TODO(refactor): Remove a lo
 	deets.ErrLrMod.Defaults()
 	deets.ErrLrMod.Base = 0.05 // 0.05 >= .01, .1 -- hard to tell
 	deets.ErrLrMod.Range.Set(0.2, 0.8)
-	deets.RndSeed = 1
+	deets.RndSeeds.Init(100)
 
 	// Default values
 	deets.PctCortexMax = 0.9 // 0.5 before
