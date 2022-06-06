@@ -46,7 +46,7 @@ func AddCommonLogItemsForOutputLayers(ui *AutoUI) {
 				if st.Order[iter] == baseComputeLevel {
 					found = true // Subsequent layers can do aggregation.
 					cosDiffMap[etime.Scope(m, t)] = func(ctx *elog.Context) {
-						ctx.SetFloat32(out.CosDiff.Cos)
+						ctx.SetFloat32(out.CorSim.Cor)
 					}
 					pctErrMap[etime.Scope(m, t)] = func(ctx *elog.Context) {
 						ctx.SetFloat64(out.PctUnitErr())
