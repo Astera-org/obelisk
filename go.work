@@ -4,5 +4,6 @@ use ./emergent
 use ./axon
 use ./models
 use ./worlds
+use ./infra/worker
 
-replace github.com/emer/emergent v1.2.3 => ./emergent
+
