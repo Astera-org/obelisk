@@ -43,7 +43,7 @@ func main() {
 	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
 	sim.WorldEnv = world
 
-	userInterface := autoui.AutoUI{
+	userInterface := &autoui.AutoUI{
 		StructForView:             &sim,
 		Looper:                    sim.Loops,
 		Network:                   sim.Net.EmerNet,
@@ -56,6 +56,7 @@ func main() {
 		StartAsServer:             true,
 		ServerFunc:                serverFunc,
 	}
+	userInterface.ViewUpdt = &sim.NetDeets.ViewUpdt
 	userInterface.Start() // Start blocks, so don't put any code after this.
 }
 
@@ -79,7 +80,8 @@ func (ss *Sim) ConfigNet() *deep.Network {
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
 	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
-	axon.AddPlusAndMinusPhases(manager, &ss.Time, ss.Net.AsAxon())
+
+	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
 	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
 	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
@@ -95,7 +97,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
 		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
-			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return ss.WorldEnv.Observe(name)
 			})
 		}
@@ -103,7 +105,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
-	axon.AddDefaultLoopSimLogic(manager, &ss.Time, ss.Net.AsAxon())
+	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
 	fmt.Println(manager.DocString())

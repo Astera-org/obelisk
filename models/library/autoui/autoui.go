@@ -5,12 +5,14 @@ import (
 	"math/rand"
 	"strconv"
 
+	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/elog"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/estats"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/relpos"
 	"github.com/goki/gi/gi"
 	"github.com/goki/gi/gimain"
@@ -20,17 +22,18 @@ import (
 
 // AutoUI tries to make it easier to set up the user interface for a model. It can automatically add logging and configure a GUI all based on the configuration parameters it contains. It can run the model either with a GUI or on the command line.
 type AutoUI struct {
-	Looper        *looper.Manager `desc:"The loop structure informs what buttons should be put in the GUI, and when logging should occur."`
-	Network       emer.Network    `desc:"The Network model can be rendered in the GUI, and is used for logging."`
-	Logs          *elog.Logs      `desc:"A pointer to a Logs object is needed if logging is to be configured."`
-	Stats         *estats.Stats   `desc:"Stats may be filled out during logging."`
-	GUI           *egui.GUI       `desc:"Optionally pass in a GUI object to more directly handles graphical elements. One will be created if none is provided."`
-	AppName       string          `desc:"Displayed in GUI."`
-	AppAbout      string          `desc:"Displayed in GUI."`
-	AppTitle      string          `desc:"Displayed in GUI."`
-	StructForView interface{}     `desc:"This might be Sim or any other object you want to display to the user in the GUI."`
-	ServerFunc    func()          `desc:"A function to start a server."`
-	RasterLayers  []string        `desc:"Show spike rasters for these layers."`
+	Looper        *looper.Manager   `desc:"The loop structure informs what buttons should be put in the GUI, and when logging should occur."`
+	Network       emer.Network      `desc:"The Network model can be rendered in the GUI, and is used for logging."`
+	Logs          *elog.Logs        `desc:"A pointer to a Logs object is needed if logging is to be configured."`
+	Stats         *estats.Stats     `desc:"Stats may be filled out during logging."`
+	ViewUpdt      *netview.ViewUpdt `desc:"netview update parameters"`
+	GUI           *egui.GUI         `desc:"Optionally pass in a GUI object to more directly handles graphical elements. One will be created if none is provided."`
+	AppName       string            `desc:"Displayed in GUI."`
+	AppAbout      string            `desc:"Displayed in GUI."`
+	AppTitle      string            `desc:"Displayed in GUI."`
+	StructForView interface{}       `desc:"This might be Sim or any other object you want to display to the user in the GUI."`
+	ServerFunc    func()            `desc:"A function to start a server."`
+	RasterLayers  []string          `desc:"Show spike rasters for these layers."`
 
 	// Callbacks
 	InitCallback              func()                      `desc:"If set, the GUI will contain an initialization button to call it."`
@@ -78,23 +81,26 @@ func (ui *AutoUI) Start() {
 	}
 }
 
-func AddDefaultGUICallbacks(manager *looper.Manager, gui *egui.GUI) {
-	for _, m := range []etime.Modes{etime.Train} {
-		curMode := m // For closures.
-		for _, t := range []etime.Times{etime.Trial} {
-			curTime := t
-			if manager.GetLoop(curMode, curTime).OnEnd.HasNameLike("UpdateNetView") {
-				// There might be a case where another function also Updates the NetView, and we don't want to do it twice. In particular, Net.WtFmDWt clears some values at the end of Trial, and it wants to update the view before doing so.
-				continue
-			}
-			manager.GetLoop(curMode, curTime).OnEnd.Add("GUI:UpdateNetView", func() {
-				gui.UpdateNetView() // TODO Use update timescale variable
-			})
-		}
-		manager.GetLoop(curMode, etime.Cycle).OnEnd.Add("GUI:UpdateTimeText", func() {
-			gui.NetViewText = getCurrentLoopState(*manager) // TODO Use update timescale variable
-		})
-	}
+func AddDefaultGUICallbacks(manager *looper.Manager, gui *egui.GUI, viewUpdt *netview.ViewUpdt) {
+	axon.LooperUpdtNetView(manager, viewUpdt)
+	axon.LooperUpdtPlots(manager, gui)
+
+	// for _, m := range []etime.Modes{etime.Train} {
+	// 	curMode := m // For closures.
+	// 	for _, t := range []etime.Times{etime.Trial} {
+	// 		curTime := t
+	// 		if manager.GetLoop(curMode, curTime).OnEnd.HasNameLike("UpdateNetView") {
+	// 			// There might be a case where another function also Updates the NetView, and we don't want to do it twice. In particular, Net.WtFmDWt clears some values at the end of Trial, and it wants to update the view before doing so.
+	// 			continue
+	// 		}
+	// 		manager.GetLoop(curMode, curTime).OnEnd.Add("GUI:UpdateNetView", func() {
+	// 			gui.UpdateNetView() // TODO Use update timescale variable
+	// 		})
+	// 	}
+	// 	manager.GetLoop(curMode, etime.Cycle).OnEnd.Add("GUI:UpdateTimeText", func() {
+	// 		ui.ViewUpdt.gui.NetViewText = getCurrentLoopState(*manager) // TODO Use update timescale variable
+	// 	})
+	// }
 }
 
 // CreateAndRunGui creates a GUI, with which the user can control the application. It will loop forever.
@@ -108,8 +114,11 @@ func (ui *AutoUI) CreateAndRunGuiWithAdditionalConfig(config func()) {
 		ui.GUI = &egui.GUI{}
 	}
 	ui.guiEnabled = true
+	if ui.ViewUpdt == nil {
+		ui.ViewUpdt = &netview.ViewUpdt{}
+	}
 
-	AddDefaultGUICallbacks(ui.Looper, ui.GUI)
+	AddDefaultGUICallbacks(ui.Looper, ui.GUI, ui.ViewUpdt)
 
 	gimain.Main(func() { // this starts gui -- requires valid OpenGL display connection (e.g., X11)
 		title := ui.AppTitle
@@ -128,6 +137,7 @@ func (ui *AutoUI) CreateAndRunGuiWithAdditionalConfig(config func()) {
 			nv.SetNet(ui.Network)
 			ui.GUI.NetView.Scene().Camera.Pose.Pos.Set(0, 1, 2.75) // more "head on" than default which is more "top down"
 			ui.GUI.NetView.Scene().Camera.LookAt(mat32.Vec3{0, 0, 0}, mat32.Vec3{0, 1, 0})
+			ui.ViewUpdt.Config(nv, etime.AlphaCycle, etime.AlphaCycle)
 		}
 
 		if ui.Logs != nil {
@@ -237,15 +247,7 @@ func (ui *AutoUI) log(mode etime.Modes, time etime.Times, loop looper.Loop) {
 		// Overwrite from the start for these timescales.
 		row = loop.Counter.Cur
 	}
-
 	ui.Logs.LogRow(mode, time, row) // also logs to file, etc
-	if ui.GUI != nil {
-		if time == etime.Cycle {
-			ui.GUI.UpdateCyclePlot(mode, row)
-		} else {
-			ui.GUI.UpdatePlot(mode, time)
-		}
-	}
 }
 
 // getCurrentLoopState is a helper function that describes the current time in the network, such as "Run:0 Epoch:4 Trial:13"
