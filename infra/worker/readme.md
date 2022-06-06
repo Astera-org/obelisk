@@ -6,3 +6,8 @@ Sits on the cluster machines.
 4) Read the spawn result report
 5) Reports the result of the process to the jobCzar
 6) delete the spawn result report
+
+
+How does it know when a spawn is done:
+- spawn msgs worker
+- spawn writes to file. worker polls

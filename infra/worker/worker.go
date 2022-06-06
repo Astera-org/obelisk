@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 /*
@@ -19,10 +20,18 @@ var gConfig Config
 func main() {
 	gConfig.Load()
 
+	var waitSeconds int = 1
+
 	for true {
 		fmt.Println("Fetching job")
 		var job Job
-		job.fetchWork()
+		err := job.fetchWork()
+		if err != nil {
+			fmt.Println("Fetching err: ", err)
+			increaseBackoff(&waitSeconds)
+			time.Sleep(time.Duration(waitSeconds) * time.Second)
+
+		}
 		job.setCfgs()
 
 		var waitGroup sync.WaitGroup
@@ -34,9 +43,21 @@ func main() {
 
 		job.readResults()
 
-		job.returnResults()
+		err = job.returnResults()
+		if err != nil {
+			fmt.Println("Results err: ", err)
+			increaseBackoff(&waitSeconds)
+			time.Sleep(time.Duration(waitSeconds) * time.Second)
 
+		}
 		fmt.Println("job completed")
+	}
+}
+
+func increaseBackoff(waitSeconds *int) {
+	*waitSeconds *= 2
+	if *waitSeconds > 60*10 {
+		*waitSeconds = 60 * 10
 	}
 }
 
@@ -62,7 +83,7 @@ func spawnAgent(waitGroup *sync.WaitGroup, job *Job) {
 }
 
 func spawnWorld(waitGroup *sync.WaitGroup, job *Job) {
-	worldDesc, exists := gConfig.WORLDS[job.envName]
+	worldDesc, exists := gConfig.WORLDS[job.worldName]
 	if exists {
 		_, err := exec.Command(worldDesc.PATH).Output()
 		if err != nil {
@@ -76,7 +97,7 @@ func spawnWorld(waitGroup *sync.WaitGroup, job *Job) {
 			}
 		}
 	} else {
-		fmt.Println("Unknown World: ", job.envName)
+		fmt.Println("Unknown World: ", job.worldName)
 	}
 
 	waitGroup.Done()
