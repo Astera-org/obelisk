@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -26,6 +28,22 @@ func (job *Job) fetchWork() error {
 	job.agentName = infraJob.AgentName
 	job.worldName = infraJob.WorldName
 	return nil
+}
+
+// This is the dir that the process will run out of and that we will save all the Job specific files to
+func (job *Job) createJobDir() {
+	dirName := fmt.Sprint(gConfig.JOBDIR_ROOT, job.jobID)
+
+	err := os.Mkdir(dirName, 0755)
+	if err != nil {
+		fmt.Println("Couldn't create dir", err)
+	}
+
+	err = os.Chdir(dirName)
+	if err != nil {
+		fmt.Println("Couldn't cd", err)
+	}
+
 }
 
 func (job *Job) setCfgs() {

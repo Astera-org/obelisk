@@ -9,11 +9,12 @@ import (
 
 /*
 1) fetches a job from the jobCzar
-2) Creates the .cfg used for the spawns
-3) Spawns the necessary processes
-4) Read the spawn result report
-5) Reports the result of the process to the jobCzar
-6) delete the spawn result report
+2) create the job dir
+3) Creates the .cfg used for the spawns
+4) Spawns the necessary processes
+5) Read the spawn result report
+6) Reports the result of the process to the jobCzar
+7) delete the spawn result report
 */
 var gConfig Config
 
