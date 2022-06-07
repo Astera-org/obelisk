@@ -10,15 +10,16 @@ struct Job {
     3: string worldName
 }
 
-
-struct WorkResult {
+// I woudl call this WorkResult but
+// thrift appends an _ if a typename ends in "result" ?
+struct ResultWork {
     1: i32 jobID,
     2: i32 cycles,
     3: i32 timeStart,
     4: i32 timeStop,
     5: double score,
-    11: string workerName,
-    12: string instanceName
+    6: string workerName,
+    7: string instanceName
 }
 
 service JobCzar {
@@ -29,5 +30,5 @@ service JobCzar {
     
     // workers call this when they are done with an assigned task
     // if doesn't return true the worker should try to tell it again that the work is complete
-    bool submitResult(1:WorkResult result);
+    bool submitResult(1:ResultWork result);
 }
