@@ -1,3 +1,8 @@
+// What am I trying to do today?
+// Connect egan to protobrain
+// egan sends pixels to protobrain currently
+// we need to map those pixels to the actual model layers
+
 // Copyright (c) 2021, The Emergent Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -6,8 +11,7 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/emer/emergent/emer"
+	"github.com/emer/etable/etensor"
 
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
@@ -16,7 +20,6 @@ import (
 	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
-	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
 
@@ -94,11 +97,26 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
-		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
+		pixels, _ := ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations["world"]
+		w := World{pixels}
+
+		obs := w.GetAllObservations()
+
+		for name, t := range obs {
+			fmt.Println("ApplyInputs name: ", name)
+
 			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return ss.WorldEnv.Observe(name)
+				return t
 			})
 		}
+
+		/*		for _, name := range ss.Net.LayersByClass(emer.Input.String()) {
+					fmt.Println("ApplyInputs name: ", name)
+					axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+						return ss.WorldEnv.Observe(name)
+					})
+				}
+		*/
 
 	})
 
