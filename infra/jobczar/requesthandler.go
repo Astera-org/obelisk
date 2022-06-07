@@ -17,16 +17,16 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 	job := infra.Job{}
 
-	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
-
-	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName)
-	if err == sql.ErrNoRows {
-		fmt.Println(err)
-		return &job, errors.New("empty")
-	}
+	rows, err := gDatabase.db.Query("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
 	if err != nil {
 		fmt.Println(err)
 		return &job, errors.New("db error")
+	}
+
+	err = rows.Scan(&job.JobID, &job.AgentName, &job.WorldName)
+	if err != nil {
+		fmt.Println(err)
+		return &job, errors.New("empty")
 	}
 
 	sql := "UPDATE jobs set woker_name=$1, instance_name=$2 where job_id=$3"
@@ -71,16 +71,6 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 	}
 
 	return insertID, nil
-}
-
-// only allow you to delete unservered up jobs
-func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
-	sql := "DELETE from jobs where job_id=$1 and status=0"
-	_, err := gDatabase.db.Exec(sql, jobID)
-	if err != nil {
-		return false, err
-	}
-	return true, nil
 }
 
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
