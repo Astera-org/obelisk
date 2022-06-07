@@ -34,11 +34,17 @@ To keep your local repository in a "rebased" state, simply run:
 Note: you may still have to run manual "rebase" commands on your branches, to rebase on top of
 master as you pull changes from upstream.
 
+### Keeping Axon and Emergent in sync
+If you need to pull changes to these repos, just do a git pull from the obelisk/axon or obelisk/emergent dirs.
+
+
 ### Testing
 
 Please ensure that all tests pass before submitting changes. 
 
 
+
+## Running
 
 ### Benchmark Protobrain
 This is the standard test that you can judge your changes by.
