@@ -9,6 +9,8 @@ import (
 
 var gConfig Config
 
+var gDatabase Database
+
 /*
 - Connect to DB
 - Create server
@@ -17,6 +19,7 @@ var gConfig Config
 
 func main() {
 	gConfig.Load()
+	gDatabase.Connect()
 
 	fmt.Println("listening on", gConfig.SERVER_ADDR)
 	handler := RequestHandler{}

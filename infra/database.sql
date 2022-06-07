@@ -3,6 +3,8 @@ create database obelisk;
 use obelisk;
 
 
+#status (0-pending,1-working,2-complete,3-errored)
+
 drop table jobs;
 create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, 
     search_id INT DEFAULT 0, status INT DEFAULT 0, priority INT DEFAULT 0,
