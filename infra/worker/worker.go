@@ -31,7 +31,7 @@ func main() {
 			fmt.Println("Fetching err: ", err)
 			increaseBackoff(&waitSeconds)
 			time.Sleep(time.Duration(waitSeconds) * time.Second)
-			continue
+
 		}
 		job.setCfgs()
 
@@ -49,7 +49,7 @@ func main() {
 			fmt.Println("Results err: ", err)
 			increaseBackoff(&waitSeconds)
 			time.Sleep(time.Duration(waitSeconds) * time.Second)
-			continue
+
 		}
 		fmt.Println("job completed")
 	}
