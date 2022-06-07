@@ -30,11 +30,11 @@ class ConfigFWorldVariables():
     """
     Handles the parsing of relevant parameter names from FWorld, have specific mapping
     """
-    vision1: ConfigETensorVariable
-    no_clue: ConfigETensorVariable
-    vision2: ConfigETensorVariable
+    visionwide: ConfigETensorVariable
+    gui_purposes: ConfigETensorVariable
+    visionlocal: ConfigETensorVariable
     reward: ConfigETensorVariable
-    vision_near: ConfigETensorVariable
+    object_seen: ConfigETensorVariable
     reward: ConfigETensorVariable #should consider normalization, or other characteristics that need to be done
     internal_state: ConfigETensorVariable
     best_action: ConfigETensorVariable
@@ -68,7 +68,7 @@ def file_to_dict(path: str)->Dict[str,Any]:
         yaml_file = yaml.safe_load(yaml_string)
         return yaml_file
 
-def file_to_configFWorld(path:str)->ConfigFWorldVariables:
+def file_to_fworldconfig(path:str)->ConfigFWorldVariables:
     shapes_fworld:ConfigFWorldVariables = file_to_dict(path)
     configFWorld: Dict[str,ConfigETensorVariable] = dict()
     for name in shapes_fworld:
@@ -78,7 +78,7 @@ def file_to_configFWorld(path:str)->ConfigFWorldVariables:
 
 def test_flatten():
     #quick test to ensure basic operations work
-    configFWorld = file_to_configFWorld(os.path.join("config","config_inputs.yaml"))
+    configFWorld = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
     assert configFWorld.sensory_local.flattened_shape == 8, "shape mismatch, default size has changed"
 
 if __name__ == '__main__':

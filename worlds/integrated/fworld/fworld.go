@@ -1298,6 +1298,13 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 		Stride: []int32{1},
 		Names:  []string{"Reward"},
 	}, Values: []float64{float64(reward)}}
+
+	(*obs)["InternalStates"] = &net_env.ETensor{Shape: &net_env.Shape{
+		Shape:  []int32{5},
+		Stride: []int32{1},
+		Names:  []string{"Food", "Water", "Energy", "Hydra", "BumpPain"},
+	}, Values: []float64{float64(ev.InterStates["FoodRew"]), float64(ev.InterStates["WaterRew"]), float64(ev.InterStates["Energy"]),
+		float64(ev.InterStates["Hydra"]), float64(ev.InterStates["BumpPain"])}}
 }
 
 func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
@@ -1305,7 +1312,7 @@ func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
-		Names:  []string{"name"},
+		Names:  []string{name},
 	}, Values: []float64{float64(action)}}
 }
 
@@ -1313,6 +1320,7 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs := map[string]*net_env.ETensor{}
 	// These two lists line up which network layer corresponds to which state within FWorld.
 	states := []string{"Depth", "FovDepth", "Fovea", "ProxSoma", "Vestibular", "Inters", "Action", "Action"}
+	//TODO place this explanation late rAct is for gUI purposes and is a mapping of regardless if it's heuristic or from the model, it's gonna to output whta it hould be
 	layers := []string{"V2Wd", "V2Fd", "V1F", "S1S", "S1V", "Ins", "VL", "Act"}
 	for i, lnm := range layers {
 		obs[lnm] = network_agent.FromTensor(ev.State(states[i]))

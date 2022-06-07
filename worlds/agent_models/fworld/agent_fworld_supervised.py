@@ -2,11 +2,12 @@
 
 import argparse
 import random
-
+from typing import Any, Dict, List, AnyStr
 import math
 import numpy as np
 from itertools import count
 from collections import namedtuple
+import os
 
 import torch
 import torch.nn as nn
@@ -19,6 +20,9 @@ from network.thrift_agent_server import setup_server
 import pandas as pd
 
 # FWorld
+from worlds.agent_models.fworld.fworld_features import ConfigETensorVariable
+from worlds.agent_models.fworld.fworld_features import ConfigFWorldVariables
+from worlds.agent_models.fworld.fworld_features import file_to_fworldconfig
 
 SEED = 1
 torch.manual_seed(SEED)
@@ -37,6 +41,7 @@ class Policy(nn.Module):
         self.best_action = [] #actions it should take
         self.best_action_history = [] #all best actions it should take
         self.chosen_action_history = []
+
         self.rewards = []
 
     def forward(self, x):
@@ -49,13 +54,33 @@ class Policy(nn.Module):
         action_prob = F.softmax(self.action_head(x), dim=-1)
         return action_prob
 
+    def get_worldstate(self,observations:Dict[AnyStr,List[float]]):
+           return np.array(observations["V2Wd"])
+
     def delete_history(self):
-        del self.rewards[:]
+        #del self.rewards[:]
         del self.saved_actions[:]
         #if len(model.best_action) > 0:
         #    model.best_action_history.append(model.best_action[-1].detach())
         del self.best_action[:]
         del self.save_full_actions[:]
+
+class PolicyDynamicInput(Policy):
+    def __init__(self, fworld_state_shapes:List[ConfigETensorVariable], hidden_size):
+        super().__init__()
+        self.relevant_features:List[ConfigETensorVariable] = fworld_state_shapes
+        input_size = np.sum([i.flattened_shape for i in self.relevant_features])
+
+        total_hidden_size: int = int(input_size * hidden_size) if hidden_size < 1 else hidden_size
+
+        self.affine1 = nn.Linear(input_size, total_hidden_size) # Inputs from V2Wd
+        self.action_head = nn.Linear(total_hidden_size, 5) # 5 actions
+
+        self.store_history = []
+
+    def get_worldstate(self,observations:Dict[AnyStr,List[float]]):
+        all_observations = [observations[etensor_info.name].values for etensor_info in self.relevant_features]
+        return np.concatenate(all_observations).ravel()
 
 def select_action(model:nn.Module, state:np.array):
     state = torch.from_numpy(state).float()
@@ -87,6 +112,11 @@ def quick_analysis(model):
         print(group["ground_truth"].value_counts())
         print(group["predicted"].value_counts())
 
+    #do Normalized performance Metric
+    #corrected F1 score
+    #do kl divergence
+    #do reward
+
 def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     current_actions =model.save_full_actions[0].float() #torch.tensor(model.save_full_actions)
     current_actions = current_actions.view(1,current_actions.shape[-1])
@@ -105,7 +135,7 @@ class FWorldHandler:
 
     def __init__(self, model: nn.Module, optimizer: optim.Optimizer):
         self.name: str = "AgentZero"
-        self.model: Policy = model
+        self.model: PolicyDynamicInput = model
         self.optimizer: optim.Optimizer = optimizer
 
         self._number_to_action= {0:"Forward",1:"Left",2:"Right",3:"Eat",4:"Drink"} #quickly hard coded
@@ -123,7 +153,7 @@ class FWorldHandler:
         return {"name":self.name}
 
     def step(self, observations, debug):
-        print(f'step called obs: {observations} debug: {debug}')
+        #print(f'step called obs: {observations} debug: {debug}')
 
         i_episode = 0
         if ":" in debug: # TODO Get i from here!
@@ -143,23 +173,29 @@ class FWorldHandler:
             self.model.delete_history()
 
         # select action from policy
-        world_state = np.array(observations["V2Wd"].values)
 
+        world_state = self.model.get_worldstate(observations)
 
+        self.model.store_history.append(world_state)
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
         if (i_episode>1):
             self.model.chosen_action_history.append(action)
-
-
+        print(action)
         return {"move":Action(discreteOption=action)}
 
 
 if __name__ == '__main__':
-    model_m: nn.Module = Policy()
-    optimizer_o: optim.Optimizer  = optim.Adam(model_m.parameters(), lr=.00001)
-    handler:FWorldHandler = FWorldHandler(model_m,optimizer_o)
+
+
+    config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
+
+    model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.sensory_local,config_fworld.sensory_local2], 125)
+
+
+    optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
+    handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o)
     server = setup_server(handler)
     server.serve()
 
