@@ -1538,9 +1538,15 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 
 				move, ok := actions["move"] // This contains a discrete option.
 
-				if ok {
-					// We've received a discrete action and can use it directly to StepWorld.
-					ev.StepWorld(int(move.DiscreteOption), false)
+				if ok { //todo need to switch to a more parasmonious structure
+					use_heuristic := actions["use_heuristic"].DiscreteOption
+					if use_heuristic == 1 { //if true (which is 1) use heuristic for agent behavior
+						heuristicAction, _ := ev.ActGen()
+						ev.StepWorld(heuristicAction, false)
+					} else { //if false use agent model
+						// We've received a discrete action and can use it directly to StepWorld.
+						ev.StepWorld(int(move.DiscreteOption), false)
+					}
 				} else {
 					// Assume VL is in actions and treat it continuously and also apply the teaching function.
 					ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)

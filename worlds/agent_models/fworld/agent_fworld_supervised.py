@@ -128,7 +128,7 @@ def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     optimizer.step()
     optimizer.zero_grad()
     #record performance
-    model.best_action_history.append(model.best_action[-1])
+    #model.best_action_history.append(model.best_action[-1])
 
 
 class FWorldHandler:
@@ -137,8 +137,13 @@ class FWorldHandler:
         self.name: str = "AgentZero"
         self.model: PolicyDynamicInput = model
         self.optimizer: optim.Optimizer = optimizer
-
         self._number_to_action= {0:"Forward",1:"Left",2:"Right",3:"Eat",4:"Drink"} #quickly hard coded
+        self._use_heuristic = True
+        self.do_learning = True
+
+
+    def set_mode_to_send(self,use_heuristic:bool):
+        self._use_heuristic = use_heuristic
 
     def init(self, actionSpace, observationSpace):
         '''
@@ -159,14 +164,16 @@ class FWorldHandler:
         if ":" in debug: # TODO Get i from here!
             i_episode = int(debug.split(":")[-1])
 
-        do_learning = True
+
         # Do learning for the previous timestep
 
-        if (i_episode > 1) and do_learning:
+        if (i_episode > 1) and self.do_learning:
             reward = observations["Reward"].values[0]
             self.model.rewards.append(reward)
             self.ep_reward += reward
             self.model.best_action.append(observations["Heuristic"].values[0])
+            self.model.best_action_history.append(self.model.best_action[-1])
+
 
             #finish_episode()
             supervised_finish_episode(self.model,self.optimizer)
@@ -176,14 +183,20 @@ class FWorldHandler:
 
         world_state = self.model.get_worldstate(observations)
 
-        self.model.store_history.append(world_state)
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
         if (i_episode>1):
             self.model.chosen_action_history.append(action)
-        print(action)
-        return {"move":Action(discreteOption=action)}
+            self.model.store_history.append(world_state)
+
+        if (len(self.model.chosen_action_history)>1000):
+            self.set_mode_to_send(use_heuristic=False)
+            self.do_learning = False
+        else:
+            self.set_mode_to_send(use_heuristic=True)
+
+        return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
 
 
 if __name__ == '__main__':
@@ -191,11 +204,20 @@ if __name__ == '__main__':
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
 
-    model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.sensory_local,config_fworld.sensory_local2], 125)
+    model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state], 125)
 
 
     optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
     handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o)
     server = setup_server(handler)
     server.serve()
+
+    #todo
+    #convert output into sparse encoding
+    #Use PCT Cortex FOr X runs
+    #STORE RUNNING HISTORY OF INPUTS AND OUTPUTS
+    #off policy results
+    #on policy results
+    #Visulize results
+
 
