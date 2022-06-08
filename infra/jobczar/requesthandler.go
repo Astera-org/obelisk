@@ -17,16 +17,16 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 	job := infra.Job{}
 
-	rows, err := gDatabase.db.Query("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
+	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
+
+	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName)
+	if err == sql.ErrNoRows {
+		fmt.Println(err)
+		return &job, errors.New("empty")
+	}
 	if err != nil {
 		fmt.Println(err)
 		return &job, errors.New("db error")
-	}
-
-	err = rows.Scan(&job.JobID, &job.AgentName, &job.WorldName)
-	if err != nil {
-		fmt.Println(err)
-		return &job, errors.New("empty")
 	}
 
 	sql := "UPDATE jobs set woker_name=$1, instance_name=$2 where job_id=$3"
