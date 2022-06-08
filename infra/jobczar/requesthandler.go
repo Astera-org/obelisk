@@ -74,7 +74,7 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 }
 
 // only allow you to delete unservered up jobs
-func (handler RequestHandler) RemoveJob(jobID int32) (bool, error) {
+func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
 	sql := "DELETE from jobs where job_id=$1 and status=0"
 	_, err := gDatabase.db.Exec(sql, jobID)
 	if err != nil {
