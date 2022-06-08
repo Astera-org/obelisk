@@ -1,6 +1,17 @@
 var gServerURL="http://localhost";
 
-function sendQuery()
+function start()
+{
+
+}
+
+function onSendSQLButton()
+{
+  sqlString=$('#sqlString').val();
+  sendQuery(sqlString);
+}
+
+function sendQuery(sqlString)
 {
     var transport = new Thrift.Transport(gServerURL);
     var protocol  = new Thrift.TJSONProtocol(transport);
@@ -10,8 +21,8 @@ function sendQuery()
         result = client.runSQL(sqlString);
         $('#result').text(result);
         $('#result').css('color', 'black');
-      } catch(ouch){
-        $('#result').text(ouch.why);
+      } catch(error){
+        $('#result').text(error.why);
         $('#result').css('color', 'red');
       }
 
