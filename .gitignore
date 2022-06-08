@@ -4,3 +4,6 @@
 *.exe
 .idea/
 .DS_Store
+wandb/*
+wandb/
+__pycache__/

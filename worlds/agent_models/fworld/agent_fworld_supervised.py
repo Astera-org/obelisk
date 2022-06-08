@@ -23,6 +23,7 @@ import pandas as pd
 from worlds.agent_models.fworld.fworld_features import ConfigETensorVariable
 from worlds.agent_models.fworld.fworld_features import ConfigFWorldVariables
 from worlds.agent_models.fworld.fworld_features import file_to_fworldconfig
+from worlds.agent_models.fworld import fworld_metrics
 
 SEED = 1
 torch.manual_seed(SEED)
@@ -130,6 +131,7 @@ def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     #record performance
     #model.best_action_history.append(model.best_action[-1])
 
+    #failing to adjust to out of distirbution
 
 class FWorldHandler:
 
@@ -186,7 +188,7 @@ class FWorldHandler:
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
-        if (i_episode>1):
+        if (i_episode>1) and self.do_learning:
             self.model.chosen_action_history.append(action)
             self.model.store_history.append(world_state)
 
@@ -200,11 +202,15 @@ class FWorldHandler:
 
 
 if __name__ == '__main__':
-
+    import wandb
+    wandb.init(project="fworld-evaluations1")
+    wandb.config.update({"modelname":"fworld_test","description":"onpolicy-supervised"})
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
 
     model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state], 125)
+
+
 
 
     optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
@@ -220,4 +226,8 @@ if __name__ == '__main__':
     #on policy results
     #Visulize results
 
+#print(fworld_metrics.calc_kl(self.model.chosen_action_history[0:500],self.model.best_action_history[0:500]))
+#print(fworld_metrics.calc_precision(self.model.chosen_action_history,self.model.best_action_history))
+#print(fworld_metrics.calc_confusion_matrix(self.model.chosen_action_history,self.model.best_action_history,["Forward","Left","Right","Eat","Drink"]))
+#print(fw
 
