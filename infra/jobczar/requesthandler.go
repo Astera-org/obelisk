@@ -73,6 +73,16 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 	return insertID, nil
 }
 
+// only allow you to delete unservered up jobs
+func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
+	sql := "DELETE from jobs where job_id=$1 and status=0"
+	_, err := gDatabase.db.Exec(sql, jobID)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {

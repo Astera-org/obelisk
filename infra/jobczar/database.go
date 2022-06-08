@@ -1,6 +1,10 @@
 package main
 
-import "database/sql"
+import (
+	"database/sql"
+
+	_ "github.com/go-sql-driver/mysql"
+)
 
 type Database struct {
 	db *sql.DB
@@ -8,7 +12,7 @@ type Database struct {
 
 func (db *Database) Connect() {
 	var err error
-	db.db, err = sql.Open("postgres", gConfig.DB_CONNECT)
+	db.db, err = sql.Open("mysql", gConfig.DB_CONNECT)
 	if err != nil {
 		panic(err)
 	}
