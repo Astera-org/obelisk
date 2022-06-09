@@ -4,10 +4,10 @@ go 1.18
 
 require (
 	github.com/anthonynsimon/bild v0.13.0 // indirect
-	github.com/emer/axon v1.3.37
-	github.com/emer/emergent v1.3.3
+	github.com/emer/axon v1.4.0
+	github.com/emer/emergent v1.3.4
 	github.com/emer/empi v1.0.12
-	github.com/emer/etable v1.1.2
+	github.com/emer/etable v1.1.3
 	github.com/goki/gi v1.3.1
 	github.com/goki/ki v1.1.8
 	github.com/goki/mat32 v1.0.12
@@ -19,6 +19,7 @@ require (
 require (
 	github.com/Astera-org/worlds v0.0.3
 	github.com/BurntSushi/toml v0.3.1
+	github.com/apache/thrift v0.16.0
 	github.com/pkg/profile v1.6.0
 )
 
@@ -33,7 +34,6 @@ require (
 	github.com/akutz/sortfold v0.2.1 // indirect
 	github.com/alecthomas/chroma v0.10.0 // indirect
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
-	github.com/apache/thrift v0.16.0 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
@@ -47,7 +47,7 @@ require (
 	github.com/go-pdf/fpdf v0.6.0 // indirect
 	github.com/goki/freetype v0.0.0-20220119013949-7a161fd3728c // indirect
 	github.com/goki/go-difflib v1.2.1 // indirect
-	github.com/goki/kigen v1.0.0 // indirect
+	github.com/goki/kigen v1.0.1 // indirect
 	github.com/goki/pi v1.0.18 // indirect
 	github.com/goki/prof v0.0.0-20180502205428-54bc71b5d09b // indirect
 	github.com/goki/vci v1.0.1 // indirect
