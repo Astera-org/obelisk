@@ -12,6 +12,37 @@ import warnings
 warnings.filterwarnings(action="once")
 warnings.simplefilter("ignore")
 
+def dict_to_configobj(parsed_yaml: Dict[Any, Any],dataclass_obj: type):
+    cleaned_yaml = keep_relevant_keys(parsed_yaml,dataclass_obj)
+    return dataclass_obj(**cleaned_yaml)
+
+def file_to_configobj(path: str, dataclass_obj: type) :
+    with open(path) as yaml_file:
+        yaml_string = yaml_file.read()
+        yaml_file = yaml.safe_load(yaml_string)
+        return dict_to_configobj(yaml_file,dataclass_obj)
+
+def file_to_dict(path: str)->Dict[str,Any]:
+    with open(path) as yaml_file:
+        yaml_string = yaml_file.read()
+        yaml_file = yaml.safe_load(yaml_string)
+        return yaml_file
+
+
+@dataclass
+class ConfigRuns():
+    name: str
+    train_runs: int
+    max_runs: int
+    description: str
+    hidden_size: float = 125.0
+
+    @staticmethod
+    def file_to_configrun(path):
+        return file_to_configobj(path, ConfigRuns)
+
+    def asdict(self)->dict:
+        return asdict(self)
 
 @dataclass
 class ConfigETensorVariable():
@@ -53,21 +84,6 @@ def keep_relevant_keys(parsed_yaml: Dict[Any, Any], dataclass_obj: type) -> Dict
                           "this may or may not be intentional, missing element called: {}".format(key), UserWarning)
     return copy_yaml
 
-def dict_to_configobj(parsed_yaml: Dict[Any, Any],dataclass_obj: type):
-    cleaned_yaml = keep_relevant_keys(parsed_yaml,dataclass_obj)
-    return dataclass_obj(**cleaned_yaml)
-def file_to_configobj(path: str, dataclass_obj: type) :
-    with open(path) as yaml_file:
-        yaml_string = yaml_file.read()
-        yaml_file = yaml.safe_load(yaml_string)
-        return dict_to_configobj(yaml_file,dataclass_obj)
-
-def file_to_dict(path: str)->Dict[str,Any]:
-    with open(path) as yaml_file:
-        yaml_string = yaml_file.read()
-        yaml_file = yaml.safe_load(yaml_string)
-        return yaml_file
-
 def file_to_fworldconfig(path:str)->ConfigFWorldVariables:
     shapes_fworld:ConfigFWorldVariables = file_to_dict(path)
     configFWorld: Dict[str,ConfigETensorVariable] = dict()
@@ -81,8 +97,12 @@ def test_flatten():
     configFWorld = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
     assert configFWorld.sensory_local.flattened_shape == 8, "shape mismatch, default size has changed"
 
-if __name__ == '__main__':
+def test_configrun():
+    config_run = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
+    assert config_run!=None, "lazy assert, just check if it can run"
 
+if __name__ == '__main__':
     test_flatten()
+    test_configrun()
 
 

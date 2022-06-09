@@ -9,6 +9,7 @@ from itertools import count
 from collections import namedtuple
 import os
 
+import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,9 +22,10 @@ from network.thrift_agent_server import setup_server
 import pandas as pd
 
 # FWorld
-from worlds.agent_models.fworld.fworld_features import ConfigETensorVariable
-from worlds.agent_models.fworld.fworld_features import ConfigFWorldVariables
-from worlds.agent_models.fworld.fworld_features import file_to_fworldconfig
+from worlds.agent_models.fworld.config_experiment import ConfigETensorVariable
+from worlds.agent_models.fworld.config_experiment import ConfigFWorldVariables
+from worlds.agent_models.fworld.config_experiment import file_to_fworldconfig
+from worlds.agent_models.fworld.config_experiment import ConfigRuns
 from worlds.agent_models.fworld import fworld_metrics
 
 SEED = 1
@@ -75,7 +77,7 @@ class PolicyDynamicInput(Policy):
 
         total_hidden_size: int = int(input_size * hidden_size) if hidden_size < 1 else hidden_size
 
-        self.affine1 = nn.Linear(input_size, total_hidden_size) # Inputs from V2Wd
+        self.affine1 = nn.Linear(input_size, total_hidden_size) # Inputs from fworld
         self.action_head = nn.Linear(total_hidden_size, 5) # 5 actions
 
         self.store_history = []
@@ -103,22 +105,6 @@ def select_action(model:nn.Module, state:np.array):
     return action.item()
 
 
-def quick_analysis(model):
-    actions = pd.DataFrame(0)
-    actions["ground_truth"] = model.best_action_history
-    actions["predicted"] = model.chosen_action_history
-    bins = pd.cut(actions.index,bins = 10)
-    actions["bins"]=[bin.left for bin in bins ]
-
-    for name, group in actions.groupby("bins"):
-        print(group["ground_truth"].value_counts())
-        print(group["predicted"].value_counts())
-
-    #do Normalized performance Metric
-    #corrected F1 score
-    #do kl divergence
-    #do reward
-
 def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     current_actions =model.save_full_actions[0].float() #torch.tensor(model.save_full_actions)
     current_actions = current_actions.view(1,current_actions.shape[-1])
@@ -135,15 +121,15 @@ def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     #failing to adjust to out of distirbution
 
 class FWorldHandler:
-
-    def __init__(self, model: nn.Module, optimizer: optim.Optimizer):
+    def __init__(self, model: nn.Module, optimizer: optim.Optimizer, train_runs:int,max_runs:int):
         self.name: str = "AgentZero"
         self.model: PolicyDynamicInput = model
         self.optimizer: optim.Optimizer = optimizer
         self._number_to_action= {0:"Forward",1:"Left",2:"Right",3:"Eat",4:"Drink"} #quickly hard coded
         self._use_heuristic = True
         self.do_learning = True
-
+        self._train_runs = train_runs
+        self._max_runs = max_runs
 
     def set_mode_to_send(self,use_heuristic:bool):
         self._use_heuristic = use_heuristic
@@ -161,29 +147,22 @@ class FWorldHandler:
         return {"name":self.name}
 
     def step(self, observations, debug):
-        #print(f'step called obs: {observations} debug: {debug}')
-
         i_episode = 0
         if ":" in debug: # TODO Get i from here!
             i_episode = int(debug.split(":")[-1])
 
-
         # Do learning for the previous timestep
-
-        if (i_episode > 1) and self.do_learning:
+        if (i_episode > 1):
             reward = observations["Reward"].values[0]
             self.model.rewards.append(reward)
             self.ep_reward += reward
             self.model.best_action.append(observations["Heuristic"].values[0])
             self.model.best_action_history.append(self.model.best_action[-1])
-
-
             #finish_episode()
-            supervised_finish_episode(self.model,self.optimizer)
+            if self.do_learning:
+                supervised_finish_episode(self.model,self.optimizer)
             self.model.delete_history()
-
         # select action from policy
-
         world_state = self.model.get_worldstate(observations)
 
         # TODO Handle n-dimensional shapes
@@ -192,21 +171,32 @@ class FWorldHandler:
         if (i_episode>1) and self.do_learning:
             self.model.chosen_action_history.append(action)
             self.model.store_history.append(world_state)
-
-        if (len(self.model.chosen_action_history)>1000):
+        if (len(self.model.chosen_action_history)>=self._train_runs):
             self.set_mode_to_send(use_heuristic=False)
             self.do_learning = False
-            self.log_results()
         else:
             self.set_mode_to_send(use_heuristic=True)
+
+        #log data at end of training, instead of online, and then
+        if len(self.model.chosen_action_history)==self._train_runs:
+            self.log_results("train",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
+            self.model.chosen_action_history = []
+            self.model.best_action_history = []
+            self.model.store_history = []
+            self.model.rewards = []
+
+        if len(self.model.chosen_action_history)==self._max_runs:
+            self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
+
 
         return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
 
 
-    def log_results(self):
+    def log_results(self, title:str, predicted_actions:List[int],heuristic_actions:List[int],input_space:List[int], rewards:List[float]):
         actions = pd.DataFrame()
-        actions["ground_truth"] = self.model.best_action_history
-        actions["predicted"] = self.model.chosen_action_history
+        actions["ground_truth"] = heuristic_actions
+        actions["predicted"] = predicted_actions
+        actions["rewards"] = rewards
         bins = pd.cut(actions.index,bins = 10)
         actions["bins"]=[bin.left for bin in bins ]
 
@@ -214,37 +204,49 @@ class FWorldHandler:
         for name, group in actions.groupby("bins"):
             ground_truth = group["ground_truth"].values
             predicted = group["predicted"].values
+            reward = group["rewards"].mean()
             kl_divergence:float = fworld_metrics.calc_kl(predicted,ground_truth)
             f1_score:float = fworld_metrics.calc_precision(predicted,ground_truth)
 
-            wandb.log({"kl_divergence":kl_divergence},step= step)
-            wandb.log({"f1":f1_score},step=step)
+            wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
+            wandb.log({"{}_f1".format(title):f1_score},step=step)
+            wandb.log({"{}_reward".format(title):reward},step=step)
             step+=int(len(actions)/10)
 
-        wandb.log({"conf_mat" : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=self.model.best_action_history, preds= self.model.chosen_action_history)})
+        wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
 
-        wandb.run.summary["overall_f1"] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
-        wandb.run.summary["overall_kl"] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
+        wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
+        wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
 
-        history = pd.DataFrame(self.model.store_history).sample(1000) #so don't make this thing lag
+        sample_amount = len(input_space) if len(input_space) < 1000 else 1000
+        history = pd.DataFrame(input_space).sample(sample_amount)#so don't make this thing lag
         del actions["bins"]
+        del rewards["rewards"]
 
-        wandb.log({"actions":actions,"inputs":history})
+        wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
 
 
 if __name__ == '__main__':
-    import wandb
-    wandb.init(project="fworld-evaluations1")
-    wandb.run.name = "online"+str(wandb.run.id)
-    wandb.config.update({"modelname":"fworld_test","description":"onpolicy-supervised"})
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
+    config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
 
-    model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state], 125)
+    wandb.init(project="fworld-evaluations1")
+    wandb.config.update(config_run.asdict()) #given conftext information
 
+    wandb.run.name = "{}-{}".format(config_run.name,str(wandb.run.id))
 
+    all_input_information:List[ConfigETensorVariable] = [config_fworld.object_seen,config_fworld.visionwide,
+                              config_fworld.visionlocal,config_fworld.internal_state,
+                              config_fworld.sensory_local2,config_fworld.sensory_local]
+
+    model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state],
+                                    config_run.hidden_size)
+
+    wandb.config.update({"inputsize":model_dync.affine1.in_features})
+    wandb.config.update({"inputareas":",".join([i.name for i in all_input_information])})
     optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
-    handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o)
+    handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o,config_run.train_runs,config_run.max_runs)
     server = setup_server(handler)
     server.serve()
 
