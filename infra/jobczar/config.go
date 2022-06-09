@@ -10,8 +10,8 @@ import (
 // LATER move parts of this to a separate package
 
 type Config struct {
-	DB_NAME string
-	DB_HOST string
+	DB_CONNECT  string
+	SERVER_ADDR string
 }
 
 func (config *Config) Load() {
@@ -26,8 +26,8 @@ func (config *Config) Load() {
 }
 
 func (config *Config) setDefaults() {
-	config.DB_NAME = ""
-	config.DB_HOST = ""
+	config.DB_CONNECT = ""
+	config.SERVER_ADDR = "localhost:9009"
 }
 
 func (config *Config) ensureRequired() {
