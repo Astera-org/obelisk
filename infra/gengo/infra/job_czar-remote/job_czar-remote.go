@@ -23,7 +23,10 @@ func Usage() {
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  Job fetchWork(string workerName, string instanceName)")
-  fmt.Fprintln(os.Stderr, "  bool submitResult(WorkResult result)")
+  fmt.Fprintln(os.Stderr, "  bool submitResult(ResultWork result)")
+  fmt.Fprintln(os.Stderr, "  i32 addJob(string agentName, string worldName, string agentCfg, string worldCfg, i32 priority, i32 userID)")
+  fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
+  fmt.Fprintln(os.Stderr, "  bool removeJob(i32 jobID)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -163,24 +166,79 @@ func main() {
       fmt.Fprintln(os.Stderr, "SubmitResult_ requires 1 args")
       flag.Usage()
     }
-    arg11 := flag.Arg(1)
-    mbTrans12 := thrift.NewTMemoryBufferLen(len(arg11))
-    defer mbTrans12.Close()
-    _, err13 := mbTrans12.WriteString(arg11)
-    if err13 != nil {
+    arg20 := flag.Arg(1)
+    mbTrans21 := thrift.NewTMemoryBufferLen(len(arg20))
+    defer mbTrans21.Close()
+    _, err22 := mbTrans21.WriteString(arg20)
+    if err22 != nil {
       Usage()
       return
     }
-    factory14 := thrift.NewTJSONProtocolFactory()
-    jsProt15 := factory14.GetProtocol(mbTrans12)
-    argvalue0 := infra.NewWorkResult_()
-    err16 := argvalue0.Read(context.Background(), jsProt15)
-    if err16 != nil {
+    factory23 := thrift.NewTJSONProtocolFactory()
+    jsProt24 := factory23.GetProtocol(mbTrans21)
+    argvalue0 := infra.NewResultWork()
+    err25 := argvalue0.Read(context.Background(), jsProt24)
+    if err25 != nil {
       Usage()
       return
     }
     value0 := argvalue0
     fmt.Print(client.SubmitResult_(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "addJob":
+    if flag.NArg() - 1 != 6 {
+      fmt.Fprintln(os.Stderr, "AddJob requires 6 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    argvalue1 := flag.Arg(2)
+    value1 := argvalue1
+    argvalue2 := flag.Arg(3)
+    value2 := argvalue2
+    argvalue3 := flag.Arg(4)
+    value3 := argvalue3
+    tmp4, err30 := (strconv.Atoi(flag.Arg(5)))
+    if err30 != nil {
+      Usage()
+      return
+    }
+    argvalue4 := int32(tmp4)
+    value4 := argvalue4
+    tmp5, err31 := (strconv.Atoi(flag.Arg(6)))
+    if err31 != nil {
+      Usage()
+      return
+    }
+    argvalue5 := int32(tmp5)
+    value5 := argvalue5
+    fmt.Print(client.AddJob(context.Background(), value0, value1, value2, value3, value4, value5))
+    fmt.Print("\n")
+    break
+  case "runSQL":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "RunSQL requires 1 args")
+      flag.Usage()
+    }
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.RunSQL(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "removeJob":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "RemoveJob requires 1 args")
+      flag.Usage()
+    }
+    tmp0, err33 := (strconv.Atoi(flag.Arg(1)))
+    if err33 != nil {
+      Usage()
+      return
+    }
+    argvalue0 := int32(tmp0)
+    value0 := argvalue0
+    fmt.Print(client.RemoveJob(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":
