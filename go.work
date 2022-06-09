@@ -6,7 +6,3 @@ use ./models
 use ./worlds
 use ./infra
 use ./infra/gengo/infra
-
-//replace github.com/Astera-org/obelisk/infra/gengo/infra => ./infra/gengo/infra
-
-
