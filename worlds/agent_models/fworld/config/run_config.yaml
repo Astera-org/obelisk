@@ -1,5 +1,5 @@
 name: "onpolicysupervised"
-train_runs: 500
-max_runs: 1000
+train_runs: 50
+max_runs: 100
 description: "a simple model using inputs and outputs from fworld in a bp network"
 hidden_size: 125

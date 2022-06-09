@@ -168,24 +168,25 @@ class FWorldHandler:
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
-        if (i_episode>1) and self.do_learning:
+        if (i_episode>1):
             self.model.chosen_action_history.append(action)
             self.model.store_history.append(world_state)
-        if (len(self.model.chosen_action_history)>=self._train_runs):
+
+        if (i_episode>=self._train_runs): #quick hack so doesn't reset, should be cleaned up
             self.set_mode_to_send(use_heuristic=False)
             self.do_learning = False
         else:
             self.set_mode_to_send(use_heuristic=True)
 
         #log data at end of training, instead of online, and then
-        if len(self.model.chosen_action_history)==self._train_runs:
+        if i_episode==self._train_runs:
             self.log_results("train",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
             self.model.chosen_action_history = []
             self.model.best_action_history = []
             self.model.store_history = []
             self.model.rewards = []
 
-        if len(self.model.chosen_action_history)==self._max_runs:
+        if i_episode==self._max_runs:
             self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
 
 
@@ -221,7 +222,7 @@ class FWorldHandler:
         sample_amount = len(input_space) if len(input_space) < 1000 else 1000
         history = pd.DataFrame(input_space).sample(sample_amount)#so don't make this thing lag
         del actions["bins"]
-        del rewards["rewards"]
+        del actions["rewards"]
 
         wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
 
