@@ -36,4 +36,6 @@ service JobCzar {
         4:string worldCfg, 5:i32 priority, 6:i32 userID);
 
     string runSQL(1:string query);
+
+    bool removeJob(1:i32 jobID);
 }

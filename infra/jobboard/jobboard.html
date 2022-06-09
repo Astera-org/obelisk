@@ -1,6 +1,24 @@
 
 <html>
-    <body>
+    <head>
+        <meta charset="utf-8">
+        <title>Obelisk Job Board!</title>
+        <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="board.css">
+    </head>
+    <body onload=start(); >
+        <script src="jquery.min.js"></script>
+        <script src="bootstrap.min.js"></script>
+        <script src="thrift.js"></script>
+        <script src="../genjs/infra_types.js"></script>
+        <script src="../genjs/JobCzar.js"></script>
+        <script src="board.js"></script>
         
+        <div class="container">Match idle workers with rewarding work.</div>
+
+        <div><textarea id="sqlString"></textarea></div>
+        <div><button onclick=onSendSQLButton(); type="button">Send Query</button></div>
+        <div id="result"></div>
+        <footer>Get your career on the right track!</footer>
     </body>
 </html>

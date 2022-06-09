@@ -38,7 +38,7 @@ func (config *Config) setDefaults() {
 	config.WORKER_NAME = ""
 	config.INSTANCE_NAME = "?"
 	config.JOBDIR_ROOT = "jobs"
-	config.JOBCZAR_IP = "127.0.0.1"
+	config.JOBCZAR_IP = "127.0.0.1:9009"
 }
 
 func (config *Config) ensureRequired() {
