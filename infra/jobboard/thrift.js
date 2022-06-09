@@ -309,13 +309,10 @@ Thrift.Transport = Thrift.TXHRTransport = function(url, options) {
     this.url = url;
     this.wpos = 0;
     this.rpos = 0;
-    console.log("OPTIONS")
-    console.log(options)
     this.useCORS = (options && options.useCORS);
     this.customHeaders = options ? (options.customHeaders ? options.customHeaders : {}): {};
     this.send_buf = '';
     this.recv_buf = '';
-    console.log(this)
 };
 
 Thrift.TXHRTransport.prototype = {
