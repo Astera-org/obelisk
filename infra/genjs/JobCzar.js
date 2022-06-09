@@ -790,7 +790,9 @@ JobCzarClient.prototype.recv_addJob = function() {
 };
 
 JobCzarClient.prototype.runSQL = function(query, callback) {
-  this.send_runSQL(query, callback); 
+  console.log("1")
+  this.send_runSQL(query, callback);
+  console.log("2")
   if (!callback) {
     return this.recv_runSQL();
   }
@@ -801,31 +803,42 @@ JobCzarClient.prototype.send_runSQL = function(query, callback) {
     query: query
   };
   var args = new JobCzar_runSQL_args(params);
+  console.log("3")
   try {
     this.output.writeMessageBegin('runSQL', Thrift.MessageType.CALL, this.seqid);
     args.write(this.output);
+    console.log("4")
     this.output.writeMessageEnd();
     if (callback) {
+      console.log("5")
       var self = this;
       this.output.getTransport().flush(true, function() {
         var result = null;
+        console.log("6")
         try {
+          console.log("6.5")
           result = self.recv_runSQL();
         } catch (e) {
+          console.log("7")
           result = e;
         }
+        console.log("8")
         callback(result);
       });
     } else {
+      console.log("callback error")
       return this.output.getTransport().flush();
     }
+    console.log("9")
   }
   catch (e) {
+    console.log("error function")
     if (typeof this.output.getTransport().reset === 'function') {
       this.output.getTransport().reset();
     }
     throw e;
   }
+  console.log("10")
 };
 
 JobCzarClient.prototype.recv_runSQL = function() {
