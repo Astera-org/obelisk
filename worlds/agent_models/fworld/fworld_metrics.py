@@ -11,10 +11,26 @@ def calc_kl(x:List[int],y:List[int]):
     data_table = pd.DataFrame()
     data_table["ground_truth"] = y
     data_table["predicted"] = x
-    ground_truth_distribution = data_table["ground_truth"].value_counts(normalize=True).sort_index().values
-    prediction_distributed = data_table["predicted"].value_counts(normalize=True).sort_index().values
+    ground_truth_valuecounts = data_table["ground_truth"].value_counts(normalize=True)
+    predicted_valuecounts = data_table["predicted"].value_counts(normalize=True)
+
+    #in the case where predicted exists, but kldivergence says it doesn't (effectively, ignoring NANs) since p(x)/0
+    for i in data_table["predicted"].unique(): #if values show up in predicted, but don't exist in ground truth ignore, a bit of a hack
+        if (i in data_table["ground_truth"].unique()) == False:
+            predicted_valuecounts.drop([i],inplace=True)
+    #in the case where exists in ground truth but never appears in predicted 0/p(y)
+    for i in data_table["ground_truth"].unique(): #if values show up in predicted, but don't exist in ground truth ignore, a bit of a hack
+        if (i in data_table["predicted"].unique()) == False:
+            predicted_valuecounts[i] = 0.0
+    predicted_valuecounts = predicted_valuecounts/predicted_valuecounts.sum() #renormalize after deleting
+
+    assert len(set(predicted_valuecounts.index).intersection(ground_truth_valuecounts.index)) == len(ground_truth_valuecounts.index), "should have same number of classes"
+
+    ground_truth_distribution = ground_truth_valuecounts.sort_index().values
+    prediction_distributed = predicted_valuecounts.sort_index().values
     kl_divergence = kl_div(prediction_distributed,ground_truth_distribution)
-    return np.sum(kl_divergence)
+
+    return kl_divergence.sum()
 def calc_performance_overtime(x:List[int],y:List[int]):
     pass
 def calc_precision(predicted:List[int],ground_truth:List[int]): #calculate the weighted precisoin

@@ -1,0 +1,4 @@
+name: "onpolicy"
+train_runs: 1500
+max_runs: 3000
+description: "a simple model using inputs from fworld in a bp network"

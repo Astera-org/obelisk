@@ -13,6 +13,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import wandb
 from torch.distributions import Categorical
 
 from network.genpy.env.ttypes import ETensor, Action
@@ -195,22 +196,51 @@ class FWorldHandler:
         if (len(self.model.chosen_action_history)>1000):
             self.set_mode_to_send(use_heuristic=False)
             self.do_learning = False
+            self.log_results()
         else:
             self.set_mode_to_send(use_heuristic=True)
 
         return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
 
 
+    def log_results(self):
+        actions = pd.DataFrame()
+        actions["ground_truth"] = self.model.best_action_history
+        actions["predicted"] = self.model.chosen_action_history
+        bins = pd.cut(actions.index,bins = 10)
+        actions["bins"]=[bin.left for bin in bins ]
+
+        step =0
+        for name, group in actions.groupby("bins"):
+            ground_truth = group["ground_truth"].values
+            predicted = group["predicted"].values
+            kl_divergence:float = fworld_metrics.calc_kl(predicted,ground_truth)
+            f1_score:float = fworld_metrics.calc_precision(predicted,ground_truth)
+
+            wandb.log({"kl_divergence":kl_divergence},step= step)
+            wandb.log({"f1":f1_score},step=step)
+            step+=int(len(actions)/10)
+
+        wandb.log({"conf_mat" : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=self.model.best_action_history, preds= self.model.chosen_action_history)})
+
+        wandb.run.summary["overall_f1"] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
+        wandb.run.summary["overall_kl"] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
+
+        history = pd.DataFrame(self.model.store_history).sample(1000) #so don't make this thing lag
+        del actions["bins"]
+
+        wandb.log({"actions":actions,"inputs":history})
+
+
 if __name__ == '__main__':
     import wandb
     wandb.init(project="fworld-evaluations1")
+    wandb.run.name = "online"+str(wandb.run.id)
     wandb.config.update({"modelname":"fworld_test","description":"onpolicy-supervised"})
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
 
     model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state], 125)
-
-
 
 
     optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
@@ -225,9 +255,4 @@ if __name__ == '__main__':
     #off policy results
     #on policy results
     #Visulize results
-
-#print(fworld_metrics.calc_kl(self.model.chosen_action_history[0:500],self.model.best_action_history[0:500]))
-#print(fworld_metrics.calc_precision(self.model.chosen_action_history,self.model.best_action_history))
-#print(fworld_metrics.calc_confusion_matrix(self.model.chosen_action_history,self.model.best_action_history,["Forward","Left","Right","Eat","Drink"]))
-#print(fw
 
