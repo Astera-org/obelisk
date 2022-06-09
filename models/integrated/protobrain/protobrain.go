@@ -98,7 +98,11 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
 		pixels, _ := ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations["world"]
-		w := World{pixels}
+		x, y := pixels.Dims()
+		// agent is located in the middle of the bottom row
+		w := World{Pixels: pixels.(*etensor.Float64), AgentX: x / 2, AgentY: 0, WorldX: x, WorldY: y}
+		w.Config()
+		fmt.Println("Received egan world: ", w)
 
 		obs := w.GetAllObservations()
 
@@ -109,15 +113,6 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 				return t
 			})
 		}
-
-		/*		for _, name := range ss.Net.LayersByClass(emer.Input.String()) {
-					fmt.Println("ApplyInputs name: ", name)
-					axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-						return ss.WorldEnv.Observe(name)
-					})
-				}
-		*/
-
 	})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
@@ -131,6 +126,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 		s := fmt.Sprintf("%f", loss)
 		fmt.Println("the pctuniterror is " + s)
 	})
+
+	// TODO: add cos similatiry here
 
 	return manager
 }
