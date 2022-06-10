@@ -12,14 +12,16 @@ struct Job {
 
 // I woudl call this WorkResult but
 // thrift appends an _ if a typename ends in "result" ?
+// status: 0-ok, 1-couldn't run job, 2- job malformed
 struct ResultWork {
     1: i32 jobID,
-    2: i32 cycles,
-    3: i32 timeStart,
-    4: i32 timeStop,
-    5: double score,
-    6: string workerName,
-    7: string instanceName
+    2: i32 status,
+    3: i32 cycles,
+    4: i32 timeStart,
+    5: i32 timeStop,
+    6: double score,
+    7: string workerName,
+    8: string instanceName
 }
 
 service JobCzar {
