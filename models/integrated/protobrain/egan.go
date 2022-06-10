@@ -28,6 +28,13 @@ type World struct {
 	NFOVRays       int
 	DepthSize      int
 	DepthPools     int
+	DepthCode      popcode.OneD
+	FoveaSize      int
+	Dv             *etensor.Float32
+	Dvr            *etensor.Float32
+	Fd             *etensor.Float32
+	Fdr            *etensor.Float32
+	Fv             *etensor.Float32
 }
 
 func (w *World) getPoint(x, y int) (pixel uint32, err error) {
@@ -82,7 +89,7 @@ func toRGBA(color uint32) (red, green, blue, alpha uint8) {
 }
 
 // rayTrace finds the first non empty pixel going in angle direction
-func (w *World) rayTrace(angle int) (distance float32, pattern []float32) {
+func (w *World) rayTrace(angle int) (distance float32, pattern *etensor.Float32) {
 	v := angVec(angle)
 	// TODO: double check all these x and ys to make sure they correspond to row, col
 	startX := float32(w.AgentX)
@@ -101,13 +108,13 @@ func (w *World) rayTrace(angle int) (distance float32, pattern []float32) {
 		if material == "Empty" {
 			continue
 		}
-		pattern = w.Pats[material].Values
+		pattern = w.Pats[material]
 		return
 	}
 }
 
 // for each angle between min and max, do ray trace
-func (w *World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patterns [][]float32) {
+func (w *World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patterns []*etensor.Float32) {
 	maxld := mat32.Log(1 + mat32.Sqrt(float32(w.WorldX*w.WorldY+w.WorldY*w.WorldY)))
 
 	for a := minAngle; a <= maxAngle; a += step {
@@ -120,23 +127,12 @@ func (w *World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patt
 	return
 }
 
-func (w *World) PopCode(depthLogs []float32) etensor.Tensor {
-
-	dv := &etensor.Float32{}
-	dv.SetShape([]int{w.DepthPools, w.NFOVRays, w.DepthSize / w.DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
-
-	dvr := &etensor.Float32{}
-	dvr.SetShape([]int{1, w.NFOVRays, w.DepthSize, 1}, nil, []string{"1", "Angle", "Pop", "1"})
-
+func (w *World) PopCode(depthLogs []float32, dv *etensor.Float32, dvr *etensor.Float32, n int) etensor.Tensor {
 	np := w.DepthSize / w.DepthPools
 
-	depthCode := popcode.OneD{}
-	depthCode.Defaults()
-	depthCode.SetRange(0.1, 1, 0.05)
-
-	for i := 0; i < w.NFOVRays; i++ {
+	for i := 0; i < n; i++ {
 		sv := dvr.SubSpace([]int{0, i}).(*etensor.Float32)
-		depthCode.Encode(&sv.Values, depthLogs[i], w.DepthSize, popcode.Set)
+		w.DepthCode.Encode(&sv.Values, depthLogs[i], w.DepthSize, popcode.Set)
 		for dp := 0; dp < w.DepthPools; dp++ {
 			for pi := 0; pi < np; pi++ {
 				ri := dp*np + pi
@@ -144,8 +140,14 @@ func (w *World) PopCode(depthLogs []float32) etensor.Tensor {
 			}
 		}
 	}
-
 	return dv
+}
+
+func (w *World) fillFovPatterns(fovPatterns []*etensor.Float32, fsz int) {
+	for i := 0; i < fsz; i++ {
+		sv := w.Fv.SubSpace([]int{0, i}).(*etensor.Float32)
+		sv.CopyFrom(fovPatterns[i])
+	}
 }
 
 func (w *World) GetAllObservations() map[string]etensor.Tensor {
@@ -155,10 +157,14 @@ func (w *World) GetAllObservations() map[string]etensor.Tensor {
 	//layers := []string{"V2Wd", "V2Fd", "V1F", "S1S", "S1V", "Ins", "VL", "Act"}
 
 	wideDistances, _ := w.fillFOV(0, 180, 15)
-	obs["V2Wd"] = w.PopCode(wideDistances)
+	obs["V2Wd"] = w.PopCode(wideDistances, w.Dv, w.Dvr, w.NFOVRays)
 
-	//fovDistances, fovPatterns := w.fillFOV(75, 105, 15)
-	// TODO: popcode it
+	fsz := 1 + 2*w.FoveaSize
+	fovDistances, fovPatterns := w.fillFOV(75, 105, 15)
+	obs["V2Fd"] = w.PopCode(fovDistances, w.Fd, w.Fdr, fsz)
+
+	w.fillFovPatterns(fovPatterns, fsz)
+	obs["V1F"] = w.Fv
 
 	// TODO: prox some
 
@@ -236,6 +242,27 @@ func (w *World) Config() {
 	w.NFOVRays = (w.FOV / w.AngInc) + 1
 	w.DepthSize = 32
 	w.DepthPools = 8
+	w.FoveaSize = 1
+
+	w.DepthCode = popcode.OneD{}
+	w.DepthCode.Defaults()
+	w.DepthCode.SetRange(0.1, 1, 0.05)
+
+	w.Dv = &etensor.Float32{}
+	w.Dv.SetShape([]int{w.DepthPools, w.NFOVRays, w.DepthSize / w.DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
+
+	w.Dvr = &etensor.Float32{}
+	w.Dvr.SetShape([]int{1, w.NFOVRays, w.DepthSize, 1}, nil, []string{"1", "Angle", "Pop", "1"})
+
+	fsz := 1 + 2*w.FoveaSize
+	w.Fd = &etensor.Float32{}
+	w.Fd.SetShape([]int{w.DepthPools, fsz, w.DepthSize / w.DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
+
+	w.Fdr = &etensor.Float32{}
+	w.Fdr.SetShape([]int{1, fsz, w.DepthSize, 1}, nil, []string{"1", "Angle", "Pop", "1"})
+
+	w.Fv = &etensor.Float32{}
+	w.Fv.SetShape([]int{1, fsz, w.PatSize.Y, w.PatSize.X}, nil, []string{"1", "Angle", "Y", "X"})
 
 	w.Pats = make(map[string]*etensor.Float32)
 	w.PatSize.Set(5, 5)
