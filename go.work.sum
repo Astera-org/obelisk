@@ -1,5 +1,9 @@
-github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
+github.com/emer/axon v1.3.37/go.mod h1:W0Gyk94vs1UGFeUiH/bNtzy0ELwu8oM75ZoakIW8aQc=
+github.com/emer/axon v1.4.0/go.mod h1:OUKYd2vrMML/IkHO3lHll/nm2pG6kcqtsWAlE4U36WA=
+github.com/emer/emergent v1.3.4/go.mod h1:+PHDLaun0mVbP0x+4N3JGnhnaHwuA6QmiUjy3qiWUJQ=
+github.com/emer/etable v1.1.3 h1:nEPauPQkbrc6OhxweHFsu2TcXMjOhAlJBB98cgmYAxA=
+github.com/emer/etable v1.1.3/go.mod h1:Q64jw7+FfuPIKGyODP+V94QsOtAigLEMM6VdKJLKme0=
+github.com/go-sql-driver/mysql v1.4.0 h1:7LxgVwFb2hIQtMm87NdgAVfXjnt4OePseqT1tKx+opk=
+github.com/goki/kigen v1.0.1 h1:txBgu8SXsPKDkHoSD8elob85bWjy6TEreVS3TYMz7pU=
+github.com/goki/kigen v1.0.1/go.mod h1:w8km7SXtEcXXiAs0HbJyIrLq05THTIc1SdFyce3cNdw=
 github.com/pkg/profile v1.2.1 h1:F++O52m40owAmADcojzM+9gyjmMOY/T4oYJkgFDH8RE=
-golang.org/x/image v0.0.0-20220302094943-723b81ca9867/go.mod h1:023OzeP/+EPmXeapQh35lcL3II3LrY8Ic+EFFKVhULM=
-golang.org/x/tools v0.1.9/go.mod h1:nABZi5QlRsZVlzPpHl034qft6wpY4eDcsTt5AaioBiU=
-gonum.org/v1/plot v0.10.1/go.mod h1:VZW5OlhkL1mysU9vaqNHnsy86inf6Ot+jB3r+BczCEo=
