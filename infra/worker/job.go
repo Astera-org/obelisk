@@ -2,20 +2,27 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"sync"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
 )
 
 type Job struct {
-	jobID     int
+	jobID     int32
 	agentName string
 	worldName string
+	result    infra.ResultWork
 }
+
+const (
+	goodJob      int32 = 0
+	jobFailed          = 1
+	malformedJob       = 2
+)
 
 func (job *Job) fetchWork() error {
 	var defaultCtx = context.Background()
@@ -26,9 +33,10 @@ func (job *Job) fetchWork() error {
 		return err
 	}
 
-	job.jobID = int(infraJob.JobID)
+	job.jobID = infraJob.JobID
 	job.agentName = infraJob.AgentName
 	job.worldName = infraJob.WorldName
+	job.result.JobID = job.jobID
 	return nil
 }
 
@@ -52,66 +60,77 @@ func (job *Job) setCfgs() {
 	// TODO
 }
 
+// TODO if result file isn't there tell server it failed
 func (job *Job) readResults() {
 	// TODO
+	if job.result.Status == goodJob {
+
+	}
 }
 
 func (job *Job) returnResults() error {
-	// TODO
-	return nil
+	var defaultCtx = context.Background()
+	var jobCzar = MakeClient(gConfig.JOBCZAR_IP)
+
+	ok, err := jobCzar.SubmitResult_(defaultCtx, &job.result)
+
+	if err != nil {
+		return err
+	}
+
+	if ok {
+		return nil
+	}
+
+	return errors.New("false")
 }
 
-// TODO need to bail from one process if the other dies
+// need to bail from one process if the other dies
 func (job *Job) doJob() {
 
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(2)
-	go spawnWorld(&waitGroup, &job)
-	go spawnAgent(&waitGroup, &job)
-
-	waitGroup.Wait()
-}
-
-func spawnAgent(waitGroup *sync.WaitGroup, job *Job) {
 	agentDesc, exists := gConfig.AGENTS[job.agentName]
-	if exists {
-		_, err := exec.Command(agentDesc.PATH).Output()
-		if err != nil {
-			switch e := err.(type) {
-			case *exec.Error:
-				fmt.Println("failed executing:", err)
-			case *exec.ExitError:
-				fmt.Println("command exit rc =", e.ExitCode())
-			default:
-				panic(err)
-			}
-		}
-	} else {
+	if !exists {
 		fmt.Println("Unknown Agent: ", job.agentName)
+		job.result.Status = jobFailed
+		return
 	}
 
-	waitGroup.Done()
-}
-
-func spawnWorld(waitGroup *sync.WaitGroup, job *Job) {
 	worldDesc, exists := gConfig.WORLDS[job.worldName]
-	if exists {
-		_, err := exec.Command(worldDesc.PATH).Output()
-		if err != nil {
-			switch e := err.(type) {
-			case *exec.Error:
-				fmt.Println("failed executing:", err)
-			case *exec.ExitError:
-				fmt.Println("command exit rc =", e.ExitCode())
-			default:
-				panic(err)
-			}
-		}
-	} else {
+	if !exists {
 		fmt.Println("Unknown World: ", job.worldName)
+		job.result.Status = jobFailed
+		return
 	}
 
-	waitGroup.Done()
+	agentCtx, agentCancel := context.WithCancel(context.Background())
+	worldCtx, worldCancel := context.WithCancel(agentCtx)
+	defer agentCancel()
+	defer worldCancel()
+
+	agentCmd := exec.CommandContext(agentCtx, agentDesc.PATH)
+	worldCmd := exec.CommandContext(worldCtx, worldDesc.PATH)
+	err := worldCmd.Start()
+	if err != nil {
+		fmt.Println("world:", err)
+		job.result.Status = jobFailed
+		return
+	}
+	err = agentCmd.Start()
+	if err != nil {
+		fmt.Println("agent:", err)
+		job.result.Status = jobFailed
+		return
+	}
+
+	go worldCmd.Wait()
+
+	err = agentCmd.Wait()
+
+	if err != nil {
+		fmt.Println("agent:", err)
+		job.result.Status = jobFailed
+		return
+	}
 }
 
 func MakeClient(addr string) *infra.JobCzarClient {
