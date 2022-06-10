@@ -27,11 +27,10 @@ func main() {
 	server := MakeServer(handler)
 
 	server.Serve()
-
 }
 
 func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
-	transportFactory := thrift.NewTBufferedTransportFactory(8192)
+	transportFactory := thrift.NewTTransportFactory()
 	transport, _ := thrift.NewTServerSocket(gConfig.SERVER_ADDR)
 	processor := infra.NewJobCzarProcessor(handler)
 	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)

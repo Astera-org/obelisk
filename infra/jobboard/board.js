@@ -1,4 +1,4 @@
-var gServerURL="http://localhost:9009";
+var gServerURL="http://localhost:9009"; // /JobCzar
 
 function start()
 {
@@ -16,7 +16,6 @@ function myCallback(thingo) {
     console.log(thingo)
 }
 
-
 function sendQuery(sqlString)
 {
     var transport = new Thrift.Transport(gServerURL, {useCORS: true});
@@ -26,7 +25,7 @@ function sendQuery(sqlString)
     console.log("hello!");
 
     try {
-        result = client.runSQL(sqlString, myCallback);
+        result = client.runSQL(sqlString);
         console.log("RESULT")
         console.log(result)
         $('#result').text(result);

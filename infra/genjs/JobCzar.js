@@ -790,10 +790,13 @@ JobCzarClient.prototype.recv_addJob = function() {
 };
 
 JobCzarClient.prototype.runSQL = function(query, callback) {
-  this.send_runSQL(query, callback); 
+  console.log("runsql")
+  this.send_runSQL(query, callback);
   if (!callback) {
+    console.log("runsql no callback!")
     return this.recv_runSQL();
   }
+  return(10)
 };
 
 JobCzarClient.prototype.send_runSQL = function(query, callback) {
@@ -806,8 +809,10 @@ JobCzarClient.prototype.send_runSQL = function(query, callback) {
     args.write(this.output);
     this.output.writeMessageEnd();
     if (callback) {
+      console.log("runsql callback 1")
       var self = this;
       this.output.getTransport().flush(true, function() {
+        console.log("runsql callback 2")
         var result = null;
         try {
           result = self.recv_runSQL();
@@ -817,10 +822,13 @@ JobCzarClient.prototype.send_runSQL = function(query, callback) {
         callback(result);
       });
     } else {
+      console.log("Calling transport")
       return this.output.getTransport().flush();
     }
   }
   catch (e) {
+    console.log("Transport error 2")
+    console.log(e)
     if (typeof this.output.getTransport().reset === 'function') {
       this.output.getTransport().reset();
     }

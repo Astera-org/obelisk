@@ -14,6 +14,7 @@ type RequestHandler struct {
 }
 
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
+	println("job czar")
 
 	job := infra.Job{}
 
@@ -36,6 +37,7 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 }
 
 func (handler RequestHandler) submitResult(ctx context.Context, result infra.ResultWork) (bool, error) {
+	println("SUBMIT RESULT")
 
 	sql := "UPDATE jobs set cycles=$1,time_start=$2,timeStop=$3,score=$4 where job_id=$5"
 	_, err := gDatabase.db.Exec(sql, result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
@@ -49,6 +51,7 @@ func (handler RequestHandler) submitResult(ctx context.Context, result infra.Res
 
 func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
 	agentCfg string, worldCfg string, priority int32, userID int32) (int32, error) {
+	println("job czar")
 
 	sql := "INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values ($1,$2,$3,$4,$5,$6)"
 	_, err := gDatabase.db.Exec(sql, userID, priority, agentName, worldName, agentCfg, worldCfg)
@@ -75,6 +78,7 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 
 // only allow you to delete unservered up jobs
 func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
+	println("job czar")
 	sql := "DELETE from jobs where job_id=$1 and status=0"
 	_, err := gDatabase.db.Exec(sql, jobID)
 	if err != nil {
@@ -84,16 +88,20 @@ func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool,
 }
 
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
-	rows, err := gDatabase.db.Query(sql)
-	if err != nil {
-		fmt.Println(err)
-		return "error", errors.New("db error")
-	}
+	println("job czar")
+	//rows, err := gDatabase.db.Query(sql)
+	//if err != nil {
+	//	fmt.Println(err)
+	//	return "error", errors.New("db error")
+	//}
 
-	return printDBResult(rows), nil
+	return "I love puppies!", nil
+
+	//return printDBResult(rows), nil
 }
 
 func printDBResult(rows *sql.Rows) string {
+	println("job czar")
 	// Get column names
 	columns, err := rows.Columns()
 	if err != nil {
