@@ -23,9 +23,14 @@ type World struct {
 	PatSize        evec.Vec2i
 	Pats           map[string]*etensor.Float32
 	Mats           []string
+	AngInc         int
+	FOV            int
+	NFOVRays       int
+	DepthSize      int
+	DepthPools     int
 }
 
-func (w World) getPoint(x, y int) (pixel uint32, err error) {
+func (w *World) getPoint(x, y int) (pixel uint32, err error) {
 	// check for out of bounds first
 	if x < 0 || y < 0 || x >= w.WorldY || y >= w.WorldY {
 		return 0, errors.New("out of bounds")
@@ -39,7 +44,8 @@ func getMaterial(pixel uint32) string {
 	if pixel == 0 {
 		return "Empty"
 	}
-	r, g, b, a := toRGBA(uint32(pixel))
+	// alpha is unused
+	r, g, b, _ := toRGBA(uint32(pixel))
 
 	rgba := []uint8{r, g, b}
 	max := findMax(rgba)
@@ -76,7 +82,7 @@ func toRGBA(color uint32) (red, green, blue, alpha uint8) {
 }
 
 // rayTrace finds the first non empty pixel going in angle direction
-func (w World) rayTrace(angle int) (distance float32, pattern []float32) {
+func (w *World) rayTrace(angle int) (distance float32, pattern []float32) {
 	v := angVec(angle)
 	// TODO: double check all these x and ys to make sure they correspond to row, col
 	startX := float32(w.AgentX)
@@ -101,7 +107,7 @@ func (w World) rayTrace(angle int) (distance float32, pattern []float32) {
 }
 
 // for each angle between min and max, do ray trace
-func (w World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patterns [][]float32) {
+func (w *World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patterns [][]float32) {
 	maxld := mat32.Log(1 + mat32.Sqrt(float32(w.WorldX*w.WorldY+w.WorldY*w.WorldY)))
 
 	for a := minAngle; a <= maxAngle; a += step {
@@ -114,31 +120,24 @@ func (w World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patte
 	return
 }
 
-func (w World) PopCode(depthLogs []float32) etensor.Tensor {
-
-	// TODO: move these somewhere nice
-	AngInc := 15
-	FOV := 180
-	NFOVRays := (FOV / AngInc) + 1
-	DepthSize := 32
-	DepthPools := 8
+func (w *World) PopCode(depthLogs []float32) etensor.Tensor {
 
 	dv := &etensor.Float32{}
-	dv.SetShape([]int{DepthPools, NFOVRays, DepthSize / DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
+	dv.SetShape([]int{w.DepthPools, w.NFOVRays, w.DepthSize / w.DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
 
 	dvr := &etensor.Float32{}
-	dvr.SetShape([]int{1, NFOVRays, DepthSize, 1}, nil, []string{"1", "Angle", "Pop", "1"})
+	dvr.SetShape([]int{1, w.NFOVRays, w.DepthSize, 1}, nil, []string{"1", "Angle", "Pop", "1"})
 
-	np := DepthSize / DepthPools
+	np := w.DepthSize / w.DepthPools
 
 	depthCode := popcode.OneD{}
 	depthCode.Defaults()
 	depthCode.SetRange(0.1, 1, 0.05)
 
-	for i := 0; i < NFOVRays; i++ {
+	for i := 0; i < w.NFOVRays; i++ {
 		sv := dvr.SubSpace([]int{0, i}).(*etensor.Float32)
-		depthCode.Encode(&sv.Values, depthLogs[i], DepthSize, popcode.Set)
-		for dp := 0; dp < DepthPools; dp++ {
+		depthCode.Encode(&sv.Values, depthLogs[i], w.DepthSize, popcode.Set)
+		for dp := 0; dp < w.DepthPools; dp++ {
 			for pi := 0; pi < np; pi++ {
 				ri := dp*np + pi
 				dv.Set([]int{dp, i, pi, 0}, sv.Values[ri])
@@ -149,16 +148,13 @@ func (w World) PopCode(depthLogs []float32) etensor.Tensor {
 	return dv
 }
 
-func (w World) GetAllObservations() map[string]etensor.Tensor {
+func (w *World) GetAllObservations() map[string]etensor.Tensor {
 	obs := map[string]etensor.Tensor{}
 
 	//states := []string{"Depth", "FovDepth", "Fovea", "ProxSoma", "Vestibular", "Inters", "Action", "Action"}
 	//layers := []string{"V2Wd", "V2Fd", "V1F", "S1S", "S1V", "Ins", "VL", "Act"}
 
-	// SaveWorld(w, "test_world.bin")
-
 	wideDistances, _ := w.fillFOV(0, 180, 15)
-
 	obs["V2Wd"] = w.PopCode(wideDistances)
 
 	//fovDistances, fovPatterns := w.fillFOV(75, 105, 15)
@@ -235,6 +231,12 @@ func OpenWorld(filename gi.FileName) (w World) {
 
 // Config configures the bit pattern representations of mats and acts
 func (w *World) Config() {
+	w.AngInc = 15
+	w.FOV = 180
+	w.NFOVRays = (w.FOV / w.AngInc) + 1
+	w.DepthSize = 32
+	w.DepthPools = 8
+
 	w.Pats = make(map[string]*etensor.Float32)
 	w.PatSize.Set(5, 5)
 	// TODO: list all the possible items egan can have
@@ -247,7 +249,6 @@ func (w *World) Config() {
 	}
 
 	w.OpenPats("pats.json")
-	// fmt.Println("World after config:", w)
 }
 
 // OpenPats opens the patterns
