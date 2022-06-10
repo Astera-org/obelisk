@@ -25,17 +25,13 @@ type World struct {
 	Mats           []string
 }
 
-// getPattern returns the material pattern at the given point
-func (w World) getPattern(x, y int) (pattern []float32, err error) {
+func (w World) getPoint(x, y int) (pixel uint32, err error) {
 	// check for out of bounds first
 	if x < 0 || y < 0 || x >= w.WorldY || y >= w.WorldY {
-		return nil, errors.New("out of bounds")
+		return 0, errors.New("out of bounds")
 	}
-
 	// the number represents RGBA in that order
-	pixel := uint32(w.Pixels.At(x, y))
-	material := getMaterial(pixel)
-	return w.Pats[material].Values, nil
+	return uint32(w.Pixels.At(x, y)), nil
 }
 
 // getMaterial finds the closest material based on a given pixel
@@ -44,7 +40,6 @@ func getMaterial(pixel uint32) string {
 		return "Empty"
 	}
 	r, g, b, a := toRGBA(uint32(pixel))
-	fmt.Println("getPattern pixel:", pixel, r, g, b, a)
 
 	rgba := []uint8{r, g, b}
 	max := findMax(rgba)
@@ -80,10 +75,9 @@ func toRGBA(color uint32) (red, green, blue, alpha uint8) {
 	return
 }
 
+// rayTrace finds the first non empty pixel going in angle direction
 func (w World) rayTrace(angle int) (distance float32, pattern []float32) {
-	fmt.Println("RayTracing angle", angle)
 	v := angVec(angle)
-	var err error
 	// TODO: double check all these x and ys to make sure they correspond to row, col
 	startX := float32(w.AgentX)
 	startY := float32(w.AgentY)
@@ -92,14 +86,17 @@ func (w World) rayTrace(angle int) (distance float32, pattern []float32) {
 		startX += v.X
 		startY += v.Y
 		distance++
-		pattern, err = w.getPattern(int(startX), int(startY))
+		pixel, err := w.getPoint(int(startX), int(startY))
 		if err != nil {
 			fmt.Println("reached out of bounds ", startX, startY)
 			return
 		}
-		if pattern != nil {
-			return
+		material := getMaterial(pixel)
+		if material == "Empty" {
+			continue
 		}
+		pattern = w.Pats[material].Values
+		return
 	}
 }
 
@@ -240,6 +237,7 @@ func OpenWorld(filename gi.FileName) (w World) {
 func (w *World) Config() {
 	w.Pats = make(map[string]*etensor.Float32)
 	w.PatSize.Set(5, 5)
+	// TODO: list all the possible items egan can have
 	w.Mats = []string{"Empty", "Wall", "Food", "Water", "FoodWas", "WaterWas"}
 
 	for _, m := range w.Mats {

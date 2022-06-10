@@ -1,8 +1,3 @@
-// What am I trying to do today?
-// Connect egan to protobrain
-// egan sends pixels to protobrain currently
-// we need to map those pixels to the actual model layers
-
 // Copyright (c) 2021, The Emergent Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
