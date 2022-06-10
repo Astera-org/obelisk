@@ -19,22 +19,28 @@ import (
 type World struct {
 	Pixels         *etensor.Float64
 	AgentX, AgentY int
+	PosI           evec.Vec2i `inactive:"+" desc:"current location of agent, integer"`
+	PosF           mat32.Vec2 `inactive:"+" desc:"current location of agent, floating point"`
 	WorldX, WorldY int
-	PatSize        evec.Vec2i
-	Pats           map[string]*etensor.Float32
-	Mats           []string
-	AngInc         int
-	FOV            int
-	NFOVRays       int
-	DepthSize      int
-	DepthPools     int
-	DepthCode      popcode.OneD
-	FoveaSize      int
-	Dv             *etensor.Float32
-	Dvr            *etensor.Float32
-	Fd             *etensor.Float32
-	Fdr            *etensor.Float32
-	Fv             *etensor.Float32
+	Size           evec.Vec2i `desc:"size of 2D world"`
+	// TODO: we need to send this over from egan probably
+	Angle int `inactive:"+" desc:"current angle, in degrees"`
+
+	PatSize    evec.Vec2i
+	Pats       map[string]*etensor.Float32
+	Mats       []string
+	AngInc     int
+	FOV        int
+	NFOVRays   int
+	DepthSize  int
+	DepthPools int
+	DepthCode  popcode.OneD
+	FoveaSize  int
+	Dv         *etensor.Float32
+	Dvr        *etensor.Float32
+	Fd         *etensor.Float32
+	Fdr        *etensor.Float32
+	Fv         *etensor.Float32
 }
 
 func (w *World) getPoint(x, y int) (pixel uint32, err error) {
@@ -56,6 +62,8 @@ func getMaterial(pixel uint32) string {
 
 	rgba := []uint8{r, g, b}
 	max := findMax(rgba)
+
+	// TODO: is empty 0 or 255? the alpha channel might be 255 so double check
 
 	if pixel == 0 {
 		return "Empty"
@@ -150,6 +158,29 @@ func (w *World) fillFovPatterns(fovPatterns []*etensor.Float32, fsz int) {
 	}
 }
 
+// getProxSoma basically looks around all 4 directions
+func (w *World) getProxSoma() *etensor.Float32 {
+	ps := &etensor.Float32{}
+	ps.SetShape([]int{1, 4, 2, 1}, nil, []string{"1", "Pos", "OnOff", "1"})
+	ps.SetZeros()
+
+	angs := []int{0, -90, 90, 180}
+
+	for i := 0; i < 4; i++ {
+		v := angVec(w.Angle + angs[i])
+		_, gp := NextVecPoint(w.PosF, v)
+		pixel, _ := w.getPoint(gp.X, gp.Y)
+		material := getMaterial(pixel)
+		if material != "Empty" {
+			ps.Set([]int{0, i, 0, 0}, 1) // on
+		} else {
+			ps.Set([]int{0, i, 1, 0}, 1) // off
+		}
+	}
+
+	return ps
+}
+
 func (w *World) GetAllObservations() map[string]etensor.Tensor {
 	obs := map[string]etensor.Tensor{}
 
@@ -166,7 +197,7 @@ func (w *World) GetAllObservations() map[string]etensor.Tensor {
 	w.fillFovPatterns(fovPatterns, fsz)
 	obs["V1F"] = w.Fv
 
-	// TODO: prox some
+	obs["S1S"] = w.getProxSoma()
 
 	// TODO: vestibular
 
@@ -181,6 +212,15 @@ func angVec(ang int) mat32.Vec2 {
 	a := mat32.DegToRad(float32(AngMod(ang)))
 	v := mat32.Vec2{mat32.Cos(a), mat32.Sin(a)}
 	return NormVecLine(v)
+}
+
+// NextVecPoint returns the next grid point along vector,
+// from given current floating and grid points.  v is normalized
+// such that the largest value is 1.
+func NextVecPoint(cp, v mat32.Vec2) (mat32.Vec2, evec.Vec2i) {
+	n := cp.Add(v)
+	g := evec.NewVec2iFmVec2Round(n)
+	return n, g
 }
 
 // NormVec normalize vector for drawing a line
@@ -244,9 +284,15 @@ func (w *World) Config() {
 	w.DepthPools = 8
 	w.FoveaSize = 1
 
+	w.Size.Set(w.WorldX, w.WorldY)
+	w.PosI = w.Size.DivScalar(2) // start in middle -- could be random..
+	w.PosF = w.PosI.ToVec2()
+
 	w.DepthCode = popcode.OneD{}
 	w.DepthCode.Defaults()
 	w.DepthCode.SetRange(0.1, 1, 0.05)
+
+	// TODO: buy some vowels
 
 	w.Dv = &etensor.Float32{}
 	w.Dv.SetShape([]int{w.DepthPools, w.NFOVRays, w.DepthSize / w.DepthPools, 1}, nil, []string{"Pools", "Angle", "Pop", "1"})
