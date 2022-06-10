@@ -53,6 +53,7 @@ func (w *World) getPoint(x, y int) (pixel uint32, err error) {
 }
 
 // getMaterial finds the closest material based on a given pixel
+// this is a hack for now until we decide on how to send this info better
 func getMaterial(pixel uint32) string {
 	if pixel == 0 {
 		return "Empty"
