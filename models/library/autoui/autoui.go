@@ -135,9 +135,10 @@ func (ui *AutoUI) CreateAndRunGuiWithAdditionalConfig(config func()) {
 			nv := ui.GUI.AddNetView("NetView")
 			nv.Params.MaxRecs = 300
 			nv.SetNet(ui.Network)
-			ui.GUI.NetView.Scene().Camera.Pose.Pos.Set(0, 1, 2.75) // more "head on" than default which is more "top down"
-			ui.GUI.NetView.Scene().Camera.LookAt(mat32.Vec3{0, 0, 0}, mat32.Vec3{0, 1, 0})
+			nv.Scene().Camera.Pose.Pos.Set(0, 1, 2.75) // more "head on" than default which is more "top down"
+			nv.Scene().Camera.LookAt(mat32.Vec3{0, 0, 0}, mat32.Vec3{0, 1, 0})
 			ui.ViewUpdt.Config(nv, etime.AlphaCycle, etime.AlphaCycle)
+			ui.GUI.ViewUpdt = ui.ViewUpdt
 		}
 
 		if ui.Logs != nil {

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
+	"sync"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -57,6 +59,59 @@ func (job *Job) readResults() {
 func (job *Job) returnResults() error {
 	// TODO
 	return nil
+}
+
+// TODO need to bail from one process if the other dies
+func (job *Job) doJob() {
+
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(2)
+	go spawnWorld(&waitGroup, &job)
+	go spawnAgent(&waitGroup, &job)
+
+	waitGroup.Wait()
+}
+
+func spawnAgent(waitGroup *sync.WaitGroup, job *Job) {
+	agentDesc, exists := gConfig.AGENTS[job.agentName]
+	if exists {
+		_, err := exec.Command(agentDesc.PATH).Output()
+		if err != nil {
+			switch e := err.(type) {
+			case *exec.Error:
+				fmt.Println("failed executing:", err)
+			case *exec.ExitError:
+				fmt.Println("command exit rc =", e.ExitCode())
+			default:
+				panic(err)
+			}
+		}
+	} else {
+		fmt.Println("Unknown Agent: ", job.agentName)
+	}
+
+	waitGroup.Done()
+}
+
+func spawnWorld(waitGroup *sync.WaitGroup, job *Job) {
+	worldDesc, exists := gConfig.WORLDS[job.worldName]
+	if exists {
+		_, err := exec.Command(worldDesc.PATH).Output()
+		if err != nil {
+			switch e := err.(type) {
+			case *exec.Error:
+				fmt.Println("failed executing:", err)
+			case *exec.ExitError:
+				fmt.Println("command exit rc =", e.ExitCode())
+			default:
+				panic(err)
+			}
+		}
+	} else {
+		fmt.Println("Unknown World: ", job.worldName)
+	}
+
+	waitGroup.Done()
 }
 
 func MakeClient(addr string) *infra.JobCzarClient {
