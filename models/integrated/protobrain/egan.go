@@ -135,7 +135,7 @@ func (w *World) fillFOV(minAngle, maxAngle, step int) (distances []float32, patt
 	return
 }
 
-func (w *World) PopCode(depthLogs []float32, dv *etensor.Float32, dvr *etensor.Float32, n int) etensor.Tensor {
+func (w *World) popCode(depthLogs []float32, dv *etensor.Float32, dvr *etensor.Float32, n int) etensor.Tensor {
 	np := w.DepthSize / w.DepthPools
 
 	for i := 0; i < n; i++ {
@@ -168,7 +168,7 @@ func (w *World) getProxSoma() *etensor.Float32 {
 
 	for i := 0; i < 4; i++ {
 		v := angVec(w.Angle + angs[i])
-		_, gp := NextVecPoint(w.PosF, v)
+		_, gp := nextVecPoint(w.PosF, v)
 		pixel, _ := w.getPoint(gp.X, gp.Y)
 		material := getMaterial(pixel)
 		if material != "Empty" {
@@ -188,11 +188,11 @@ func (w *World) GetAllObservations() map[string]etensor.Tensor {
 	//layers := []string{"V2Wd", "V2Fd", "V1F", "S1S", "S1V", "Ins", "VL", "Act"}
 
 	wideDistances, _ := w.fillFOV(0, 180, 15)
-	obs["V2Wd"] = w.PopCode(wideDistances, w.Dv, w.Dvr, w.NFOVRays)
+	obs["V2Wd"] = w.popCode(wideDistances, w.Dv, w.Dvr, w.NFOVRays)
 
 	fsz := 1 + 2*w.FoveaSize
 	fovDistances, fovPatterns := w.fillFOV(75, 105, 15)
-	obs["V2Fd"] = w.PopCode(fovDistances, w.Fd, w.Fdr, fsz)
+	obs["V2Fd"] = w.popCode(fovDistances, w.Fd, w.Fdr, fsz)
 
 	w.fillFovPatterns(fovPatterns, fsz)
 	obs["V1F"] = w.Fv
@@ -209,22 +209,22 @@ func (w *World) GetAllObservations() map[string]etensor.Tensor {
 }
 
 func angVec(ang int) mat32.Vec2 {
-	a := mat32.DegToRad(float32(AngMod(ang)))
+	a := mat32.DegToRad(float32(angMod(ang)))
 	v := mat32.Vec2{mat32.Cos(a), mat32.Sin(a)}
-	return NormVecLine(v)
+	return normVecLine(v)
 }
 
 // NextVecPoint returns the next grid point along vector,
 // from given current floating and grid points.  v is normalized
 // such that the largest value is 1.
-func NextVecPoint(cp, v mat32.Vec2) (mat32.Vec2, evec.Vec2i) {
+func nextVecPoint(cp, v mat32.Vec2) (mat32.Vec2, evec.Vec2i) {
 	n := cp.Add(v)
 	g := evec.NewVec2iFmVec2Round(n)
 	return n, g
 }
 
 // NormVec normalize vector for drawing a line
-func NormVecLine(v mat32.Vec2) mat32.Vec2 {
+func normVecLine(v mat32.Vec2) mat32.Vec2 {
 	av := v.Abs()
 	if av.X > av.Y {
 		v = v.DivScalar(av.X)
@@ -235,7 +235,7 @@ func NormVecLine(v mat32.Vec2) mat32.Vec2 {
 }
 
 // AngMod returns angle modulo within 360 degrees
-func AngMod(ang int) int {
+func angMod(ang int) int {
 	for ang < 0 {
 		ang += 360
 	}
@@ -254,7 +254,7 @@ func logMax(d, maxld float32) float32 {
 }
 
 // SaveWorld is a helper function that persists a world object to file
-func SaveWorld(w World, filename gi.FileName) error {
+func saveWorld(w World, filename gi.FileName) error {
 	jenc, _ := json.MarshalIndent(w, "", " ")
 	return ioutil.WriteFile(string(filename), jenc, 0644)
 }
@@ -321,11 +321,11 @@ func (w *World) Config() {
 		w.Pats[m] = t
 	}
 
-	w.OpenPats("pats.json")
+	w.openPats("pats.json")
 }
 
 // OpenPats opens the patterns
-func (w *World) OpenPats(filename gi.FileName) error {
+func (w *World) openPats(filename gi.FileName) error {
 	fp, err := os.Open(string(filename))
 	if err != nil {
 		fmt.Println("ERROR! Can't find pats file! This will prevent the model from working! :", err)
