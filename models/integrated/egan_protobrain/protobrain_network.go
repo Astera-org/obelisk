@@ -1,31 +1,36 @@
 package main
 
 import (
+	"log"
+
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/emer"
+	"github.com/emer/emergent/erand"
 	"github.com/emer/emergent/evec"
 	"github.com/emer/emergent/looper"
-	"github.com/emer/emergent/params"
+	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/prjn"
 	"github.com/emer/emergent/relpos"
 	"github.com/emer/empi/mpi"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/emer/etable/pca"
-	"log"
 )
 
 // TODO Comment
 // TODO Remove unused
 type NetworkDeets struct { // TODO(refactor): Remove a lot of this stuff
-	Net      *deep.Network   `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
-	Loops    *looper.Manager `view:"no-inline" desc:"contains looper control loops for running sim"`
-	Time     axon.Time       `desc:"axon timing parameters and state"`
-	LoopTime string          `desc:"Printout of the current time."`
-	GUI      egui.GUI        `view:"-" desc:"manages all the gui elements"`
+	Net      *deep.Network    `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
+	Params   emer.Params      `view:"inline" desc:"all parameter management"`
+	ViewUpdt netview.ViewUpdt `desc:"netview update parameters"`
+	RndSeeds erand.Seeds      `view:"-" desc:"a list of random seeds to use for each run"`
+	Loops    *looper.Manager  `view:"no-inline" desc:"contains looper control loops for running sim"`
+	Time     axon.Time        `desc:"axon timing parameters and state"`
+	LoopTime string           `desc:"Printout of the current time."`
+	GUI      egui.GUI         `view:"-" desc:"manages all the gui elements"`
 
 	ActionMapping      map[string]agent.SpaceSpec `view:"-" desc:"shape and structure of actions agent can take"`
 	ObservationMapping map[string]agent.SpaceSpec `view:"-" desc:"shape and structure of observations agent can take"`
@@ -37,9 +42,6 @@ type NetworkDeets struct { // TODO(refactor): Remove a lot of this stuff
 	MinusCycles      int                  `desc:"number of minus-phase cycles"`
 	PlusCycles       int                  `desc:"number of plus-phase cycles"`
 	ErrLrMod         axon.LrateMod        `view:"inline" desc:"learning rate modulation as function of error"`
-	Params           params.Sets          `view:"no-inline" desc:"full collection of param sets"`
-	ParamSet         string               `desc:"which set of *additional* parameters to use -- always applies Base and optionaly this next if set"`
-	Tag              string               `desc:"extra tag string to add to any file names output from sim (e.g., weights files, log files, params for run)"`
 	Prjn4x4Skp2      *prjn.PoolTile       `view:"no-inline" desc:"feedforward 4x4 skip 2 topo prjn"`
 	Prjn4x4Skp2Recip *prjn.PoolTile       `view:"no-inline" desc:"feedforward 4x4 skip 2 topo prjn, recip"`
 	Prjn4x3Skp2      *prjn.PoolTile       `view:"no-inline" desc:"feedforward 4x4 skip 2 topo prjn"`
@@ -78,7 +80,6 @@ type NetworkDeets struct { // TODO(refactor): Remove a lot of this stuff
 	SaveWts      bool                        `view:"-" desc:"for command-line run only, auto-save final weights after each run"`
 	SaveARFs     bool                        `view:"-" desc:"for command-line run only, auto-save receptive field data"`
 	LogSetParams bool                        `view:"-" desc:"if true, print message for all params that are set"`
-	RndSeed      int64                       `view:"-" desc:"the current random seed"`
 	UseMPI       bool                        `view:"-" desc:"if true, use MPI to distribute computation across nodes"`
 	SaveProcLog  bool                        `view:"-" desc:"if true, save logs per processor"`
 	Comm         *mpi.Comm                   `view:"-" desc:"mpi communicator"`
@@ -109,7 +110,7 @@ func (deets *NetworkDeets) InitStats() { // TODO(refactor): use Stats
 
 // DefineSimVariables creates new blank elements and initializes defaults
 func (deets *NetworkDeets) DefineSimVariables() { // TODO(refactor): Remove a lot
-	deets.Params = ParamSets
+	deets.Params.Params = ParamSets
 
 	deets.Time.Defaults()
 	deets.MinusCycles = 150
@@ -118,8 +119,7 @@ func (deets *NetworkDeets) DefineSimVariables() { // TODO(refactor): Remove a lo
 	deets.ErrLrMod.Defaults()
 	deets.ErrLrMod.Base = 0.05 // 0.05 >= .01, .1 -- hard to tell
 	deets.ErrLrMod.Range.Set(0.2, 0.8)
-	deets.Params = ParamSets
-	deets.RndSeed = 1
+	deets.RndSeeds.Init(100)
 
 	// Default values
 	deets.PctCortexMax = 0.9 // 0.5 before
@@ -479,7 +479,9 @@ func DefineNetworkStructure(deets *NetworkDeets, net *deep.Network) {
 	deets.PulvLays = append(deets.PulvLays, "VL")
 
 	net.Defaults()
-	axon.SetParams("Network", deets.LogSetParams, net.AsAxon(), &deets.Params, deets.ParamSet, deets) // only set Network params
+
+	deets.Params.AddNetwork(net.AsAxon())
+	deets.Params.SetObject("Network")
 	err := net.Build()
 	if err != nil {
 		log.Println(err)
@@ -497,7 +499,7 @@ func (deets *NetworkDeets) TrialStatsTRC(accum bool) {
 	acd := 0.0
 	for i, ln := range deets.PulvLays {
 		ly := deets.Net.LayerByName(ln).(axon.AxonLayer).AsAxon()
-		cd := float64(ly.CosDiff.Cos)
+		cd := float64(ly.CorSim.Cor)
 		acd += cd
 		deets.TrlCosDiffTRC[i] = cd
 	}

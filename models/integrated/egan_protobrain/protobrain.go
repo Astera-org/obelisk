@@ -41,7 +41,7 @@ func main() {
 	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
 	sim.WorldEnv = world
 
-	userInterface := autoui.AutoUI{
+	userInterface := &autoui.AutoUI{
 		StructForView:             &sim,
 		Looper:                    sim.Loops,
 		Network:                   sim.Net.EmerNet,
@@ -77,11 +77,11 @@ func (ss *Sim) ConfigNet() *deep.Network {
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
 	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
-	axon.AddPlusAndMinusPhases(manager, &ss.Time, ss.Net.AsAxon())
+	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
 	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
 	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
-		axon.SendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
@@ -103,15 +103,14 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 		for name, t := range obs {
 			fmt.Println("ApplyInputs name: ", name)
-
-			axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return t
 			})
 		}
 	})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
-	axon.AddDefaultLoopSimLogic(manager, &ss.Time, ss.Net.AsAxon())
+	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
 	fmt.Println(manager.DocString())
@@ -129,6 +128,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 // NewRun intializes a new run of the model, using the WorldMailbox.GetCounter(etime.Run) counter for the new run value
 func (ss *Sim) NewRun() {
+	run := ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur
+	ss.NetDeets.RndSeeds.Set(run)
 	ss.NetDeets.PctCortex = 0
 	ss.WorldEnv.InitWorld(nil)
 	ss.Time.Reset()
