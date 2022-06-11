@@ -31,9 +31,10 @@ func main() {
 
 func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
 	transportFactory := thrift.NewTTransportFactory()
-	transport, _ := thrift.NewTServerSocket(gConfig.SERVER_ADDR)
+	transport, _ := thrift.NewTServerSocketTimeout(gConfig.SERVER_ADDR, 5)
 	processor := infra.NewJobCzarProcessor(handler)
-	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
+	protocolFactory := thrift.NewTSimpleJSONProtocolFactoryConf(nil)
+	//protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
 	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)
 	return server
 }

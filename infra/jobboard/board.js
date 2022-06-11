@@ -1,4 +1,4 @@
-var gServerURL="http://localhost:9009"; // /JobCzar
+var gServerURL="http://localhost:8000"; // /JobCzar
 
 function start()
 {
@@ -18,7 +18,8 @@ function myCallback(thingo) {
 
 function sendQuery(sqlString)
 {
-    var transport = new Thrift.Transport(gServerURL, {useCORS: true});
+    var transport = new Thrift.Transport("http://test.com:8000/test")//, {useCORS: true});
+    // var transport = new Thrift.TWebSocketTransport(gServerURL)//, {useCORS: true});
     var protocol  = new Thrift.TJSONProtocol(transport);
     var client    = new JobCzarClient(protocol);
 
