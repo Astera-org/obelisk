@@ -98,11 +98,10 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	// Trial Stats and Apply Input
-	mode := etime.Train // For closures
-	stack := manager.Stacks[mode]
+	stack := manager.Stacks[etime.Train]
 	stack.Loops[etime.Trial].OnStart.Add("Sim:ResetState", func() {
 		ss.Net.NewState()
-		ss.Time.NewState(mode.String())
+		ss.Time.NewState(etime.Train.String())
 	})
 	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
 		axon.ApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
