@@ -26,6 +26,7 @@ import (
 	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/patgen"
 	"github.com/emer/emergent/prjn"
+	"github.com/emer/empi/mpi"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	_ "github.com/emer/etable/etview" // include to get gui views
@@ -231,22 +232,21 @@ func (ss *Sim) ConfigLoops() {
 	for m, _ := range man.Stacks {
 		mode := m // For closures
 		stack := man.Stacks[mode]
-		stack.Loops[etime.Trial].OnStart.Add("Sim:Env:Step", func() {
+		stack.Loops[etime.Trial].OnStart.Add("Env:Step", func() {
 			// note: OnStart for env.Env, others may happen OnEnd
 			ss.Envs[mode.String()].Step()
 		})
-		stack.Loops[etime.Trial].OnStart.Add("Sim:ApplyInputs", func() {
+		stack.Loops[etime.Trial].OnStart.Add("ApplyInputs", func() {
 			ss.ApplyInputs()
-			// axon.EnvApplyInputs(ss.Net, ss.Envs[ss.Time.Mode])
 		})
-		stack.Loops[etime.Trial].OnEnd.Add("Sim:StatCounters", ss.StatCounters)
-		stack.Loops[etime.Trial].OnEnd.Add("Sim:TrialStats", ss.TrialStats)
+		stack.Loops[etime.Trial].OnEnd.Add("StatCounters", ss.StatCounters)
+		stack.Loops[etime.Trial].OnEnd.Add("TrialStats", ss.TrialStats)
 	}
 
-	man.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
+	man.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 
 	// Train stop early condition
-	man.GetLoop(etime.Train, etime.Epoch).IsDone["Epoch:NZeroStop"] = func() bool {
+	man.GetLoop(etime.Train, etime.Epoch).IsDone["NZeroStop"] = func() bool {
 		// This is calculated in TrialStats
 		stopNz := ss.Args.Int("nzero")
 		if stopNz <= 0 {
@@ -259,7 +259,7 @@ func (ss *Sim) ConfigLoops() {
 
 	// Add Testing
 	trainEpoch := man.GetLoop(etime.Train, etime.Epoch)
-	trainEpoch.OnStart.Add("Log:Train:TestAtInterval", func() {
+	trainEpoch.OnStart.Add("TestAtInterval", func() {
 		if (ss.TestInterval > 0) && ((trainEpoch.Counter.Cur+1)%ss.TestInterval == 0) {
 			// Note the +1 so that it doesn't occur at the 0th timestep.
 			ss.TestAll()
@@ -269,48 +269,50 @@ func (ss *Sim) ConfigLoops() {
 	/////////////////////////////////////////////
 	// Logging
 
-	man.GetLoop(etime.Test, etime.Epoch).OnEnd.Add("Test:Epoch:LogTestErrors", func() {
+	man.GetLoop(etime.Test, etime.Epoch).OnEnd.Add("LogTestErrors", func() {
 		axon.LogTestErrors(&ss.Logs)
 	})
-	man.GetLoop(etime.Train, etime.Epoch).OnEnd.Add("Train:Epoch:PCAStats", func() {
+	man.GetLoop(etime.Train, etime.Epoch).OnEnd.Add("PCAStats", func() {
 		trnEpc := man.Stacks[etime.Train].Loops[etime.Epoch].Counter.Cur
 		if ss.PCAInterval > 0 && trnEpc%ss.PCAInterval == 0 {
 			axon.PCAStats(ss.Net.AsAxon(), &ss.Logs, &ss.Stats)
+			ss.Logs.ResetLog(etime.Analyze, etime.Trial)
 		}
 	})
 
 	man.AddOnEndToAll("Log", ss.Log)
 	axon.LooperResetLogBelow(man, &ss.Logs)
 
-	man.GetLoop(etime.Train, etime.Trial).OnEnd.Add("Train:Trial:LogAnalyze", func() {
+	man.GetLoop(etime.Train, etime.Trial).OnEnd.Add("LogAnalyze", func() {
 		trnEpc := man.Stacks[etime.Train].Loops[etime.Epoch].Counter.Cur
 		if (ss.PCAInterval > 0) && (trnEpc%ss.PCAInterval == 0) {
 			ss.Log(etime.Analyze, etime.Trial)
 		}
 	})
 
-	man.GetLoop(etime.Train, etime.Run).OnEnd.Add("Train:Run:RunStats", func() {
+	man.GetLoop(etime.Train, etime.Run).OnEnd.Add("RunStats", func() {
 		ss.Logs.RunStats("PctCor", "FirstZero", "LastZero")
 	})
 
 	// Save weights to file, to look at later
-	man.GetLoop(etime.Train, etime.Run).OnEnd.Add("Log:Train:SaveWeights", func() {
+	man.GetLoop(etime.Train, etime.Run).OnEnd.Add("SaveWeights", func() {
 		ctrString := ss.Stats.PrintVals([]string{"Run", "Epoch"}, []string{"%03d", "%05d"}, "_")
 		axon.SaveWeightsIfArgSet(ss.Net.AsAxon(), &ss.Args, ctrString, ss.Stats.String("RunName"))
 	})
 
 	////////////////////////////////////////////
 	// GUI
-	if ss.Args.Bool("nogui") == false {
+	if ss.Args.Bool("nogui") {
+		man.GetLoop(etime.Test, etime.Trial).Main.Add("NetDataRecord", func() {
+			ss.GUI.NetDataRecord(ss.ViewUpdt.Text)
+		})
+	} else {
 		axon.LooperUpdtNetView(man, &ss.ViewUpdt)
 		axon.LooperUpdtPlots(man, &ss.GUI)
-		// man.GetLoop(etime.Test, etime.Trial).Main.Add("Log:Test:Trial", func() {
-		// 	ss.GUI.NetDataRecord()
-		// })
 	}
 
 	if Debug {
-		fmt.Println(man.DocString())
+		mpi.Println(man.DocString())
 	}
 	ss.Loops = man
 }
@@ -447,7 +449,9 @@ func (ss *Sim) TrialStats() {
 func (ss *Sim) ConfigLogs() {
 	ss.Stats.SetString("RunName", ss.Params.RunName(0)) // used for naming logs, stats, etc
 
-	ss.Logs.AddCounterItems([]etime.Times{etime.Run, etime.Epoch, etime.Trial, etime.Cycle}, []string{"TrialName", "RunName"})
+	ss.Logs.AddCounterItems(etime.Run, etime.Epoch, etime.Trial, etime.Cycle)
+	ss.Logs.AddStatStringItem(etime.AllModes, etime.AllTimes, "RunName")
+	ss.Logs.AddStatStringItem(etime.AllModes, etime.Trial, "TrialName")
 
 	ss.Logs.AddStatAggItem("CorSim", "TrlCorSim", elog.DTrue, etime.Run, etime.Epoch, etime.Trial)
 	ss.Logs.AddStatAggItem("UnitErr", "TrlUnitErr", elog.DFalse, etime.Run, etime.Epoch, etime.Trial)
@@ -458,7 +462,7 @@ func (ss *Sim) ConfigLogs() {
 	axon.LogAddPCAItems(&ss.Logs, ss.Net.AsAxon(), etime.Run, etime.Epoch, etime.Trial)
 
 	axon.LogAddLayerGeActAvgItems(&ss.Logs, ss.Net.AsAxon(), etime.Test, etime.Cycle)
-	axon.LogAddLayerActTensorItems(&ss.Logs, ss.Net.AsAxon(), etime.Test, etime.Trial)
+	ss.Logs.AddLayerTensorItems(ss.Net, "Act", etime.Test, etime.Trial, "Input", "Target")
 
 	ss.Logs.CreateTables()
 	ss.Logs.SetContext(&ss.Stats, ss.Net.AsAxon())
@@ -493,7 +497,7 @@ func (ss *Sim) Log(mode etime.Modes, time etime.Times) {
 
 // ConfigGui configures the GoGi gui interface for this simulation,
 func (ss *Sim) ConfigGui() *gi.Window {
-	title := "Leabra Random Associator"
+	title := "One-to-Many"
 	ss.GUI.MakeWindow(ss, "ra25", title, `This demonstrates a basic Leabra model. See <a href="https://github.com/emer/emergent">emergent on GitHub</a>.</p>`)
 	ss.GUI.CycleUpdateInterval = 10
 
@@ -563,22 +567,26 @@ func (ss *Sim) ConfigArgs() {
 }
 
 func (ss *Sim) CmdArgs() {
-	ss.Args.ProcStd(&ss.Logs, &ss.Params, ss.Net.Name())
+	ss.Args.ProcStd(&ss.Params)
+	ss.Args.ProcStdLogs(&ss.Logs, &ss.Params, ss.Net.Name())
 	ss.Args.SetBool("nogui", true)                                       // by definition if here
 	ss.Stats.SetString("RunName", ss.Params.RunName(ss.Args.Int("run"))) // used for naming logs, stats, etc
 
 	netdata := ss.Args.Bool("netdata")
 	if netdata {
-		fmt.Printf("Saving NetView data from testing\n")
+		mpi.Printf("Saving NetView data from testing\n")
 		ss.GUI.InitNetData(ss.Net, 200)
 	}
 
 	runs := ss.Args.Int("runs")
 	run := ss.Args.Int("run")
-	fmt.Printf("Running %d Runs starting at %d\n", runs, run)
+	mpi.Printf("Running %d Runs starting at %d\n", runs, run)
 	rc := &ss.Loops.GetLoop(etime.Train, etime.Run).Counter
 	rc.Set(run)
 	rc.Max = run + runs
+
+	ss.Loops.GetLoop(etime.Train, etime.Epoch).Counter.Max = ss.Args.Int("epochs")
+
 	ss.NewRun()
 	ss.Loops.Run()
 

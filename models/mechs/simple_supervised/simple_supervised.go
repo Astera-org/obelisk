@@ -99,8 +99,11 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.ViewUpdt)
 
-	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
-	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
+	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
+	if !ok {
+		panic("PlusPhase not found")
+	}
+	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		// Check the action at the beginning of the Plus phase, before the teaching signal is introduced.
 		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
@@ -108,7 +111,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	// Trial Stats and Apply Input
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
+	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
 		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
 			return ss.WorldEnv.Observe("Input")
 		})
@@ -118,8 +121,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 		})
 	})
 
-	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
-	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })
+	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
+	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })
 
 	// Initialize and print loop structure, then add to Sim
 	fmt.Println(manager.DocString())

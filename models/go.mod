@@ -4,11 +4,11 @@ go 1.18
 
 require (
 	github.com/anthonynsimon/bild v0.13.0 // indirect
-	github.com/emer/axon v1.4.1
-	github.com/emer/emergent v1.3.5
-	github.com/emer/empi v1.0.12
-	github.com/emer/etable v1.1.4
-	github.com/goki/gi v1.3.2
+	github.com/emer/axon v1.4.9
+	github.com/emer/emergent v1.3.14
+	github.com/emer/empi v1.0.13
+	github.com/emer/etable v1.1.7
+	github.com/goki/gi v1.3.4
 	github.com/goki/ki v1.1.8
 	github.com/goki/mat32 v1.0.12
 	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
