@@ -121,7 +121,7 @@ def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
     #failing to adjust to out of distirbution
 
 class FWorldHandler:
-    def __init__(self, model: nn.Module, optimizer: optim.Optimizer, train_runs:int,max_runs:int):
+    def __init__(self, model: nn.Module, optimizer: optim.Optimizer, train_runs:int,max_runs:int , infer_offpolicy:bool):
         self.name: str = "AgentZero"
         self.model: PolicyDynamicInput = model
         self.optimizer: optim.Optimizer = optimizer
@@ -130,6 +130,7 @@ class FWorldHandler:
         self.do_learning = True
         self._train_runs = train_runs
         self._max_runs = max_runs
+        self._infer_offpolicy = infer_offpolicy
 
     def set_mode_to_send(self,use_heuristic:bool):
         self._use_heuristic = use_heuristic
@@ -173,13 +174,16 @@ class FWorldHandler:
             self.model.store_history.append(world_state)
 
         if (i_episode>=self._train_runs): #quick hack so doesn't reset, should be cleaned up
-            self.set_mode_to_send(use_heuristic=False)
+            if self._infer_offpolicy:
+                self.set_mode_to_send(use_heuristic=True)
+            else:
+                self.set_mode_to_send(use_heuristic=False)
             self.do_learning = False
         else:
             self.set_mode_to_send(use_heuristic=True)
 
         #log data at end of training, instead of online, and then
-        if i_episode==self._train_runs:
+        if i_episode==(self._max_runs - self._train_runs):
             self.log_results("train",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
             self.model.chosen_action_history = []
             self.model.best_action_history = []
@@ -189,42 +193,41 @@ class FWorldHandler:
         if i_episode==self._max_runs:
             self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
 
-
         return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
 
 
     def log_results(self, title:str, predicted_actions:List[int],heuristic_actions:List[int],input_space:List[int], rewards:List[float]):
-        actions = pd.DataFrame()
-        actions["ground_truth"] = heuristic_actions
-        actions["predicted"] = predicted_actions
-        actions["rewards"] = rewards
-        bins = pd.cut(actions.index,bins = 10)
-        actions["bins"]=[bin.left for bin in bins ]
+            actions = pd.DataFrame()
+            actions["ground_truth"] = heuristic_actions
+            actions["predicted"] = predicted_actions
+            actions["rewards"] = rewards
+            bins = pd.cut(actions.index,bins = 10)
+            actions["bins"]=[bin.left for bin in bins ]
 
-        step =0
-        for name, group in actions.groupby("bins"):
-            ground_truth = group["ground_truth"].values
-            predicted = group["predicted"].values
-            reward = group["rewards"].mean()
-            kl_divergence:float = fworld_metrics.calc_kl(predicted,ground_truth)
-            f1_score:float = fworld_metrics.calc_precision(predicted,ground_truth)
+            step =0
+            for name, group in actions.groupby("bins"):
+                ground_truth = group["ground_truth"].values
+                predicted = group["predicted"].values
+                reward = group["rewards"].mean()
+                kl_divergence:float = fworld_metrics.calc_kl(predicted,ground_truth)
+                f1_score:float = fworld_metrics.calc_precision(predicted,ground_truth)
 
-            wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
-            wandb.log({"{}_f1".format(title):f1_score},step=step)
-            wandb.log({"{}_reward".format(title):reward},step=step)
-            step+=int(len(actions)/10)
+                wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
+                wandb.log({"{}_f1".format(title):f1_score},step=step)
+                wandb.log({"{}_reward".format(title):reward},step=step)
+                step+=int(len(actions)/10)
 
-        wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
+            wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
 
-        wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
-        wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
+            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
+            wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
 
-        sample_amount = len(input_space) if len(input_space) < 1000 else 1000
-        history = pd.DataFrame(input_space).sample(sample_amount)#so don't make this thing lag
-        del actions["bins"]
-        del actions["rewards"]
+            sample_amount = len(input_space) if len(input_space) < 1000 else 1000
+            history = pd.DataFrame(input_space).sample(sample_amount)#so don't make this thing lag
+            del actions["bins"]
+            del actions["rewards"]
 
-        wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
+            wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
 
 
 if __name__ == '__main__':
@@ -232,7 +235,7 @@ if __name__ == '__main__':
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
     config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
 
-    wandb.init(project="fworld-evaluations1")
+    wandb.init(project="fworld-evaluations2")
     wandb.config.update(config_run.asdict()) #given conftext information
 
     wandb.run.name = "{}-{}".format(config_run.name,str(wandb.run.id))
@@ -247,15 +250,10 @@ if __name__ == '__main__':
     wandb.config.update({"inputsize":model_dync.affine1.in_features})
     wandb.config.update({"inputareas":",".join([i.name for i in all_input_information])})
     optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
-    handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o,config_run.train_runs,config_run.max_runs)
+    handler:FWorldHandler = FWorldHandler(model_dync,optimizer_o,config_run.train_runs,config_run.max_runs,config_run.infer_offpolicy)
     server = setup_server(handler)
+
     server.serve()
 
-    #todo
-    #convert output into sparse encoding
-    #Use PCT Cortex FOr X runs
-    #STORE RUNNING HISTORY OF INPUTS AND OUTPUTS
-    #off policy results
-    #on policy results
-    #Visulize results
-
+    #pickle history
+    #rerun and analyze in isolatoin

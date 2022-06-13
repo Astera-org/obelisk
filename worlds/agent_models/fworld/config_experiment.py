@@ -36,6 +36,7 @@ class ConfigRuns():
     max_runs: int
     description: str
     hidden_size: float = 125.0
+    infer_offpolicy: bool = True
 
     @staticmethod
     def file_to_configrun(path):

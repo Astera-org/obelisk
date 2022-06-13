@@ -4,6 +4,7 @@
 *.exe
 .idea/
 .DS_Store
+*.pkl
 wandb/*
 wandb/
 __pycache__/
