@@ -1,10 +1,14 @@
-package m_armedbandit
+package main
 
 import (
 	"errors"
 	"github.com/emer/emergent/agent"
+	"github.com/emer/etable/etensor"
+	"math/rand"
 )
 
+//todo add latent variables that are coupled to multibandit problem
+//todo add continous sampling instead of discrete values
 //find empirical data to characterize biological 'solutions'
 //https://doi.org/10.1016/j.jtbi.2019.02.002
 //Upper Confidence Bounds, Hoeffding's Inequality, UCB, Bayesian UCB, THompson Sampling
@@ -13,13 +17,50 @@ import (
 type NaiveMultiArmedBandit struct {
 	agent.WorldInterface
 
-	armProbs     []float32 //prob of it returning that value
-	armPayout    []float32 //how much you're gonna get
-	utility      []float32 //true expected return
-	runningScore []float32 //a running count of the score of each turn
+	armProbs  []float32 //prob of it returning that value
+	armPayout []float32 //how much you're gonna get
+	utility   []float32 //true expected return
+
+	lastAction int
+	lastReward float32
+}
+
+func (mab *NaiveMultiArmedBandit) InitWorld(details map[string]string) (
+	actionSpace map[string]agent.SpaceSpec,
+	observationSpace map[string]agent.SpaceSpec) {
+
+	discreteActions := agent.SpaceSpec{
+		ContinuousShape: []int{len(mab.armPayout)},
+		Min:             0.0,
+		Max:             1.0,
+	}
+
+	reward := agent.SpaceSpec{
+		ContinuousShape: []int{10},
+		Min:             0.0,
+		Max:             1.0,
+	}
+	return map[string]agent.SpaceSpec{"Output": discreteActions, "Input": reward},
+		map[string]agent.SpaceSpec{"Input": reward, "Output": discreteActions}
+}
+
+// StepWorld steps the index of the current pattern.
+func (mab *NaiveMultiArmedBandit) StepWorld(actions map[string]agent.Action, agentDone bool) (worldDone bool, debug string) {
+	whichAction := actions["Output"].DiscreteOption
+	mab.lastAction = whichAction
+
+	return false, ""
+}
+
+// Observe returns an observation from the cache.
+func (mab *NaiveMultiArmedBandit) Observe(name string) etensor.Tensor {
+	if name == "Input" {
+	}
+	return nil
 }
 
 func (mab *NaiveMultiArmedBandit) New(armProbs, armPayout []float32) (*NaiveMultiArmedBandit, error) {
+	mab.lastAction = -1
 	if len(armPayout) != len(armProbs) {
 		return nil, errors.New("Mismatched length")
 	}
@@ -30,15 +71,27 @@ func (mab *NaiveMultiArmedBandit) New(armProbs, armPayout []float32) (*NaiveMult
 		utility = append(utility, mab.armPayout[i]*mab.armProbs[i])
 	}
 	mab.utility = utility
-	mab.runningScore = make([]float32, len(mab.armProbs))
 	return mab, nil
 }
 
 //assume you get the same payout
-func (mab *NaiveMultiArmedBandit) NewFlatPayout(armProbs []float32) (*NaiveMultiArmedBandit, error) {
+func (mab *NaiveMultiArmedBandit) NewUniformPayout(armProbs []float32) (*NaiveMultiArmedBandit, error) {
 	payouts := make([]float32, len(armProbs))
 	for i := 0; i < len(payouts); i++ {
 		payouts[i] = 1.0
 	}
 	return mab.New(armProbs, payouts)
+}
+
+func (mab NaiveMultiArmedBandit) PullArm(whichArm int) float32 {
+	probs := rand.Float32()
+	threshold := mab.armProbs[whichArm]
+	if probs < threshold {
+		return mab.armPayout[whichArm]
+	}
+	return 0.0
+}
+
+func main() {
+
 }
