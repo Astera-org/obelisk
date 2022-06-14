@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"github.com/rs/cors"
+	"net/http"
+	"net/http/httputil"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/zenazn/goji"
 )
 
 var gConfig Config
-
+var defaultCtx = context.Background()
 var gDatabase Database
 
 /*
@@ -17,24 +22,38 @@ var gDatabase Database
 - Handle requests
 */
 
+// NewThriftHandlerFunc is a function that create a ready to use Apache Thrift Handler function
+func NewThriftHandlerFunc(processor thrift.TProcessor,
+	inPfactory, outPfactory thrift.TProtocolFactory) func(w http.ResponseWriter, r *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("in thrift handler func", r.Body)
+		reqDump, err := httputil.DumpRequest(r, true)
+		if err != nil {
+			fmt.Print(err)
+		}
+		fmt.Printf("REQUEST:\n%s\n", string(reqDump))
+
+		transport := thrift.NewStreamTransport(r.Body, w)
+		processor.Process(defaultCtx, inPfactory.GetProtocol(transport), outPfactory.GetProtocol(transport))
+	}
+}
+
 func main() {
 	gConfig.Load()
 	gDatabase.Connect()
 
-	fmt.Println("listening on", gConfig.SERVER_ADDR)
+	// this is just a hack for localhost testing
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://test.com", "127.0.0.1", "localhost", "localhost:8000", "localhost:9009", "null"},
+	})
+	goji.Use(c.Handler)
+
 	handler := RequestHandler{}
-
-	server := MakeServer(handler)
-
-	server.Serve()
-}
-
-func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
-	transportFactory := thrift.NewTTransportFactory()
-	transport, _ := thrift.NewTServerSocketTimeout(gConfig.SERVER_ADDR, 5)
 	processor := infra.NewJobCzarProcessor(handler)
-	protocolFactory := thrift.NewTSimpleJSONProtocolFactoryConf(nil)
-	//protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
-	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)
-	return server
+	factory := thrift.NewTJSONProtocolFactory()
+
+	goji.Post("/jobczar", NewThriftHandlerFunc(processor, factory, factory))
+
+	goji.Serve()
 }
