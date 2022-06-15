@@ -1,0 +1,8 @@
+go 1.18
+
+use ./emergent
+use ./axon
+use ./models
+use ./worlds
+use ./infra
+use ./infra/gengo/infra
