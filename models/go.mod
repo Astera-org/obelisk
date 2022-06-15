@@ -3,6 +3,7 @@ module github.com/Astera-org/models
 go 1.18
 
 require (
+
 	github.com/anthonynsimon/bild v0.13.0
 	github.com/emer/axon v1.4.12
 	github.com/emer/emergent v1.3.17

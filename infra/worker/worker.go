@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -24,33 +22,41 @@ func main() {
 	var waitSeconds int = 1
 
 	for true {
-		fmt.Println("Fetching job")
 		var job Job
-		err := job.fetchWork()
-		if err != nil {
-			fmt.Println("Fetching err: ", err)
-			increaseBackoff(&waitSeconds)
-			time.Sleep(time.Duration(waitSeconds) * time.Second)
-			continue
+
+		for true {
+			fmt.Println("Fetching job")
+
+			err := job.fetchWork()
+			if err != nil {
+				fmt.Println("Fetching err: ", err)
+				increaseBackoff(&waitSeconds)
+				time.Sleep(time.Duration(waitSeconds) * time.Second)
+				continue
+			} else {
+				waitSeconds = 1
+				break
+			}
+
 		}
+
 		job.setCfgs()
-
-		var waitGroup sync.WaitGroup
-		waitGroup.Add(2)
-		go spawnWorld(&waitGroup, &job)
-		go spawnAgent(&waitGroup, &job)
-
-		waitGroup.Wait()
-
+		job.doJob()
 		job.readResults()
 
-		err = job.returnResults()
-		if err != nil {
-			fmt.Println("Results err: ", err)
-			increaseBackoff(&waitSeconds)
-			time.Sleep(time.Duration(waitSeconds) * time.Second)
-			continue
+		for true {
+			err := job.returnResults()
+			if err != nil {
+				fmt.Println("Results err: ", err)
+				increaseBackoff(&waitSeconds)
+				time.Sleep(time.Duration(waitSeconds) * time.Second)
+				continue
+			} else {
+				waitSeconds = 1
+				break
+			}
 		}
+
 		fmt.Println("job completed")
 	}
 }
@@ -60,46 +66,4 @@ func increaseBackoff(waitSeconds *int) {
 	if *waitSeconds > 60*10 {
 		*waitSeconds = 60 * 10
 	}
-}
-
-func spawnAgent(waitGroup *sync.WaitGroup, job *Job) {
-	agentDesc, exists := gConfig.AGENTS[job.agentName]
-	if exists {
-		_, err := exec.Command(agentDesc.PATH).Output()
-		if err != nil {
-			switch e := err.(type) {
-			case *exec.Error:
-				fmt.Println("failed executing:", err)
-			case *exec.ExitError:
-				fmt.Println("command exit rc =", e.ExitCode())
-			default:
-				panic(err)
-			}
-		}
-	} else {
-		fmt.Println("Unknown Agent: ", job.agentName)
-	}
-
-	waitGroup.Done()
-}
-
-func spawnWorld(waitGroup *sync.WaitGroup, job *Job) {
-	worldDesc, exists := gConfig.WORLDS[job.worldName]
-	if exists {
-		_, err := exec.Command(worldDesc.PATH).Output()
-		if err != nil {
-			switch e := err.(type) {
-			case *exec.Error:
-				fmt.Println("failed executing:", err)
-			case *exec.ExitError:
-				fmt.Println("command exit rc =", e.ExitCode())
-			default:
-				panic(err)
-			}
-		}
-	} else {
-		fmt.Println("Unknown World: ", job.worldName)
-	}
-
-	waitGroup.Done()
 }
