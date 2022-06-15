@@ -194,6 +194,7 @@ func (p *Job) String() string {
 
 // Attributes:
 //  - JobID
+//  - Status
 //  - Cycles
 //  - TimeStart
 //  - TimeStop
@@ -202,12 +203,13 @@ func (p *Job) String() string {
 //  - InstanceName
 type ResultWork struct {
   JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
-  Cycles int32 `thrift:"cycles,2" db:"cycles" json:"cycles"`
-  TimeStart int32 `thrift:"timeStart,3" db:"timeStart" json:"timeStart"`
-  TimeStop int32 `thrift:"timeStop,4" db:"timeStop" json:"timeStop"`
-  Score float64 `thrift:"score,5" db:"score" json:"score"`
-  WorkerName string `thrift:"workerName,6" db:"workerName" json:"workerName"`
-  InstanceName string `thrift:"instanceName,7" db:"instanceName" json:"instanceName"`
+  Status int32 `thrift:"status,2" db:"status" json:"status"`
+  Cycles int32 `thrift:"cycles,3" db:"cycles" json:"cycles"`
+  TimeStart int32 `thrift:"timeStart,4" db:"timeStart" json:"timeStart"`
+  TimeStop int32 `thrift:"timeStop,5" db:"timeStop" json:"timeStop"`
+  Score float64 `thrift:"score,6" db:"score" json:"score"`
+  WorkerName string `thrift:"workerName,7" db:"workerName" json:"workerName"`
+  InstanceName string `thrift:"instanceName,8" db:"instanceName" json:"instanceName"`
 }
 
 func NewResultWork() *ResultWork {
@@ -217,6 +219,10 @@ func NewResultWork() *ResultWork {
 
 func (p *ResultWork) GetJobID() int32 {
   return p.JobID
+}
+
+func (p *ResultWork) GetStatus() int32 {
+  return p.Status
 }
 
 func (p *ResultWork) GetCycles() int32 {
@@ -296,7 +302,7 @@ func (p *ResultWork) Read(ctx context.Context, iprot thrift.TProtocol) error {
         }
       }
     case 5:
-      if fieldTypeId == thrift.DOUBLE {
+      if fieldTypeId == thrift.I32 {
         if err := p.ReadField5(ctx, iprot); err != nil {
           return err
         }
@@ -306,7 +312,7 @@ func (p *ResultWork) Read(ctx context.Context, iprot thrift.TProtocol) error {
         }
       }
     case 6:
-      if fieldTypeId == thrift.STRING {
+      if fieldTypeId == thrift.DOUBLE {
         if err := p.ReadField6(ctx, iprot); err != nil {
           return err
         }
@@ -318,6 +324,16 @@ func (p *ResultWork) Read(ctx context.Context, iprot thrift.TProtocol) error {
     case 7:
       if fieldTypeId == thrift.STRING {
         if err := p.ReadField7(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 8:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField8(ctx, iprot); err != nil {
           return err
         }
       } else {
@@ -353,7 +369,7 @@ func (p *ResultWork)  ReadField2(ctx context.Context, iprot thrift.TProtocol) er
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 2: ", err)
 } else {
-  p.Cycles = v
+  p.Status = v
 }
   return nil
 }
@@ -362,7 +378,7 @@ func (p *ResultWork)  ReadField3(ctx context.Context, iprot thrift.TProtocol) er
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 3: ", err)
 } else {
-  p.TimeStart = v
+  p.Cycles = v
 }
   return nil
 }
@@ -371,25 +387,25 @@ func (p *ResultWork)  ReadField4(ctx context.Context, iprot thrift.TProtocol) er
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 4: ", err)
 } else {
-  p.TimeStop = v
+  p.TimeStart = v
 }
   return nil
 }
 
 func (p *ResultWork)  ReadField5(ctx context.Context, iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadDouble(ctx); err != nil {
+  if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 5: ", err)
 } else {
-  p.Score = v
+  p.TimeStop = v
 }
   return nil
 }
 
 func (p *ResultWork)  ReadField6(ctx context.Context, iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadString(ctx); err != nil {
+  if v, err := iprot.ReadDouble(ctx); err != nil {
   return thrift.PrependError("error reading field 6: ", err)
 } else {
-  p.WorkerName = v
+  p.Score = v
 }
   return nil
 }
@@ -397,6 +413,15 @@ func (p *ResultWork)  ReadField6(ctx context.Context, iprot thrift.TProtocol) er
 func (p *ResultWork)  ReadField7(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 7: ", err)
+} else {
+  p.WorkerName = v
+}
+  return nil
+}
+
+func (p *ResultWork)  ReadField8(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 8: ", err)
 } else {
   p.InstanceName = v
 }
@@ -414,6 +439,7 @@ func (p *ResultWork) Write(ctx context.Context, oprot thrift.TProtocol) error {
     if err := p.writeField5(ctx, oprot); err != nil { return err }
     if err := p.writeField6(ctx, oprot); err != nil { return err }
     if err := p.writeField7(ctx, oprot); err != nil { return err }
+    if err := p.writeField8(ctx, oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(ctx); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -433,62 +459,72 @@ func (p *ResultWork) writeField1(ctx context.Context, oprot thrift.TProtocol) (e
 }
 
 func (p *ResultWork) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "cycles", thrift.I32, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:cycles: ", p), err) }
-  if err := oprot.WriteI32(ctx, int32(p.Cycles)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.cycles (2) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "status", thrift.I32, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:status: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.Status)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.status (2) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:cycles: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:status: ", p), err) }
   return err
 }
 
 func (p *ResultWork) writeField3(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "timeStart", thrift.I32, 3); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:timeStart: ", p), err) }
-  if err := oprot.WriteI32(ctx, int32(p.TimeStart)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.timeStart (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "cycles", thrift.I32, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:cycles: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.Cycles)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.cycles (3) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:timeStart: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:cycles: ", p), err) }
   return err
 }
 
 func (p *ResultWork) writeField4(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "timeStop", thrift.I32, 4); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:timeStop: ", p), err) }
-  if err := oprot.WriteI32(ctx, int32(p.TimeStop)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.timeStop (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "timeStart", thrift.I32, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:timeStart: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.TimeStart)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.timeStart (4) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:timeStop: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:timeStart: ", p), err) }
   return err
 }
 
 func (p *ResultWork) writeField5(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "score", thrift.DOUBLE, 5); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:score: ", p), err) }
-  if err := oprot.WriteDouble(ctx, float64(p.Score)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.score (5) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "timeStop", thrift.I32, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:timeStop: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.TimeStop)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.timeStop (5) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:score: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:timeStop: ", p), err) }
   return err
 }
 
 func (p *ResultWork) writeField6(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "workerName", thrift.STRING, 6); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:workerName: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.WorkerName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.workerName (6) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "score", thrift.DOUBLE, 6); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:score: ", p), err) }
+  if err := oprot.WriteDouble(ctx, float64(p.Score)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.score (6) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 6:workerName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 6:score: ", p), err) }
   return err
 }
 
 func (p *ResultWork) writeField7(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "instanceName", thrift.STRING, 7); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:instanceName: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.InstanceName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.instanceName (7) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "workerName", thrift.STRING, 7); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:workerName: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.WorkerName)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.workerName (7) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:instanceName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:workerName: ", p), err) }
+  return err
+}
+
+func (p *ResultWork) writeField8(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "instanceName", thrift.STRING, 8); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 8:instanceName: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.InstanceName)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.instanceName (8) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 8:instanceName: ", p), err) }
   return err
 }
 
@@ -499,6 +535,7 @@ func (p *ResultWork) Equals(other *ResultWork) bool {
     return false
   }
   if p.JobID != other.JobID { return false }
+  if p.Status != other.Status { return false }
   if p.Cycles != other.Cycles { return false }
   if p.TimeStart != other.TimeStart { return false }
   if p.TimeStop != other.TimeStop { return false }
