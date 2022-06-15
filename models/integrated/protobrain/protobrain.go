@@ -83,14 +83,17 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
-	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
-	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
+	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
+	if !ok {
+		panic("PlusPhase not found")
+	}
+	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
+	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
 		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
 			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return ss.WorldEnv.Observe(name)
@@ -99,13 +102,13 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	})
 
-	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
+	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
 	fmt.Println(manager.DocString())
 
-	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("Sim:Trial:QuickScore", func() {
+	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("QuickScore", func() {
 		loss := ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr()
 		s := fmt.Sprintf("%f", loss)
 		fmt.Println("the pctuniterror is " + s)
