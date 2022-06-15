@@ -46,7 +46,7 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 	println("SUBMIT RESULT")
 
 	if result.Status == goodJob {
-		sql := fmt.Sprintf("UPDATE jobs set cycles=%d,time_start=%d,time_end=%d,score=%f where job_id=%d", result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,time_start=%d,time_end=%d,score=%f where job_id=%d", result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)
