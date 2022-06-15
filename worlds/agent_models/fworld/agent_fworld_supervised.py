@@ -1,15 +1,11 @@
 # TODO(michael): Move this into models/ and fix the Python import issues
 
-import argparse
-import random
+
 from typing import Any, Dict, List, AnyStr
 import math
 import numpy as np
-from itertools import count
-from collections import namedtuple
 import os
 
-import wandb
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -27,6 +23,9 @@ from worlds.agent_models.fworld.config_experiment import ConfigFWorldVariables
 from worlds.agent_models.fworld.config_experiment import file_to_fworldconfig
 from worlds.agent_models.fworld.config_experiment import ConfigRuns
 from worlds.agent_models.fworld import fworld_metrics
+
+
+import pickle
 
 SEED = 1
 torch.manual_seed(SEED)
@@ -105,7 +104,7 @@ def select_action(model:nn.Module, state:np.array):
     return action.item()
 
 
-def supervised_finish_episode(model:nn.Module, optimizer:optim.Optimizer):
+def supervised_finish_episode(model:Policy, optimizer:optim.Optimizer):
     current_actions =model.save_full_actions[0].float() #torch.tensor(model.save_full_actions)
     current_actions = current_actions.view(1,current_actions.shape[-1])
     best_actions  = torch.tensor([model.best_action[-1]]).long()
@@ -131,6 +130,8 @@ class FWorldHandler:
         self._train_runs = train_runs
         self._max_runs = max_runs
         self._infer_offpolicy = infer_offpolicy
+
+        self.stored_observations = []
 
     def set_mode_to_send(self,use_heuristic:bool):
         self._use_heuristic = use_heuristic
@@ -169,6 +170,7 @@ class FWorldHandler:
         # TODO Handle n-dimensional shapes
         action = select_action(self.model,world_state)
 
+        self.stored_observations.append({"observations":observations,"chosen_action":action})
         if (i_episode>1):
             self.model.chosen_action_history.append(action)
             self.model.store_history.append(world_state)
@@ -183,17 +185,26 @@ class FWorldHandler:
             self.set_mode_to_send(use_heuristic=True)
 
         #log data at end of training, instead of online, and then
-        if i_episode==(self._max_runs - self._train_runs):
+        if i_episode==(self._max_runs):
             self.log_results("train",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
             self.model.chosen_action_history = []
             self.model.best_action_history = []
             self.model.store_history = []
             self.model.rewards = []
 
+            #store a small log of results
+            file = open('fworld_{}.pkl'.format(wandb.run.name), 'wb')
+            pickle.dump(self.stored_observations, file)
+            file.close()
+
+
+
         if i_episode==self._max_runs:
-            self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
+                    self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
 
         return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
+
+
 
 
     def log_results(self, title:str, predicted_actions:List[int],heuristic_actions:List[int],input_space:List[int], rewards:List[float]):
@@ -227,10 +238,11 @@ class FWorldHandler:
             del actions["bins"]
             del actions["rewards"]
 
-            wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
+            #wandb.log({"actions":actions,"inputs":history, "rewards":rewards}) #so can replicate results if neccesary
 
 
 if __name__ == '__main__':
+
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
     config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
