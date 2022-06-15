@@ -6,14 +6,12 @@ package main
 
 import (
 	"fmt"
-
-	"github.com/emer/emergent/emer"
-
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"
+	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
