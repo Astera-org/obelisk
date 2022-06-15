@@ -42,7 +42,9 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 	return &job, nil
 }
 
+
 func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
+
 	println("SUBMIT RESULT")
 
 	if result.Status == goodJob {
@@ -89,6 +91,7 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 
 // only allow you to delete unservered up jobs
 func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
+
 	sql := fmt.Sprintf("DELETE from jobs where job_id=%d and status=0", jobID)
 	_, err := gDatabase.db.Exec(sql)
 	if err != nil {
