@@ -809,9 +809,8 @@ func (ss *Sim) NewRun() {
 // TestAll runs through the full set of testing items
 func (ss *Sim) TestAll() {
 	ss.Envs.ByMode(etime.Test).Init(0)
-	ss.Loops.Mode = etime.Test
 	ss.Stats.ActRFs.Reset()
-	ss.Loops.Run()
+	ss.Loops.ResetAndRun(etime.Test)
 	ss.Loops.Mode = etime.Train // Important to reset Mode back to Train because this is called from within the Train Run.
 	ss.Stats.ActRFsAvgNorm()
 	ss.GUI.ViewActRFs(&ss.Stats.ActRFs)
@@ -820,7 +819,7 @@ func (ss *Sim) TestAll() {
 
 // RunTestAll runs through the full set of testing items, has stop running = false at end -- for gui
 func (ss *Sim) RunTestAll() {
-	ss.Logs.ResetLog(etime.Test, etime.Epoch) // only show last row
+	// ss.Logs.ResetLog(etime.Test, etime.Epoch) // only show last row
 	ss.GUI.StopNow = false
 	ss.TestAll()
 	ss.GUI.Stopped()
@@ -1037,10 +1036,13 @@ func (ss *Sim) ConfigLogs() {
 	ss.Logs.AddStatStringItem(etime.AllModes, etime.AllTimes, "RunName")
 	ss.Logs.AddStatStringItem(etime.AllModes, etime.Trial, "TrlCat", "TrialName", "TrlResp")
 
-	ss.Logs.AddStatAggItem("CorSim", "TrlCorSim", true, etime.Run, etime.Epoch, etime.Trial)
-	ss.Logs.AddStatAggItem("UnitErr", "TrlUnitErr", false, etime.Run, etime.Epoch, etime.Trial)
+	ss.Logs.AddStatAggItem("CorSim", "TrlCorSim", etime.Run, etime.Epoch, etime.Trial)
+	ss.Logs.AddStatAggItem("UnitErr", "TrlUnitErr", etime.Run, etime.Epoch, etime.Trial)
 	ss.Logs.AddErrStatAggItems("TrlErr", etime.Run, etime.Epoch, etime.Trial)
 	ss.Logs.AddPerTrlMSec("PerTrlMSec", etime.Run, etime.Epoch, etime.Trial)
+
+	// Copy over Testing items
+	ss.Logs.AddCopyFromFloatItems(etime.Train, etime.Epoch, etime.Test, etime.Epoch, "Tst", "CorSim", "UnitErr", "PctCor", "PctErr", "PctErr2", "DecErr", "DecErr2", "FirstErr", "FirstErr2")
 
 	ss.ConfigLogItems()
 	ss.ConfigActRFs()
@@ -1051,6 +1053,8 @@ func (ss *Sim) ConfigLogs() {
 	axon.LogAddLayerGeActAvgItems(&ss.Logs, ss.Net.AsAxon(), etime.Test, etime.Cycle)
 	ss.Logs.AddLayerTensorItems(ss.Net, "Act", etime.Test, etime.Trial, "Target")
 	ss.Logs.AddLayerTensorItems(ss.Net, "Act", etime.AllModes, etime.Cycle, "Target")
+
+	ss.Logs.PlotItems("CorSim", "PctErr", "PctErr2", "DecErr", "DecErr2")
 
 	ss.Logs.CreateTables()
 	ss.Logs.SetContext(&ss.Stats, ss.Net.AsAxon())
@@ -1438,7 +1442,7 @@ func (ss *Sim) CmdArgs() {
 	ss.Loops.GetLoop(etime.Train, etime.Epoch).Counter.Max = ss.Args.Int("epochs")
 
 	ss.NewRun()
-	ss.Loops.Run()
+	ss.Loops.Run(etime.Train)
 
 	ss.Logs.CloseLogFiles()
 

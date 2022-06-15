@@ -234,7 +234,7 @@ func (ui *AutoUI) AddServerButton(serverRunFunc func()) {
 // RunWithoutGui runs the model without any GUI.
 func (ui *AutoUI) RunWithoutGui() {
 	// TODO Something something command line here?
-	ui.Looper.Run()
+	ui.Looper.Run(etime.Train)
 }
 
 /////////////

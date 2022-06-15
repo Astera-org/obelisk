@@ -3,17 +3,17 @@ module github.com/Astera-org/models
 go 1.18
 
 require (
-	github.com/anthonynsimon/bild v0.13.0 // indirect
-	github.com/emer/axon v1.4.9
-	github.com/emer/emergent v1.3.14
+	github.com/anthonynsimon/bild v0.13.0
+	github.com/emer/axon v1.4.12
+	github.com/emer/emergent v1.3.17
 	github.com/emer/empi v1.0.13
 	github.com/emer/etable v1.1.7
-	github.com/emer/leabra v1.1.48
+	github.com/emer/leabra v1.2.0
 	github.com/emer/vision v1.1.15
 	github.com/goki/gi v1.3.4
 	github.com/goki/ki v1.1.8
 	github.com/goki/mat32 v1.0.12
-	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
+	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
 	golang.org/x/tools v0.1.10 // indirect
 )
@@ -39,8 +39,6 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
-	github.com/emer/leabra v1.2.0 // indirect
-	github.com/emer/vision v1.1.15 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect
