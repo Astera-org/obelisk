@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/rs/cors"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/rs/cors"
 	"github.com/zenazn/goji"
 )
 
