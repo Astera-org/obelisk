@@ -93,15 +93,12 @@ func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool,
 }
 
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
-	//rows, err := gDatabase.db.Query(sql)
-	//if err != nil {
-	//	fmt.Println(err)
-	//	return "error", errors.New("db error")
-	//}
-
-	return "I love puppies!", nil
-
-	//return printDBResult(rows), nil
+	rows, err := gDatabase.db.Query(sql)
+	if err != nil {
+		fmt.Println(err)
+		return "error", errors.New("db error")
+	}
+	return printDBResult(rows), nil
 }
 
 func printDBResult(rows *sql.Rows) string {
