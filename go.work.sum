@@ -1,5 +1,4 @@
-github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I=
-github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/emer/axon v1.3.37/go.mod h1:W0Gyk94vs1UGFeUiH/bNtzy0ELwu8oM75ZoakIW8aQc=
+github.com/emer/emergent v1.3.3/go.mod h1:Q7z1k5Z7nXcy75zU04Qj3Bi+OH/PdPl2xqOS9dM9VMQ=
 github.com/go-sql-driver/mysql v1.4.0 h1:7LxgVwFb2hIQtMm87NdgAVfXjnt4OePseqT1tKx+opk=
 github.com/pkg/profile v1.2.1 h1:F++O52m40owAmADcojzM+9gyjmMOY/T4oYJkgFDH8RE=
