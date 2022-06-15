@@ -58,6 +58,7 @@ func (job *Job) createJobDir() {
 
 func (job *Job) setCfgs() {
 	// TODO
+
 }
 
 // TODO if result file isn't there tell server it failed
