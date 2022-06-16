@@ -60,12 +60,9 @@ if __name__ == '__main__':
 
 
 
-    temp = DatasetFWorld(data,None,None)
-    dataloader_fworld = DataLoader(temp,batch_size=20, num_workers=0, shuffle=True)
-    example = next(iter(dataloader_fworld))
+    dataset_fworld = DatasetFWorld(data,None,None)
 
-
-    for j in range(config_run.max_runs):
-        dataloader_fworld = DataLoader(temp,batch_size=20, num_workers=0, shuffle=True)
+    for j in range(config_run.max_epochs):
+        dataloader_fworld = DataLoader(dataset_fworld,batch_size=20, num_workers=0, shuffle=True)
         for i, batch in enumerate(dataloader_fworld):
-            print(batch)
+            print("OK")

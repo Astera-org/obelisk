@@ -4,3 +4,4 @@ max_runs: 10001
 description: "a simple model using inputs and outputs from fworld in a bp network"
 hidden_size: 125
 infer_offpolicy: False
+max_epochs: 10

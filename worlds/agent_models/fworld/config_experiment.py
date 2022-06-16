@@ -37,6 +37,7 @@ class ConfigRuns():
     description: str
     hidden_size: float = 125.0
     infer_offpolicy: bool = True
+    max_epochs: int = field(init=False, default=10)
 
     @staticmethod
     def file_to_configrun(path):
