@@ -1,6 +1,8 @@
 package main
 
 import (
+	"github.com/emer/axon/axon"
+	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/etime"
 	"testing"
 )
@@ -13,11 +15,11 @@ func TestSupervised(t *testing.T) {
 	sim.Loops = sim.ConfigLoops()
 	sim.Loops.GetLoop(etime.Train, etime.Epoch).Counter.Max = 1
 
-	//userInterface := egui.UserInterface{
-	//	Looper:                    sim.Loops,
-	//	Network:                   sim.Net.EmerNet,
-	//	AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
-	//}
-	//userInterface.AddDefaultLogging()
-	//userInterface.RunWithoutGui()
+	userInterface := egui.UserInterface{
+		Looper:                    sim.Loops,
+		Network:                   sim.Net.EmerNet,
+		AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
+	}
+	userInterface.AddDefaultLogging()
+	userInterface.RunWithoutGui()
 }
