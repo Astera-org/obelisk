@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -47,8 +48,23 @@ func main() {
 	server := MakeServer(handler)
 
 	go httpServer(&handler)
+	go server.Serve()
 
-	server.Serve()
+	for true {
+		var command string
+		fmt.Scan(&command)
+		switch command {
+		case "q":
+			os.Exit(0)
+		default:
+			printHelp()
+		}
+	}
+}
+
+func printHelp() {
+	fmt.Println("Valid Commands:")
+	fmt.Println("q: quit")
 }
 
 func httpServer(handler *RequestHandler) {
