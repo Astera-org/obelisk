@@ -13,7 +13,7 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     agent_param LONGBLOB, world_param LONGBLOB, 
     bail_threshold DOUBLE DEFAULT 0, 
     worker_name VARCHAR(10), instance_name VARCHAR(10),
-    time_start TIMESTAMP DEFAULT 0, time_end TIMESTAMP DEFAULT 0,
+    time_handed TIMESTAMP DEFAULT 0, time_start TIMESTAMP DEFAULT 0, time_end TIMESTAMP DEFAULT 0,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
 
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_name VARCHAR(10));

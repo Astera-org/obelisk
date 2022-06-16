@@ -34,8 +34,7 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 		return &job, errors.New("db error")
 	}
 
-	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s' where job_id=%d", workerName, instanceName, job.JobID)
-	println(sql)
+	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d", workerName, instanceName, job.JobID)
 	_, err = gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
