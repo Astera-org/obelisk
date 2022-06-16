@@ -2,7 +2,7 @@ import dataclasses
 import os
 from dataclasses import dataclass,asdict
 from dataclasses import field
-from typing import Any, Dict, List, AnyStr
+from typing import Any, Dict, List, AnyStr, Optional
 import yaml
 import copy
 import numpy as np
@@ -37,7 +37,7 @@ class ConfigRuns():
     description: str
     hidden_size: float = 125.0
     infer_offpolicy: bool = True
-    max_epochs: int = field(init=False, default=10)
+    max_epochs: Optional[int] = field(default=-1)
 
     @staticmethod
     def file_to_configrun(path):
