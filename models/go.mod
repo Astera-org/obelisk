@@ -3,7 +3,6 @@ module github.com/Astera-org/models
 go 1.18
 
 require (
-
 	github.com/anthonynsimon/bild v0.13.0
 	github.com/emer/axon v1.4.12
 	github.com/emer/emergent v1.3.17
@@ -24,6 +23,7 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/apache/thrift v0.16.0
 	github.com/pkg/profile v1.6.0
+	github.com/stretchr/testify v1.7.0
 )
 
 require (
@@ -39,6 +39,7 @@ require (
 	github.com/apache/arrow/go/arrow v0.0.0-20211112161151-bc219186db40 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
@@ -62,6 +63,7 @@ require (
 	github.com/iancoleman/strcase v0.2.0 // indirect
 	github.com/jinzhu/copier v0.3.5 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/srwiley/rasterx v0.0.0-20220128185129-2efea2b9ea41 // indirect
 	github.com/srwiley/scanx v0.0.0-20190309010443-e94503791388 // indirect
 	golang.org/x/exp v0.0.0-20220518171630-0b5c67f07fdf // indirect
@@ -71,4 +73,5 @@ require (
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	gonum.org/v1/gonum v0.11.0 // indirect
 	gonum.org/v1/plot v0.11.0 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )

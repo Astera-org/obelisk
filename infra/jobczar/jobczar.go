@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -34,6 +36,8 @@ func main() {
 	gConfig.Load()
 	gDatabase.Connect()
 
+	fmt.Println("listening on", gConfig.SERVER_ADDR)
+
 	// this is just a hack for localhost testing
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"http://test.com", "127.0.0.1", "localhost", "localhost:8000", "localhost:9009", "null"},
@@ -41,10 +45,42 @@ func main() {
 	goji.Use(c.Handler)
 
 	handler := RequestHandler{}
+	server := MakeServer(handler)
+
+	go httpServer(&handler)
+	go server.Serve()
+
+	for true {
+		var command string
+		fmt.Scan(&command)
+		switch command {
+		case "q":
+			os.Exit(0)
+		default:
+			printHelp()
+		}
+	}
+}
+
+func printHelp() {
+	fmt.Println("Valid Commands:")
+	fmt.Println("q: quit")
+}
+
+func httpServer(handler *RequestHandler) {
 	processor := infra.NewJobCzarProcessor(handler)
 	factory := thrift.NewTJSONProtocolFactory()
 
 	goji.Post("/jobczar", NewThriftHandlerFunc(processor, factory, factory))
 
 	goji.Serve()
+}
+
+func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
+	transportFactory := thrift.NewTBufferedTransportFactory(8192)
+	transport, _ := thrift.NewTServerSocket(gConfig.SERVER_ADDR)
+	processor := infra.NewJobCzarProcessor(handler)
+	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
+	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)
+	return server
 }
