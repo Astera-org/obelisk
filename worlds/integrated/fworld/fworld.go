@@ -115,7 +115,7 @@ type FWorld struct {
 	Scene         env.Ctr                     `view:"arbitrary counter incrementing over a coherent sequence of events: e.g., approaching food -- increments at consumption"`
 	Episode       env.Ctr                     `view:"arbitrary counter incrementing over scenes within larger episode: feeding, drinking, exploring, etc"`
 
-	UseGUI bool `view:"arbitrary counter incrementing over scenes within larger episode: feeding, drinking, exploring, etc"`
+	UseGUI bool `view:"determines if gui is going to be used or not"`
 }
 
 var KiT_FWorld = kit.Types.AddType(&FWorld{}, FWorldProps)
@@ -1559,7 +1559,6 @@ func (ev *FWorld) ConfigWorldView(tg *etview.TensorGrid) {
 }
 
 func connectAndQueryAgent(ev *FWorld) {
-	//time.Sleep(20 * time.Second)
 
 	agent := network.MakeClient()
 	var defaultCtx = context.Background()
