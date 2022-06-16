@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/rs/cors"
 	"net/http"
-	"net/http/httputil"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/rs/cors"
 	"github.com/zenazn/goji"
 )
 
@@ -27,13 +25,6 @@ func NewThriftHandlerFunc(processor thrift.TProcessor,
 	inPfactory, outPfactory thrift.TProtocolFactory) func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("in thrift handler func", r.Body)
-		reqDump, err := httputil.DumpRequest(r, true)
-		if err != nil {
-			fmt.Print(err)
-		}
-		fmt.Printf("REQUEST:\n%s\n", string(reqDump))
-
 		transport := thrift.NewStreamTransport(r.Body, w)
 		processor.Process(defaultCtx, inPfactory.GetProtocol(transport), outPfactory.GetProtocol(transport))
 	}
