@@ -13,11 +13,11 @@ func TestSupervised(t *testing.T) {
 	sim.Loops = sim.ConfigLoops()
 	sim.Loops.GetLoop(etime.Train, etime.Epoch).Counter.Max = 1
 
-	//userInterface := egui.UserInterface{
-	//	Looper:                    sim.Loops,
-	//	Network:                   sim.Net.EmerNet,
-	//	AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
-	//}
-	//userInterface.AddDefaultLogging()
-	//userInterface.RunWithoutGui()
+	userInterface := egui.UserInterface{
+		Looper:                    sim.Loops,
+		Network:                   sim.Net.EmerNet,
+		AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
+	}
+	userInterface.AddDefaultLogging()
+	userInterface.RunWithoutGui()
 }
