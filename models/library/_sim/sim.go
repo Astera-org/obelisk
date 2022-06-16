@@ -1,6 +1,9 @@
 package sim
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/elog"
@@ -11,8 +14,6 @@ import (
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etable"
-	"math/rand"
-	"time"
 )
 
 // Sim encapsulates the entire simulation model, and we define all the

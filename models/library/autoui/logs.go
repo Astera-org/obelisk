@@ -36,7 +36,7 @@ func AddCommonLogItemsForOutputLayers(ui *AutoUI) {
 		// TODO These should be computed at the Trial, not Cycle level
 		baseComputeLevel := etime.Trial
 		found := false
-		cosDiffMap := elog.WriteMap{}
+		corSimMap := elog.WriteMap{}
 		pctErrMap := elog.WriteMap{}
 		trlCorrMap := elog.WriteMap{}
 		for m, st := range ui.Looper.Stacks {
@@ -45,8 +45,8 @@ func AddCommonLogItemsForOutputLayers(ui *AutoUI) {
 				t := st.Order[i]
 				if st.Order[iter] == baseComputeLevel {
 					found = true // Subsequent layers can do aggregation.
-					cosDiffMap[etime.Scope(m, t)] = func(ctx *elog.Context) {
-						ctx.SetFloat32(out.CosDiff.Cos)
+					corSimMap[etime.Scope(m, t)] = func(ctx *elog.Context) {
+						ctx.SetFloat32(out.CorSim.Cor)
 					}
 					pctErrMap[etime.Scope(m, t)] = func(ctx *elog.Context) {
 						ctx.SetFloat64(out.PctUnitErr())
@@ -61,7 +61,7 @@ func AddCommonLogItemsForOutputLayers(ui *AutoUI) {
 					}
 				} else if found {
 					// All other, less frequent, timescales are an aggregate
-					for _, wm := range []elog.WriteMap{cosDiffMap, pctErrMap, trlCorrMap} {
+					for _, wm := range []elog.WriteMap{corSimMap, pctErrMap, trlCorrMap} {
 						wm[etime.Scope(m, t)] = func(ctx *elog.Context) {
 							ctx.SetAgg(ctx.Mode, st.Order[i+1], agg.AggMean)
 						}
@@ -72,12 +72,12 @@ func AddCommonLogItemsForOutputLayers(ui *AutoUI) {
 
 		// Add it to the list.
 		ui.Logs.AddItem(&elog.Item{
-			Name:   olnm + "CosSim",
+			Name:   olnm + "CorSim",
 			Type:   etensor.FLOAT64,
 			Plot:   elog.DTrue,
 			Range:  minmax.F64{Min: 0, Max: 1},
 			FixMax: elog.DTrue,
-			Write:  cosDiffMap})
+			Write:  corSimMap})
 		ui.Logs.AddItem(&elog.Item{
 			Name:  olnm + "PctErr",
 			Type:  etensor.FLOAT64,
