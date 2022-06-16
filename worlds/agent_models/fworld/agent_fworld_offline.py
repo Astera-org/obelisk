@@ -7,6 +7,8 @@ import torch.nn.functional as F
 import torch.optim as optim
 from worlds.agent_models.fworld import agent_fworld_supervised as agent_fworld
 
+from worlds.agent_models.fworld import fworld_metrics
+
 
 #ablate each part
 #run N iterations
@@ -43,7 +45,7 @@ class DatasetFWorld(Dataset):
         target_value = dict()
         for name in self._feature_names:
             raw_values[name] = np.array(elements[name].values).T #so shapes are proper format
-        target_value[self._relevant_target_name] = elements[name].values
+        target_value[self._relevant_target_name] = np.array(elements[self._relevant_target_name].values).T
         return raw_values,target_value
 
 class PolicyDynamicOffline(agent_fworld.PolicyDynamicInput):
@@ -67,23 +69,52 @@ if __name__ == '__main__':
     with open(datapath, 'rb') as f:
         data = pickle.load(f)
 
+
+
+
+
+
     all_input_information:List[ConfigETensorVariable] = [config_fworld.object_seen,config_fworld.visionwide,
                                                          config_fworld.visionlocal,config_fworld.internal_state,
                                                          config_fworld.sensory_local2,config_fworld.sensory_local]
 
-    model_dync:PolicyDynamicOffline = PolicyDynamicOffline(all_input_information,
-                                    config_run.hidden_size)
-    optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.00001)
+    config_run.max_epochs = 5
+    for feature_index in range(len(all_input_information)):
+        model_dync:PolicyDynamicOffline = PolicyDynamicOffline(all_input_information,
+                                        config_run.hidden_size)
+        optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.0005)
 
-    dataset_fworld = DatasetFWorld(data,[i.name for i in all_input_information],"Heuristic")
+        dataset_fworld = DatasetFWorld(data,[i.name for i in all_input_information],"Heuristic")
 
 
 
-for j in range(config_run.max_epochs):
-        dataloader_fworld = DataLoader(dataset_fworld,batch_size=20, num_workers=0, shuffle=True)
-        for i, batch in enumerate(dataloader_fworld):
-            formatted_tensors = model_dync.get_worldstate_tensors(batch)
 
-            prediction = model_dync(formatted_tensors.float())
+        for j in range(config_run.max_epochs):
+                total_error = 0
+                dataloader_fworld = DataLoader(dataset_fworld,batch_size=50, num_workers=0, shuffle=True)
+                chosen_action_history = []
+                best_action_history = []
+                for i, batch in enumerate(dataloader_fworld):
+                    formatted_tensors_features = model_dync.get_worldstate_tensors(batch[0])
+                    ground_truth = batch[1]["Heuristic"]
+                    predictions = model_dync(formatted_tensors_features.float())
+                    best_actions  = ground_truth.flatten().long()
+                    loss = nn.CrossEntropyLoss()
+                    the_error:torch.Tensor = loss(predictions, best_actions)
+                    the_error.backward()
+                    optimizer_o.step()
+                    optimizer_o.zero_grad()
+                    total_error += the_error.detach()
 
-            print("OK")
+                    chosen_action_history.append(torch.argmax(predictions, 1).detach().numpy())
+                    best_action_history.append(best_actions.detach().numpy())
+
+                np_chosen = np.concatenate(chosen_action_history)
+                np_best = np.concatenate(best_action_history)
+
+                kl_divergence:float = fworld_metrics.calc_kl(np_chosen,np_best)
+                f1_score:float = fworld_metrics.calc_precision(np_chosen,np_best)
+
+                print("kl {:.2f}\nf1 {:.2f}".format(kl_divergence,f1_score))
+
+            print(fworld_metrics.calc_confusion_matrix(np_chosen,np_best,["f","l","r","e","d"]))
