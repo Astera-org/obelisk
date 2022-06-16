@@ -1,9 +1,5 @@
 github.com/emer/axon v1.3.37/go.mod h1:W0Gyk94vs1UGFeUiH/bNtzy0ELwu8oM75ZoakIW8aQc=
-github.com/emer/axon v1.4.0/go.mod h1:OUKYd2vrMML/IkHO3lHll/nm2pG6kcqtsWAlE4U36WA=
-github.com/emer/emergent v1.3.4/go.mod h1:+PHDLaun0mVbP0x+4N3JGnhnaHwuA6QmiUjy3qiWUJQ=
-github.com/emer/etable v1.1.3 h1:nEPauPQkbrc6OhxweHFsu2TcXMjOhAlJBB98cgmYAxA=
-github.com/emer/etable v1.1.3/go.mod h1:Q64jw7+FfuPIKGyODP+V94QsOtAigLEMM6VdKJLKme0=
+github.com/emer/emergent v1.3.12/go.mod h1:mH8Anz15ohliMvYD6+njtMVs92imTn5T8uMfasP4ZEA=
+github.com/emer/etable v1.1.6/go.mod h1:IP1kIRXNm2lDmHPaCFQBq7HGNEo/GZ5z+32A/IIz2cE=
 github.com/go-sql-driver/mysql v1.4.0 h1:7LxgVwFb2hIQtMm87NdgAVfXjnt4OePseqT1tKx+opk=
-github.com/goki/kigen v1.0.1 h1:txBgu8SXsPKDkHoSD8elob85bWjy6TEreVS3TYMz7pU=
-github.com/goki/kigen v1.0.1/go.mod h1:w8km7SXtEcXXiAs0HbJyIrLq05THTIc1SdFyce3cNdw=
 github.com/pkg/profile v1.2.1 h1:F++O52m40owAmADcojzM+9gyjmMOY/T4oYJkgFDH8RE=
