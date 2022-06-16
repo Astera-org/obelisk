@@ -5,4 +5,3 @@ use ./axon
 use ./models
 use ./worlds
 use ./infra
-use ./infra/gengo/infra
