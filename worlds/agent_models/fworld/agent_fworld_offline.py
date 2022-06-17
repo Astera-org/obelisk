@@ -1,33 +1,28 @@
 #a empirical way to analyze performance over time
 #this should overfit, and is more to analyze the efficiacy of different variable inputs
-import torch
+import wandb
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
-from worlds.agent_models.fworld import agent_fworld_supervised as agent_fworld
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
 
-from worlds.agent_models.fworld import fworld_metrics
-
-
-#ablate each part
-#run N iterations
-#save actions at a given point
-
-from typing import List
 
 import pickle
 import os
 import numpy as np
+from copy import copy
+
 from typing import Any, Dict, List, AnyStr
 from worlds.agent_models.fworld.config_experiment import ConfigETensorVariable
 from worlds.agent_models.fworld.config_experiment import ConfigFWorldVariables
 from worlds.agent_models.fworld.config_experiment import file_to_fworldconfig
-from worlds.agent_models.fworld.config_experiment import ConfigRuns
+from worlds.agent_models.fworld.config_experiment import ConfigRunsOffline
+from worlds.agent_models.fworld import agent_fworld_supervised as agent_fworld
+from worlds.agent_models.fworld import fworld_metrics
 
-from torch.utils.data import DataLoader
-from torch.utils.data import Dataset
 
+#todo add clearer documentation about run process and functions
 class DatasetFWorld(Dataset):
     def __init__(self, fworld_features:List[dict], feature_names:List[str], target_name:str):
         self._fworld_features:List[dict] = fworld_features
@@ -61,60 +56,65 @@ class PolicyDynamicOffline(agent_fworld.PolicyDynamicInput):
 
 
 if __name__ == '__main__':
+
+
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
-    config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
+    config_run: ConfigRunsOffline = ConfigRunsOffline.file_to_configrun(os.path.join("config","run_config_offline.yaml"))
 
-    datapath:str = "fworld_onpolicysupervised-2ets9y8o.pkl"
     data:dict = None
-    with open(datapath, 'rb') as f:
+    with open(config_run.datapath, 'rb') as f:
         data = pickle.load(f)
-
-
-
-
-
 
     all_input_information:List[ConfigETensorVariable] = [config_fworld.object_seen,config_fworld.visionwide,
                                                          config_fworld.visionlocal,config_fworld.internal_state,
                                                          config_fworld.sensory_local2,config_fworld.sensory_local]
 
-    config_run.max_epochs = 5
     for feature_index in range(len(all_input_information)):
-        model_dync:PolicyDynamicOffline = PolicyDynamicOffline(all_input_information,
-                                        config_run.hidden_size)
-        optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.0005)
-
-        dataset_fworld = DatasetFWorld(data,[i.name for i in all_input_information],"Heuristic")
+            wandb.init(project="fworld-supervised-ablation")
+            wandb.config.update(config_run.asdict()) #given conftext information
 
 
+            copied_input_information: List[ConfigETensorVariable] = copy(all_input_information)
+            del copied_input_information[feature_index]
 
+            model_dync:PolicyDynamicOffline = PolicyDynamicOffline(copied_input_information,
+                                            config_run.hidden_size)
+            optimizer_o: optim.Optimizer  = optim.Adam(model_dync.parameters(), lr=.0005)
+            dataset_fworld = DatasetFWorld(data,[i.name for i in copied_input_information],"Heuristic")
+            print(all_input_information[feature_index]) #make logging flag
+            wandb.run.name = "ablate-{}-{}-{}".format(all_input_information[feature_index].name,config_run.name,str(wandb.run.id))
+            for j in range(config_run.max_epochs):
+                    total_error = 0
+                    dataloader_fworld = DataLoader(dataset_fworld,batch_size=50, num_workers=0, shuffle=True)
+                    chosen_action_history = []
+                    best_action_history = []
 
-        for j in range(config_run.max_epochs):
-                total_error = 0
-                dataloader_fworld = DataLoader(dataset_fworld,batch_size=50, num_workers=0, shuffle=True)
-                chosen_action_history = []
-                best_action_history = []
-                for i, batch in enumerate(dataloader_fworld):
-                    formatted_tensors_features = model_dync.get_worldstate_tensors(batch[0])
-                    ground_truth = batch[1]["Heuristic"]
-                    predictions = model_dync(formatted_tensors_features.float())
-                    best_actions  = ground_truth.flatten().long()
-                    loss = nn.CrossEntropyLoss()
-                    the_error:torch.Tensor = loss(predictions, best_actions)
-                    the_error.backward()
-                    optimizer_o.step()
-                    optimizer_o.zero_grad()
-                    total_error += the_error.detach()
+                    for i, batch in enumerate(dataloader_fworld):
+                        formatted_tensors_features = model_dync.get_worldstate_tensors(batch[0])
+                        ground_truth = batch[1]["Heuristic"]
+                        predictions = model_dync(formatted_tensors_features.float())
+                        best_actions  = ground_truth.flatten().long()
+                        loss = nn.CrossEntropyLoss()
+                        the_error:torch.Tensor = loss(predictions, best_actions)
+                        the_error.backward()
+                        optimizer_o.step()
+                        optimizer_o.zero_grad()
+                        total_error += the_error.detach()
 
-                    chosen_action_history.append(torch.argmax(predictions, 1).detach().numpy())
-                    best_action_history.append(best_actions.detach().numpy())
+                        chosen_action_history.append(torch.argmax(predictions, 1).detach().numpy())
+                        best_action_history.append(best_actions.detach().numpy())
 
-                np_chosen = np.concatenate(chosen_action_history)
-                np_best = np.concatenate(best_action_history)
+                    np_chosen = np.concatenate(chosen_action_history)
+                    np_best = np.concatenate(best_action_history)
+                    kl_divergence:float = fworld_metrics.calc_kl(np_chosen,np_best)
+                    f1_score:float = fworld_metrics.calc_precision(np_chosen,np_best)
+                    wandb.log({"kl":kl_divergence},step=j)
+                    wandb.log({"f1":f1_score},step=j)
+            #final confusion matrix
+            confusion_matrix = fworld_metrics.calc_confusion_matrix(np_chosen,np_best,["f","l","r","e","d"])
+            wandb.log({"action_confusion_matrix" : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],
+                                                                               y_true=np_best, preds= np_chosen)})
 
-                kl_divergence:float = fworld_metrics.calc_kl(np_chosen,np_best)
-                f1_score:float = fworld_metrics.calc_precision(np_chosen,np_best)
-
-                print("kl {:.2f}\nf1 {:.2f}".format(kl_divergence,f1_score))
-
-            print(fworld_metrics.calc_confusion_matrix(np_chosen,np_best,["f","l","r","e","d"]))
+            print("kl {:.2f}\nf1 {:.2f}".format(kl_divergence,f1_score)) #make logging flag
+            print(confusion_matrix) #make logging flag
+            wandb.finish()

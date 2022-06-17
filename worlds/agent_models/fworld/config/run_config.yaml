@@ -5,3 +5,4 @@ description: "a simple model using inputs and outputs from fworld in a bp networ
 hidden_size: 125
 infer_offpolicy: False
 max_epochs: 10
+log_remote: False

@@ -266,6 +266,3 @@ if __name__ == '__main__':
     server = setup_server(handler)
 
     server.serve()
-
-    #pickle history
-    #rerun and analyze in isolatoin

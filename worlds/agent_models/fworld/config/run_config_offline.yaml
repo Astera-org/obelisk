@@ -1,0 +1,9 @@
+name: "onpolicy-trainsamples"
+train_runs: 10000
+max_runs: 10001
+description: "a simple model using inputs and outputs from fworld for ablations on their impact on the network. Explicitely examining ability to overfit"
+hidden_size: 125
+infer_offpolicy: False
+max_epochs: 10
+datapath: "fworld_onpolicysupervised-2ets9y8o.pkl"
+log_remote: True

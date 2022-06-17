@@ -37,15 +37,27 @@ class ConfigRuns():
     description: str
     hidden_size: float = 125.0
     infer_offpolicy: bool = True
+    log_remote: Optional[bool] = field(default=True)
     max_epochs: Optional[int] = field(default=-1)
-
     @staticmethod
     def file_to_configrun(path):
         return file_to_configobj(path, ConfigRuns)
-
     def asdict(self)->dict:
         return asdict(self)
+    def __post_init__(self):
+        if self.log_remote == False:
+            os.environ["WANDB_MODE"] = "offline"
 
+
+@dataclass
+class ConfigRunsOffline(ConfigRuns): #todo should restructure config runs
+    datapath: Optional[int] = field(default="")
+    def __post_init__(self):
+        super().__post_init__()
+        self.infer_offpolicy = False #this should always be off since never going int off policy
+    @staticmethod
+    def file_to_configrun(path):
+        return file_to_configobj(path, ConfigRunsOffline)
 @dataclass
 class ConfigETensorVariable():
     shape: List[int]
