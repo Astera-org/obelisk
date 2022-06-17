@@ -12,33 +12,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
-
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/emergent/agent"
-	"github.com/emer/etable/etview"
-	"github.com/goki/gi/colormap"
-	"github.com/goki/gi/gimain"
-	"github.com/goki/gi/gist"
-	"github.com/goki/gi/giv"
-
 	"github.com/emer/emergent/env"
 	"github.com/emer/emergent/erand"
 	"github.com/emer/emergent/evec"
 	"github.com/emer/emergent/popcode"
 	"github.com/emer/etable/etensor"
+	"github.com/emer/etable/etview"
 	"github.com/emer/etable/metric"
+	"github.com/goki/gi/colormap"
 	"github.com/goki/gi/gi"
+	"github.com/goki/gi/gimain"
+	"github.com/goki/gi/gist"
+	"github.com/goki/gi/giv"
 	"github.com/goki/ki/ints"
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
 )
 
 // FWorld is a flat-world grid-based environment
@@ -116,6 +114,8 @@ type FWorld struct {
 	Event         env.Ctr                     `view:"arbitrary counter for steps within a scene -- resets at consumption event"`
 	Scene         env.Ctr                     `view:"arbitrary counter incrementing over a coherent sequence of events: e.g., approaching food -- increments at consumption"`
 	Episode       env.Ctr                     `view:"arbitrary counter incrementing over scenes within larger episode: feeding, drinking, exploring, etc"`
+
+	UseGUI bool `view:"determines if gui is going to be used or not"`
 }
 
 var KiT_FWorld = kit.Types.AddType(&FWorld{}, FWorldProps)
@@ -1285,7 +1285,9 @@ func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug 
 	println("Taking action: " + chosenActionStr)
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
-	ev.UpdateWorldGui()
+	if ev.UseGUI {
+		ev.UpdateWorldGui()
+	}
 	return false, ""
 }
 
@@ -1298,13 +1300,6 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 		Stride: []int32{1},
 		Names:  []string{"Reward"},
 	}, Values: []float64{float64(reward)}}
-
-	(*obs)["InternalStates"] = &net_env.ETensor{Shape: &net_env.Shape{
-		Shape:  []int32{5},
-		Stride: []int32{1},
-		Names:  []string{"Food", "Water", "Energy", "Hydra", "BumpPain"},
-	}, Values: []float64{float64(ev.InterStates["FoodRew"]), float64(ev.InterStates["WaterRew"]), float64(ev.InterStates["Energy"]),
-		float64(ev.InterStates["Hydra"]), float64(ev.InterStates["BumpPain"])}}
 }
 
 func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
@@ -1312,7 +1307,7 @@ func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
-		Names:  []string{name},
+		Names:  []string{"name"},
 	}, Values: []float64{float64(action)}}
 }
 
@@ -1320,7 +1315,6 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs := map[string]*net_env.ETensor{}
 	// These two lists line up which network layer corresponds to which state within FWorld.
 	states := []string{"Depth", "FovDepth", "Fovea", "ProxSoma", "Vestibular", "Inters", "Action", "Action"}
-	//TODO place this explanation late rAct is for gUI purposes and is a mapping of regardless if it's heuristic or from the model, it's gonna to output whta it hould be
 	layers := []string{"V2Wd", "V2Fd", "V1F", "S1S", "S1V", "Ins", "VL", "Act"}
 	for i, lnm := range layers {
 		obs[lnm] = network_agent.FromTensor(ev.State(states[i]))
@@ -1422,6 +1416,7 @@ func (ev *FWorld) Drink() {
 
 // ConfigWorldGui configures all the world view GUI elements
 func (ev *FWorld) ConfigWorldGui() *gi.Window {
+
 	// order: Empty, wall, food, water, foodwas, waterwas
 	ev.MatColors = []string{"lightgrey", "black", "orange", "blue", "brown", "navy"}
 
@@ -1517,43 +1512,7 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 	toolbar.AddAction(gi.ActOpts{Label: "Connect to Server", Icon: "svg", Tooltip: "Connect to an intelligent model that is serving actions as a server.", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
 	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
-		// TODO Have this function happen automatically
-		agent := network.MakeClient()
-		var defaultCtx = context.Background()
-
-		default_action, _ := agent.Init(defaultCtx, nil, nil)
-		fmt.Println("Initializing FWorld") // TODO Delete
-		if default_action == nil {
-			fmt.Println("failed to connect")
-		} else { //if successfully connected
-			// This is the main loop.
-			for {
-				observations := ev.getAllObservations()
-				// Step the agent
-				actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
-				if actions == nil {
-					fmt.Println("disconnected from agent, exiting")
-					break
-				}
-
-				move, ok := actions["move"] // This contains a discrete option.
-
-				if ok { //todo need to switch to a more parasmonious structure
-					use_heuristic := actions["use_heuristic"].DiscreteOption
-					if use_heuristic == 1 { //if true (which is 1) use heuristic for agent behavior
-						heuristicAction, _ := ev.ActGen()
-						ev.StepWorld(heuristicAction, false)
-					} else { //if false use agent model
-						// We've received a discrete action and can use it directly to StepWorld.
-						ev.StepWorld(int(move.DiscreteOption), false)
-					}
-				} else {
-					// Assume VL is in actions and treat it continuously and also apply the teaching function.
-					ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
-				}
-
-			}
-		}
+		connectAndQueryAgent(ev)
 	})
 
 	vp.UpdateEndNoSig(updt)
@@ -1599,14 +1558,61 @@ func (ev *FWorld) ConfigWorldView(tg *etview.TensorGrid) {
 	tg.SetStretchMax()
 }
 
+func connectAndQueryAgent(ev *FWorld) {
+
+	agent := network.MakeClient()
+	var defaultCtx = context.Background()
+
+	default_action, _ := agent.Init(defaultCtx, nil, nil)
+	fmt.Println("Initializing FWorld") // TODO Delete
+	if default_action == nil {
+		fmt.Println("failed to connect")
+	} else { //if successfully connected
+		// This is the main loop.
+		for {
+			observations := ev.getAllObservations()
+			// Step the agent
+			actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
+			if actions == nil {
+				fmt.Println("disconnected from agent, exiting")
+				break
+			}
+
+			move, ok := actions["move"] // This contains a discrete option.
+
+			if ok {
+				// We've received a discrete action and can use it directly to StepWorld.
+				ev.StepWorld(int(move.DiscreteOption), false)
+			} else {
+				// Assume VL is in actions and treat it continuously and also apply the teaching function.
+				ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+			}
+		}
+	}
+}
+
+var gConfig Config
+
 func main() {
+	gConfig.Load() // LATER specify the .cfg as a cmd line arg
+
 	bestWorld := FWorld{}
+	bestWorld.UseGUI = gConfig.GUI
 	bestWorld.Config(200)
 	bestWorld.InitWorld(nil)
 
-	gimain.Main(func() {
-		fwin := bestWorld.ConfigWorldGui()
-		// TODO Get the server connection to start automatically on window open
-		fwin.StartEventLoop()
-	})
+	if !bestWorld.UseGUI {
+		connectAndQueryAgent(&bestWorld)
+	} else {
+
+		gimain.Main(func() {
+			fwin := bestWorld.ConfigWorldGui()
+			// TODO Get the server connection to start automatically on window open
+
+			fwin.StartEventLoop()
+
+		})
+
+	}
+
 }

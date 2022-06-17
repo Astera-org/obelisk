@@ -109,8 +109,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	})
 
 	// Trial Stats and Apply Input
-	mode := etime.Train // For closures
-	stack := manager.Stacks[mode]
+	stack := manager.Stacks[etime.Train]
 	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
 		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
 			return ss.WorldEnv.Observe("Input")
