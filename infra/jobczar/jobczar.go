@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net/http"
+	"os"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
+	"github.com/rs/cors"
+	"github.com/zenazn/goji"
 )
 
 var gConfig Config
-
+var defaultCtx = context.Background()
 var gDatabase Database
 
 /*
@@ -17,17 +22,58 @@ var gDatabase Database
 - Handle requests
 */
 
+// NewThriftHandlerFunc is a function that create a ready to use Apache Thrift Handler function
+func NewThriftHandlerFunc(processor thrift.TProcessor,
+	inPfactory, outPfactory thrift.TProtocolFactory) func(w http.ResponseWriter, r *http.Request) {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		transport := thrift.NewStreamTransport(r.Body, w)
+		processor.Process(defaultCtx, inPfactory.GetProtocol(transport), outPfactory.GetProtocol(transport))
+	}
+}
+
 func main() {
 	gConfig.Load()
 	gDatabase.Connect()
 
 	fmt.Println("listening on", gConfig.SERVER_ADDR)
-	handler := RequestHandler{}
 
+	// this is just a hack for localhost testing
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"http://test.com", "127.0.0.1", "localhost", "localhost:8000", "localhost:9009", "null"},
+	})
+	goji.Use(c.Handler)
+
+	handler := RequestHandler{}
 	server := MakeServer(handler)
 
-	server.Serve()
+	go httpServer(&handler)
+	go server.Serve()
 
+	for true {
+		var command string
+		fmt.Scan(&command)
+		switch command {
+		case "q":
+			os.Exit(0)
+		default:
+			printHelp()
+		}
+	}
+}
+
+func printHelp() {
+	fmt.Println("Valid Commands:")
+	fmt.Println("q: quit")
+}
+
+func httpServer(handler *RequestHandler) {
+	processor := infra.NewJobCzarProcessor(handler)
+	factory := thrift.NewTJSONProtocolFactory()
+
+	goji.Post("/jobczar", NewThriftHandlerFunc(processor, factory, factory))
+
+	goji.Serve()
 }
 
 func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {

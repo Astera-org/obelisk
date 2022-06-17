@@ -46,7 +46,7 @@ var Thrift = {
      * @const {string} Version
      * @memberof Thrift
      */
-    Version: '0.13.0',
+    Version: '0.16.0',
 
     /**
      * Thrift IDL type string to Id mapping.
@@ -127,10 +127,10 @@ var Thrift = {
      * @param {string} [name] - Type name to set as name property in derived prototype.
      */
     inherits: function(constructor, superConstructor, name) {
-      function F() {}
-      F.prototype = superConstructor.prototype;
-      constructor.prototype = new F();
-      constructor.prototype.name = name || '';
+        function F() {}
+        F.prototype = superConstructor.prototype;
+        constructor.prototype = new F();
+        constructor.prototype.name = name || '';
     }
 };
 
@@ -191,7 +191,7 @@ Thrift.TApplicationExceptionType = {
  * @param {string} message - The TApplicationException message (distinct from the Error message).
  * @param {Thrift.TApplicationExceptionType} [code] - The TApplicationExceptionType code.
  * @classdesc TApplicationException is the exception class used to propagate exceptions from an RPC server back to a calling client.
-*/
+ */
 Thrift.TApplicationException = function(message, code) {
     this.message = message;
     this.code = typeof code === 'number' ? code : 0;
@@ -229,7 +229,7 @@ Thrift.TApplicationException.prototype.read = function(input) {
                     ret = input.skip(ret.ftype);
                 }
                 break;
-           default:
+            default:
                 ret = input.skip(ret.ftype);
                 break;
         }
@@ -284,7 +284,9 @@ Thrift.TProtocolExceptionType = {
 
 Thrift.TProtocolException = function TProtocolException(type, message) {
     Error.call(this);
-    Error.captureStackTrace(this, this.constructor);
+    if (Error.captureStackTrace !== undefined) {
+        Error.captureStackTrace(this, this.constructor);
+    }
     this.name = this.constructor.name;
     this.type = type;
     this.message = message;
@@ -354,23 +356,23 @@ Thrift.TXHRTransport.prototype = {
             //Ignore XHR callbacks until the data arrives, then call the
             //  client's callback
             xreq.onreadystatechange =
-              (function() {
-                var clientCallback = callback;
-                return function() {
-                  if (this.readyState == 4 && this.status == 200) {
-                    self.setRecvBuffer(this.responseText);
-                    clientCallback();
-                  }
-                };
-              }());
+                (function() {
+                    var clientCallback = callback;
+                    return function() {
+                        if (this.readyState == 4 && this.status == 200) {
+                            self.setRecvBuffer(this.responseText);
+                            clientCallback();
+                        }
+                    };
+                }());
 
             // detect net::ERR_CONNECTION_REFUSED and call the callback.
             xreq.onerror =
                 (function() {
-                  var clientCallback = callback;
-                  return function() {
-                      clientCallback();
-                  };
+                    var clientCallback = callback;
+                    return function() {
+                        clientCallback();
+                    };
                 }());
 
         }
@@ -550,14 +552,14 @@ Thrift.TWebSocketTransport = function(url) {
 
 Thrift.TWebSocketTransport.prototype = {
     __reset: function(url) {
-      this.url = url;             //Where to connect
-      this.socket = null;         //The web socket
-      this.callbacks = [];        //Pending callbacks
-      this.send_pending = [];     //Buffers/Callback pairs waiting to be sent
-      this.send_buf = '';         //Outbound data, immutable until sent
-      this.recv_buf = '';         //Inbound data
-      this.rb_wpos = 0;           //Network write position in receive buffer
-      this.rb_rpos = 0;           //Client read position in receive buffer
+        this.url = url;             //Where to connect
+        this.socket = null;         //The web socket
+        this.callbacks = [];        //Pending callbacks
+        this.send_pending = [];     //Buffers/Callback pairs waiting to be sent
+        this.send_buf = '';         //Outbound data, immutable until sent
+        this.recv_buf = '';         //Inbound data
+        this.rb_wpos = 0;           //Network write position in receive buffer
+        this.rb_rpos = 0;           //Client read position in receive buffer
     },
 
     /**
@@ -569,60 +571,60 @@ Thrift.TWebSocketTransport.prototype = {
      * @returns {undefined|string} Nothing (undefined)
      */
     flush: function(async, callback) {
-      var self = this;
-      if (this.isOpen()) {
-        //Send data and register a callback to invoke the client callback
-        this.socket.send(this.send_buf);
-        this.callbacks.push((function() {
-          var clientCallback = callback;
-          return function(msg) {
-            self.setRecvBuffer(msg);
-            if (clientCallback) {
-                clientCallback();
-            }
-          };
-        }()));
-      } else {
-        //Queue the send to go out __onOpen
-        this.send_pending.push({
-          buf: this.send_buf,
-          cb: callback
-        });
-      }
+        var self = this;
+        if (this.isOpen()) {
+            //Send data and register a callback to invoke the client callback
+            this.socket.send(this.send_buf);
+            this.callbacks.push((function() {
+                var clientCallback = callback;
+                return function(msg) {
+                    self.setRecvBuffer(msg);
+                    if (clientCallback) {
+                        clientCallback();
+                    }
+                };
+            }()));
+        } else {
+            //Queue the send to go out __onOpen
+            this.send_pending.push({
+                buf: this.send_buf,
+                cb: callback
+            });
+        }
     },
 
     __onOpen: function() {
-       var self = this;
-       if (this.send_pending.length > 0) {
-          //If the user made calls before the connection was fully
-          //open, send them now
-          this.send_pending.forEach(function(elem) {
-             self.socket.send(elem.buf);
-             self.callbacks.push((function() {
-               var clientCallback = elem.cb;
-               return function(msg) {
-                  self.setRecvBuffer(msg);
-                  clientCallback();
-               };
-             }()));
-          });
-          this.send_pending = [];
-       }
+        var self = this;
+        if (this.send_pending.length > 0) {
+            //If the user made calls before the connection was fully
+            //open, send them now
+            this.send_pending.forEach(function(elem) {
+                self.socket.send(elem.buf);
+                self.callbacks.push((function() {
+                    var clientCallback = elem.cb;
+                    return function(msg) {
+                        self.setRecvBuffer(msg);
+                        clientCallback();
+                    };
+                }()));
+            });
+            this.send_pending = [];
+        }
     },
 
     __onClose: function(evt) {
-      this.__reset(this.url);
+        this.__reset(this.url);
     },
 
     __onMessage: function(evt) {
-      if (this.callbacks.length) {
-        this.callbacks.shift()(evt.data);
-      }
+        if (this.callbacks.length) {
+            this.callbacks.shift()(evt.data);
+        }
     },
 
     __onError: function(evt) {
-      console.log('Thrift WebSocket Error: ' + evt.toString());
-      this.socket.close();
+        console.log('Thrift WebSocket Error: ' + evt.toString());
+        this.socket.close();
     },
 
     /**
@@ -649,23 +651,23 @@ Thrift.TWebSocketTransport.prototype = {
      * Opens the transport connection
      */
     open: function() {
-      //If OPEN/CONNECTING/CLOSING ignore additional opens
-      if (this.socket && this.socket.readyState != this.socket.CLOSED) {
-        return;
-      }
-      //If there is no socket or the socket is closed:
-      this.socket = new WebSocket(this.url);
-      this.socket.onopen = this.__onOpen.bind(this);
-      this.socket.onmessage = this.__onMessage.bind(this);
-      this.socket.onerror = this.__onError.bind(this);
-      this.socket.onclose = this.__onClose.bind(this);
+        //If OPEN/CONNECTING/CLOSING ignore additional opens
+        if (this.socket && this.socket.readyState != this.socket.CLOSED) {
+            return;
+        }
+        //If there is no socket or the socket is closed:
+        this.socket = new WebSocket(this.url);
+        this.socket.onopen = this.__onOpen.bind(this);
+        this.socket.onmessage = this.__onMessage.bind(this);
+        this.socket.onerror = this.__onError.bind(this);
+        this.socket.onclose = this.__onClose.bind(this);
     },
 
     /**
      * Closes the transport connection
      */
     close: function() {
-      this.socket.close();
+        this.socket.close();
     },
 
     /**
@@ -779,7 +781,7 @@ Thrift.Protocol.RType.set = Thrift.Type.SET;
  * @const {number} Version
  * @memberof Thrift.Protocol
  */
- Thrift.Protocol.Version = 1;
+Thrift.Protocol.Version = 1;
 
 Thrift.Protocol.prototype = {
     /**
@@ -802,7 +804,7 @@ Thrift.Protocol.prototype = {
         this.tpos = [];
 
         this.tstack.push([Thrift.Protocol.Version, '"' +
-            name + '"', messageType, seqid]);
+        name + '"', messageType, seqid]);
     },
 
     /**
@@ -817,7 +819,7 @@ Thrift.Protocol.prototype = {
         this.wbuf = '[' + this.wobj.join(',') + ']';
 
         this.transport.write(this.wbuf);
-     },
+    },
 
 
     /**
@@ -861,7 +863,7 @@ Thrift.Protocol.prototype = {
     writeFieldBegin: function(name, fieldType, fieldId) {
         this.tpos.push(this.tstack.length);
         this.tstack.push({ 'fieldId': '"' +
-            fieldId + '"', 'fieldType': Thrift.Protocol.Type[fieldType]
+                fieldId + '"', 'fieldType': Thrift.Protocol.Type[fieldType]
         });
 
     },
@@ -1068,11 +1070,11 @@ Thrift.Protocol.prototype = {
     },
 
     /**
-       @class
-       @name AnonReadMessageBeginReturn
-       @property {string} fname - The name of the service method.
-       @property {Thrift.MessageType} mtype - The type of message call.
-       @property {number} rseqid - The sequence number of the message (0 in Thrift RPC).
+     @class
+     @name AnonReadMessageBeginReturn
+     @property {string} fname - The name of the service method.
+     @property {Thrift.MessageType} mtype - The type of message call.
+     @property {number} rseqid - The sequence number of the message (0 in Thrift RPC).
      */
     /**
      * Deserializes the beginning of a message.
@@ -1141,11 +1143,11 @@ Thrift.Protocol.prototype = {
     },
 
     /**
-       @class
-       @name AnonReadFieldBeginReturn
-       @property {string} fname - The name of the field (always '').
-       @property {Thrift.Type} ftype - The data type of the field.
-       @property {number} fid - The unique identifier of the field.
+     @class
+     @name AnonReadFieldBeginReturn
+     @property {string} fname - The name of the field (always '').
+     @property {Thrift.Type} ftype - The data type of the field.
+     @property {number} fid - The unique identifier of the field.
      */
     /**
      * Deserializes the beginning of a field.
@@ -1160,7 +1162,7 @@ Thrift.Protocol.prototype = {
         //get a fieldId
         for (var f in (this.rstack[this.rstack.length - 1])) {
             if (f === null) {
-              continue;
+                continue;
             }
 
             fid = parseInt(f, 10);
@@ -1210,11 +1212,11 @@ Thrift.Protocol.prototype = {
     },
 
     /**
-       @class
-       @name AnonReadMapBeginReturn
-       @property {Thrift.Type} ktype - The data type of the key.
-       @property {Thrift.Type} vtype - The data type of the value.
-       @property {number} size - The number of elements in the map.
+     @class
+     @name AnonReadMapBeginReturn
+     @property {Thrift.Type} ktype - The data type of the key.
+     @property {Thrift.Type} vtype - The data type of the value.
+     @property {number} size - The number of elements in the map.
      */
     /**
      * Deserializes the beginning of a map.
@@ -1224,9 +1226,9 @@ Thrift.Protocol.prototype = {
         var map = this.rstack.pop();
         var first = map.shift();
         if (first instanceof Array) {
-          this.rstack.push(map);
-          map = first;
-          first = map.shift();
+            this.rstack.push(map);
+            map = first;
+            first = map.shift();
         }
 
         var r = {};
@@ -1246,10 +1248,10 @@ Thrift.Protocol.prototype = {
     },
 
     /**
-       @class
-       @name AnonReadColBeginReturn
-       @property {Thrift.Type} etype - The data type of the element.
-       @property {number} size - The number of elements in the collection.
+     @class
+     @name AnonReadColBeginReturn
+     @property {Thrift.Type} etype - The data type of the element.
+     @property {number} size - The number of elements in the collection.
      */
     /**
      * Deserializes the beginning of a list.
@@ -1274,7 +1276,7 @@ Thrift.Protocol.prototype = {
         var st = this.rstack;
         st.pop();
         if (st instanceof Array && st.length > pos && st[pos].length > 0) {
-          st.push(st[pos].shift());
+            st.push(st[pos].shift());
         }
     },
 
@@ -1307,19 +1309,19 @@ Thrift.Protocol.prototype = {
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readByte: function() {
         return this.readI32();
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readI16: function() {
         return this.readI32();
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readI32: function(f) {
         if (f === undefined) {
             f = this.rstack[this.rstack.length - 1];
@@ -1338,16 +1340,16 @@ Thrift.Protocol.prototype = {
                 r.value = f.pop();
             }
         } else if (f instanceof Object) {
-           for (var i in f) {
+            for (var i in f) {
                 if (i === null) {
-                  continue;
+                    continue;
                 }
                 this.rstack.push(f[i]);
                 delete f[i];
 
                 r.value = i;
                 break;
-           }
+            }
         } else {
             r.value = f;
             this.rstack.pop();
@@ -1357,7 +1359,7 @@ Thrift.Protocol.prototype = {
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readI64: function(f) {
         if (f === undefined) {
             f = this.rstack[this.rstack.length - 1];
@@ -1392,7 +1394,7 @@ Thrift.Protocol.prototype = {
             } else {
                 for (var i in f) {
                     if (i === null) {
-                    continue;
+                        continue;
                     }
                     this.rstack.push(f[i]);
                     delete f[i];
@@ -1409,20 +1411,20 @@ Thrift.Protocol.prototype = {
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readDouble: function() {
         return this.readI32();
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readString: function() {
         var r = this.readI32();
         return r;
     },
 
     /** Returns the an object with a value property set to the
-        next value found in the protocol buffer */
+     next value found in the protocol buffer */
     readBinary: function() {
         var r = this.readI32();
         r.value = atob(r.value);
@@ -1539,7 +1541,7 @@ Thrift.Multiplexer = function() {
  *    var transport = new Thrift.Transport("http://localhost:9090/foo.thrift");
  *    var protocol = new Thrift.Protocol(transport);
  *    var client = mp.createClient('AuthService', AuthServiceClient, transport);
-*/
+ */
 Thrift.Multiplexer.prototype.createClient = function(serviceName, SCl, transport) {
     if (SCl.Client) {
         SCl = SCl.Client;
@@ -1560,64 +1562,64 @@ var copyList, copyMap;
 
 copyList = function(lst, types) {
 
-  if (!lst) {return lst; }
+    if (!lst) {return lst; }
 
-  var type;
+    var type;
 
-  if (types.shift === undefined) {
-    type = types;
-  }
-  else {
-    type = types[0];
-  }
-  var Type = type;
-
-  var len = lst.length, result = [], i, val;
-  for (i = 0; i < len; i++) {
-    val = lst[i];
-    if (type === null) {
-      result.push(val);
-    }
-    else if (type === copyMap || type === copyList) {
-      result.push(type(val, types.slice(1)));
+    if (types.shift === undefined) {
+        type = types;
     }
     else {
-      result.push(new Type(val));
+        type = types[0];
     }
-  }
-  return result;
+    var Type = type;
+
+    var len = lst.length, result = [], i, val;
+    for (i = 0; i < len; i++) {
+        val = lst[i];
+        if (type === null) {
+            result.push(val);
+        }
+        else if (type === copyMap || type === copyList) {
+            result.push(type(val, types.slice(1)));
+        }
+        else {
+            result.push(new Type(val));
+        }
+    }
+    return result;
 };
 
 copyMap = function(obj, types) {
 
-  if (!obj) {return obj; }
+    if (!obj) {return obj; }
 
-  var type;
+    var type;
 
-  if (types.shift === undefined) {
-    type = types;
-  }
-  else {
-    type = types[0];
-  }
-  var Type = type;
-
-  var result = {}, val;
-  for (var prop in obj) {
-    if (obj.hasOwnProperty(prop)) {
-      val = obj[prop];
-      if (type === null) {
-        result[prop] = val;
-      }
-      else if (type === copyMap || type === copyList) {
-        result[prop] = type(val, types.slice(1));
-      }
-      else {
-        result[prop] = new Type(val);
-      }
+    if (types.shift === undefined) {
+        type = types;
     }
-  }
-  return result;
+    else {
+        type = types[0];
+    }
+    var Type = type;
+
+    var result = {}, val;
+    for (var prop in obj) {
+        if (obj.hasOwnProperty(prop)) {
+            val = obj[prop];
+            if (type === null) {
+                result[prop] = val;
+            }
+            else if (type === copyMap || type === copyList) {
+                result[prop] = type(val, types.slice(1));
+            }
+            else {
+                result[prop] = new Type(val);
+            }
+        }
+    }
+    return result;
 };
 
 Thrift.copyMap = copyMap;

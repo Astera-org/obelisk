@@ -1,8 +1,6 @@
 package main
 
 import (
-	"github.com/emer/axon/axon"
-	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/etime"
 	"testing"
 )

@@ -13,8 +13,13 @@ type RequestHandler struct {
 	infra.JobCzar
 }
 
-func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
+const (
+	goodJob      int32 = 0
+	jobFailed          = 1
+	malformedJob       = 2
+)
 
+func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
 
 	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
@@ -29,19 +34,30 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 		return &job, errors.New("db error")
 	}
 
-	sql := "UPDATE jobs set woker_name=$1, instance_name=$2 where job_id=$3"
-	gDatabase.db.Exec(sql, workerName, instanceName, job.JobID)
+	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d", workerName, instanceName, job.JobID)
+	_, err = gDatabase.db.Exec(sql)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 	return &job, nil
 }
 
-func (handler RequestHandler) submitResult(ctx context.Context, result infra.ResultWork) (bool, error) {
-
-	sql := "UPDATE jobs set cycles=$1,time_start=$2,timeStop=$3,score=$4 where job_id=$5"
-	_, err := gDatabase.db.Exec(sql, result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
-	if err != nil {
-		fmt.Println(err)
-		return false, err
+func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
+	if result.Status == goodJob {
+		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,time_start=%d,time_end=%d,score=%f where job_id=%d", result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
+		_, err := gDatabase.db.Exec(sql)
+		if err != nil {
+			fmt.Println(err)
+			return false, err
+		}
+	} else { // this worker wasn't up to the task. return the job to the pool
+		sql := fmt.Sprintf("UPDATE jobs set status=0, woker_name='', instance_name=`` where job_id=%d", result.JobID)
+		_, err := gDatabase.db.Exec(sql)
+		if err != nil {
+			fmt.Println(err)
+			return false, err
+		}
 	}
 
 	return true, nil
@@ -50,8 +66,8 @@ func (handler RequestHandler) submitResult(ctx context.Context, result infra.Res
 func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
 	agentCfg string, worldCfg string, priority int32, userID int32) (int32, error) {
 
-	sql := "INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values ($1,$2,$3,$4,$5,$6)"
-	_, err := gDatabase.db.Exec(sql, userID, priority, agentName, worldName, agentCfg, worldCfg)
+	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')", userID, priority, agentName, worldName, agentCfg, worldCfg)
+	_, err := gDatabase.db.Exec(sql)
 
 	if err != nil {
 		fmt.Println(err)
@@ -75,8 +91,8 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worl
 
 // only allow you to delete unservered up jobs
 func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool, error) {
-	sql := "DELETE from jobs where job_id=$1 and status=0"
-	_, err := gDatabase.db.Exec(sql, jobID)
+	sql := fmt.Sprintf("DELETE from jobs where job_id=%d and status=0", jobID)
+	_, err := gDatabase.db.Exec(sql)
 	if err != nil {
 		return false, err
 	}
@@ -89,7 +105,6 @@ func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, e
 		fmt.Println(err)
 		return "error", errors.New("db error")
 	}
-
 	return printDBResult(rows), nil
 }
 

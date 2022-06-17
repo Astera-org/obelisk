@@ -6,15 +6,15 @@ package main
 
 import (
 	"fmt"
+	"github.com/emer/etable/etensor"
+
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"
-	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
-	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
 
@@ -45,7 +45,6 @@ func main() {
 		StructForView:             &sim,
 		Looper:                    sim.Loops,
 		Network:                   sim.Net.EmerNet,
-		ViewUpdt:                  &sim.NetDeets.ViewUpdt,
 		AppName:                   "Protobrain solves FWorld",
 		AppTitle:                  "Protobrain",
 		AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
@@ -78,39 +77,51 @@ func (ss *Sim) ConfigNet() *deep.Network {
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
 	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
-
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
-	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
-	if !ok {
-		panic("PlusPhase not found")
-	}
-	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
+	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
+	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
 		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
-			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return ss.WorldEnv.Observe(name)
-			})
-		}
-
+	stack.Loops[etime.Trial].OnStart.Add("Sim:ResetState", func() {
+		ss.Net.NewState()
+		ss.Time.NewState(mode.String())
 	})
 
-	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
+	stack.Loops[etime.Trial].OnStart.Add("Sim:Trial:Observe", func() {
+		pixels, _ := ss.WorldEnv.(*agent.AgentProxyWithWorldCache).CachedObservations["world"]
+		x, y := pixels.Dims()
+		// agent is located in the middle of the bottom row
+		w := World{Pixels: pixels.(*etensor.Float64), AgentX: x / 2, AgentY: 0, WorldX: x, WorldY: y}
+		w.Config()
+		fmt.Println("Received egan world: ", w)
+
+		obs := w.GetAllObservations()
+
+		for name, t := range obs {
+			fmt.Println("ApplyInputs name: ", name)
+			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+				return t
+			})
+		}
+	})
+
+	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("Sim:NewRun", ss.NewRun)
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
 	fmt.Println(manager.DocString())
 
-	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("QuickScore", func() {
+	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("Sim:Trial:QuickScore", func() {
 		loss := ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr()
 		s := fmt.Sprintf("%f", loss)
 		fmt.Println("the pctuniterror is " + s)
 	})
+
+	// TODO: add cos similatiry here
 
 	return manager
 }
