@@ -34,7 +34,8 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 		return &job, errors.New("db error")
 	}
 
-	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d", workerName, instanceName, job.JobID)
+	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d",
+		workerName, instanceName, job.JobID)
 	_, err = gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
@@ -45,14 +46,15 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
 	if result.Status == goodJob {
-		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,time_start=%d,time_end=%d,score=%f where job_id=%d", result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,seconds=%d,score=%f where job_id=%d",
+			result.Cycles, result.Seconds, result.Score, result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)
 			return false, err
 		}
 	} else { // this worker wasn't up to the task. return the job to the pool
-		sql := fmt.Sprintf("UPDATE jobs set status=0, woker_name='', instance_name=`` where job_id=%d", result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name=`` where job_id=%d", result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)
@@ -66,7 +68,8 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
 	agentCfg string, worldCfg string, priority int32, userID int32) (int32, error) {
 
-	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')", userID, priority, agentName, worldName, agentCfg, worldCfg)
+	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')",
+		userID, priority, agentName, worldName, agentCfg, worldCfg)
 	_, err := gDatabase.db.Exec(sql)
 
 	if err != nil {

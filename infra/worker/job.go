@@ -15,6 +15,8 @@ type Job struct {
 	jobID     int32
 	agentName string
 	worldName string
+	agentCfg  string
+	worldCfg  string
 	result    infra.ResultWork
 }
 
@@ -36,6 +38,8 @@ func (job *Job) fetchWork() error {
 	job.jobID = infraJob.JobID
 	job.agentName = infraJob.AgentName
 	job.worldName = infraJob.WorldName
+	job.agentCfg = infraJob.AgentCfg
+	job.worldCfg = infraJob.WorldCfg
 	job.result.JobID = job.jobID
 	return nil
 }
@@ -57,16 +61,20 @@ func (job *Job) createJobDir() {
 }
 
 func (job *Job) setCfgs() {
-	// TODO
-
-}
-
-// TODO if result file isn't there tell server it failed
-func (job *Job) readResults() {
-	// TODO
-	if job.result.Status == goodJob {
-
+	// write the cfgs to file
+	file, err := os.Create("agent.cfg")
+	if err != nil {
+		fmt.Println("Couldn't create file", err)
 	}
+	file.WriteString(job.agentCfg)
+	file.Close()
+
+	file, err = os.Create("world.cfg")
+	if err != nil {
+		fmt.Println("Couldn't create file", err)
+	}
+	file.WriteString(job.worldCfg)
+	file.Close()
 }
 
 func (job *Job) returnResults() error {

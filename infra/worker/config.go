@@ -37,7 +37,7 @@ func (config *Config) Load() {
 func (config *Config) setDefaults() {
 	config.WORKER_NAME = ""
 	config.INSTANCE_NAME = "?"
-	config.JOBDIR_ROOT = "jobs"
+	config.JOBDIR_ROOT = "jobs/"
 	config.JOBCZAR_IP = "127.0.0.1:9009"
 }
 

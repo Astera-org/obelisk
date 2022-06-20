@@ -39,10 +39,10 @@ func main() {
 			}
 
 		}
-
+		job.createJobDir()
 		job.setCfgs()
 		job.doJob()
-		job.readResults()
+		readResults(&job)
 
 		for true {
 			err := job.returnResults()
