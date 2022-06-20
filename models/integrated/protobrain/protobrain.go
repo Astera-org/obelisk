@@ -6,6 +6,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
@@ -16,6 +17,7 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
+	log "github.com/zajann/easylog"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -30,8 +32,18 @@ func main() {
 
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
 
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("brain.log"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	log.Info("Starting Protobrain ==========")
+
 	if gConfig.PROFILE {
-		fmt.Println("Starting profiling")
+		log.Info("Starting profiling")
 		defer profile.Start(profile.ProfilePath(".")).Stop()
 	}
 
@@ -83,7 +95,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
 	if !ok {
-		panic("PlusPhase not found")
+		log.Fatal("PlusPhase not found")
 	}
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
@@ -104,12 +116,12 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
-	fmt.Println(manager.DocString())
+	log.Info(manager.DocString())
 
 	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("QuickScore", func() {
 		loss := ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr()
 		s := fmt.Sprintf("%f", loss)
-		fmt.Println("the pctuniterror is " + s)
+		log.Info("the pctuniterror is " + s)
 	})
 
 	return manager

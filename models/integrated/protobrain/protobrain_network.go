@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	log "github.com/zajann/easylog"
 
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
@@ -484,7 +484,7 @@ func DefineNetworkStructure(deets *NetworkDeets, net *deep.Network) {
 	deets.Params.SetObject("Network")
 	err := net.Build()
 	if err != nil {
-		log.Println(err)
+		log.Error("", err)
 		return
 	}
 	net.InitWts()
