@@ -4,5 +4,8 @@
 *.exe
 .idea/
 .DS_Store
-__pycache/
+*.pkl
+wandb/*
+wandb/
+__pycache__/
 go.work

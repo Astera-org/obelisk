@@ -1,13 +1,13 @@
-vision1:
+visionwide:
   name: "V2Wd"
   shape: [8,13,4,1]
-vision2:
+visionlocal:
   name: "V2Fd"
   shape: [8,3,4,1]
 reward:
   name: "Reward"
   shape: [1]
-vision_near:
+object_seen:
   name: "V1F"
   shape: [1,3,5,5]
 sensory_local:
@@ -22,6 +22,6 @@ internal_state:
 best_action:
   name: "VL"
   shape: [5,5]
-no_clue:
+gui_purposes:
   name: "Act"
   shape: [5,5]

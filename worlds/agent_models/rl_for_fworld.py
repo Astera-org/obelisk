@@ -14,6 +14,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 
+
 from network.genpy.env.ttypes import ETensor, Action
 from network.thrift_agent_server import setup_server
 
