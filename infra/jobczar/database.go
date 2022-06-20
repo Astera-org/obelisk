@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -16,4 +17,14 @@ func (db *Database) Connect() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (db *Database) GetJobCount(status int32) int32 {
+	var count int32
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM jobs WHERE status = %d", status)
+	err := db.db.QueryRow(sql).Scan(&count)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return count
 }

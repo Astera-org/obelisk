@@ -56,6 +56,8 @@ func main() {
 		switch command {
 		case "q":
 			os.Exit(0)
+		case "s":
+			printStats()
 		default:
 			printHelp()
 		}
@@ -65,6 +67,13 @@ func main() {
 func printHelp() {
 	fmt.Println("Valid Commands:")
 	fmt.Println("q: quit")
+	fmt.Println("s: print stats")
+}
+
+func printStats() {
+	fmt.Println("Stats:")
+	fmt.Println(" in Q:", gDatabase.GetJobCount(0))
+	fmt.Println(" working:", gDatabase.GetJobCount(1))
 }
 
 func httpServer(handler *RequestHandler) {
