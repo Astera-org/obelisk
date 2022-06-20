@@ -22,9 +22,9 @@ const (
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
 
-	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
+	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1")
 
-	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName)
+	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName, &job.AgentCfg, &job.WorldCfg)
 	if err == sql.ErrNoRows {
 		fmt.Println(err)
 		return &job, errors.New("empty")
@@ -46,6 +46,7 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
 	if result.Status == goodJob {
+
 		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,seconds=%d,score=%f where job_id=%d",
 			result.Cycles, result.Seconds, result.Score, result.JobID)
 		_, err := gDatabase.db.Exec(sql)

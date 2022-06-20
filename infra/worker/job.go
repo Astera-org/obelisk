@@ -66,11 +66,13 @@ func (job *Job) createJobDir() error {
 
 	err := os.Mkdir(dirName, 0755)
 	if err != nil {
+		job.result.Status = jobFailed
 		return err
 	}
 
 	err = os.Chdir(dirName)
 	if err != nil {
+		job.result.Status = jobFailed
 		return err
 	}
 	return nil
@@ -80,22 +82,25 @@ func (job *Job) setCfgs() error {
 	// write the cfgs to file
 	agentFile, err := os.Create("agent.cfg")
 	if err != nil {
+		job.result.Status = jobFailed
 		return err
 	}
 	defer agentFile.Close()
 	agentFile.WriteString("GITHASH=\"" + job.agentDesc.GITHASH + "\"\n")
 	dt := time.Now()
-	agentFile.WriteString("JOBSTART=" + dt.Format(time.RFC822) + "\"\n")
-	agentFile.WriteString("##### end manifest ####\n")
+	agentFile.WriteString("JOBSTART=" + dt.Format(time.RFC1123) + "\"\n")
+	agentFile.WriteString("##### end manifest ####\n\n")
 	agentFile.WriteString(job.agentCfg)
 	agentFile.Close()
 
 	worldFile, err := os.Create("world.cfg")
 	if err != nil {
+		job.result.Status = jobFailed
 		return err
 	}
 	defer worldFile.Close()
 	worldFile.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
+	agentFile.WriteString("##### end manifest ####\n\n")
 	worldFile.WriteString(job.worldCfg)
 	worldFile.Close()
 	return nil

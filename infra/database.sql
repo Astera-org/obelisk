@@ -22,5 +22,5 @@ create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_name V
 
 ####################
 
-INSERT INTO jobs (agent_name,world_name) values ("brain","fworld");
+INSERT INTO jobs (agent_name,world_name,agent_param,world_param) values ("brain","fworld","GUI=false","GUI=false");
 

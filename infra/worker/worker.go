@@ -71,9 +71,10 @@ func mainLoop() {
 func fetchJob(job *Job) {
 	var waitSeconds int = 1
 	for true {
-		fmt.Println("Fetching job")
+		fmt.Println("Fetching job: ", job.jobID)
 
 		err := job.fetchWork()
+		fmt.Println("Job Fetched: ", job.jobID) // TEMP
 		if err != nil {
 			fmt.Println("Fetching err: ", err)
 			wait(&waitSeconds)
