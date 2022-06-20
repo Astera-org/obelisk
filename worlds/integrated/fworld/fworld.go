@@ -12,6 +12,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
+
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
 	"github.com/Astera-org/worlds/network_agent"
@@ -32,11 +38,7 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
+	log "github.com/zajann/easylog"
 )
 
 // FWorld is a flat-world grid-based environment
@@ -366,7 +368,7 @@ func (ev *FWorld) GetWorld(p evec.Vec2i) int {
 func (ev *FWorld) SaveWorld(filename gi.FileName) error {
 	fp, err := os.Create(string(filename))
 	if err != nil {
-		fmt.Println("Error creating file:", err)
+		log.Error("Error creating file:", err)
 		return err
 	}
 	defer fp.Close()
@@ -390,7 +392,7 @@ func (ev *FWorld) SaveWorld(filename gi.FileName) error {
 func (ev *FWorld) OpenWorld(filename gi.FileName) error {
 	fp, err := os.Open(string(filename))
 	if err != nil {
-		fmt.Println("Error opening file:", err)
+		log.Error("Error opening file:", err)
 		return err
 	}
 	defer fp.Close()
@@ -414,7 +416,7 @@ func (ev *FWorld) OpenWorld(filename gi.FileName) error {
 			}
 			mi, ok := ev.MatMap[ms]
 			if !ok {
-				fmt.Printf("Mat not found: %s\n", ms)
+				log.Info("Mat not found: %s\n", ms)
 			} else {
 				ev.World.Set([]int{y, x}, mi)
 			}
@@ -433,14 +435,14 @@ func (ev *FWorld) SavePats(filename gi.FileName) error {
 func (ev *FWorld) OpenPats(filename gi.FileName) error {
 	fp, err := os.Open(string(filename))
 	if err != nil {
-		fmt.Println("ERROR! Can't find pats file! This will prevent the model from working! :", err)
+		log.Error("ERROR! Can't find pats file! This will prevent the model from working! :", err)
 		return err
 	}
 	defer fp.Close()
 	b, err := ioutil.ReadAll(fp)
 	err = json.Unmarshal(b, &ev.Pats)
 	if err != nil {
-		fmt.Println(err)
+		log.Error("", err)
 	}
 	return err
 }
@@ -1275,14 +1277,14 @@ func (ev FWorld) ApplyTeachingFunction(agentActionId int) int {
 	chosenAction := ev.PossiblyGetTeachingSignal(agentActionId)
 	agentAction := ev.Acts[agentActionId]
 	chosenActionStr := ev.Acts[chosenAction]
-	println("Action from Agent: " + agentAction + ", but Heuristic Advises: " + chosenActionStr)
+	log.Info("Action from Agent: " + agentAction + ", but Heuristic Advises: " + chosenActionStr)
 	return chosenAction
 }
 
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
-	println("Taking action: " + chosenActionStr)
+	log.Info("Taking action: " + chosenActionStr)
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
 	if ev.UseGUI {
@@ -1564,9 +1566,9 @@ func connectAndQueryAgent(ev *FWorld) {
 	var defaultCtx = context.Background()
 
 	default_action, _ := agent.Init(defaultCtx, nil, nil)
-	fmt.Println("Initializing FWorld") // TODO Delete
+	log.Info("Initializing FWorld") // TODO Delete
 	if default_action == nil {
-		fmt.Println("failed to connect")
+		log.Error("failed to connect")
 	} else { //if successfully connected
 		// This is the main loop.
 		for {
@@ -1574,7 +1576,7 @@ func connectAndQueryAgent(ev *FWorld) {
 			// Step the agent
 			actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
 			if actions == nil {
-				fmt.Println("disconnected from agent, exiting")
+				log.Error("disconnected from agent, exiting")
 				break
 			}
 
@@ -1595,6 +1597,14 @@ var gConfig Config
 
 func main() {
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
+
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("brain.log"),
+	)
+	if err != nil {
+		panic(err)
+	}
 
 	bestWorld := FWorld{}
 	bestWorld.UseGUI = gConfig.GUI
