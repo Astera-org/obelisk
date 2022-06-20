@@ -40,51 +40,66 @@ func printHelp() {
 }
 
 func mainLoop() {
-	var waitSeconds int = 1
+	var still bool = true
 
-	for true {
+	for still {
 		var job Job
+		fetchJob(&job)
 
-		for true {
-			fmt.Println("Fetching job")
-
-			err := job.fetchWork()
+		err := job.createJobDir()
+		if err != nil {
+			fmt.Println("Creating job dir err: ", err)
+			still = false
+		} else {
+			err = job.setCfgs()
 			if err != nil {
-				fmt.Println("Fetching err: ", err)
-				increaseBackoff(&waitSeconds)
-				time.Sleep(time.Duration(waitSeconds) * time.Second)
-				continue
+				fmt.Println("Setting cfgs err: ", err)
+				still = false
 			} else {
-				waitSeconds = 1
-				break
-			}
-
-		}
-		job.createJobDir()
-		job.setCfgs()
-		job.doJob()
-		readResults(&job)
-
-		for true {
-			err := job.returnResults()
-			if err != nil {
-				fmt.Println("Results err: ", err)
-				increaseBackoff(&waitSeconds)
-				time.Sleep(time.Duration(waitSeconds) * time.Second)
-				continue
-			} else {
-				waitSeconds = 1
-				break
+				job.doJob()
+				readResults(&job)
 			}
 		}
 
+		returnResults(&job)
 		fmt.Println("job completed")
+	}
+
+	os.Exit(-1)
+}
+
+func fetchJob(job *Job) {
+	var waitSeconds int = 1
+	for true {
+		fmt.Println("Fetching job")
+
+		err := job.fetchWork()
+		if err != nil {
+			fmt.Println("Fetching err: ", err)
+			wait(&waitSeconds)
+		} else {
+			return
+		}
 	}
 }
 
-func increaseBackoff(waitSeconds *int) {
+func returnResults(job *Job) {
+	var waitSeconds int = 1
+	for true {
+		err := job.returnResults()
+		if err != nil {
+			fmt.Println("Results err: ", err)
+			wait(&waitSeconds)
+		} else {
+			return
+		}
+	}
+}
+
+func wait(waitSeconds *int) {
 	*waitSeconds *= 2
 	if *waitSeconds > 60*10 {
 		*waitSeconds = 60 * 10
 	}
+	time.Sleep(time.Duration(*waitSeconds) * time.Second)
 }

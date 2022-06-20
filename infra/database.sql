@@ -16,6 +16,8 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     time_handed TIMESTAMP DEFAULT 0, seconds INT,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
 
+create table cfgs (cfg_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, cfg VARCHAR(1024));
+
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_name VARCHAR(10));
 
 ####################

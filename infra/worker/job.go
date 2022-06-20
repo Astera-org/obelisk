@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -60,38 +61,44 @@ func (job *Job) fetchWork() error {
 }
 
 // This is the dir that the process will run out of and that we will save all the Job specific files to
-func (job *Job) createJobDir() {
+func (job *Job) createJobDir() error {
 	dirName := fmt.Sprint(gConfig.JOBDIR_ROOT, job.jobID)
 
 	err := os.Mkdir(dirName, 0755)
 	if err != nil {
-		fmt.Println("Couldn't create dir", err)
+		return err
 	}
 
 	err = os.Chdir(dirName)
 	if err != nil {
-		fmt.Println("Couldn't cd", err)
+		return err
 	}
-
+	return nil
 }
 
-func (job *Job) setCfgs() {
+func (job *Job) setCfgs() error {
 	// write the cfgs to file
-	file, err := os.Create("agent.cfg")
+	agentFile, err := os.Create("agent.cfg")
 	if err != nil {
-		fmt.Println("Couldn't create file", err)
+		return err
 	}
-	file.WriteString("GITHASH=\"" + job.agentDesc.GITHASH + "\"\n")
-	file.WriteString(job.agentCfg)
-	file.Close()
+	defer agentFile.Close()
+	agentFile.WriteString("GITHASH=\"" + job.agentDesc.GITHASH + "\"\n")
+	dt := time.Now()
+	agentFile.WriteString("JOBSTART=" + dt.Format(time.RFC822) + "\"\n")
+	agentFile.WriteString("##### end manifest ####\n")
+	agentFile.WriteString(job.agentCfg)
+	agentFile.Close()
 
-	file, err = os.Create("world.cfg")
+	worldFile, err := os.Create("world.cfg")
 	if err != nil {
-		fmt.Println("Couldn't create file", err)
+		return err
 	}
-	file.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
-	file.WriteString(job.worldCfg)
-	file.Close()
+	defer worldFile.Close()
+	worldFile.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
+	worldFile.WriteString(job.worldCfg)
+	worldFile.Close()
+	return nil
 }
 
 func (job *Job) returnResults() error {
