@@ -15,6 +15,8 @@ type Job struct {
 	jobID     int32
 	agentName string
 	worldName string
+	agentDesc AgentDesc
+	worldDesc WorldDesc
 	agentCfg  string
 	worldCfg  string
 	result    infra.ResultWork
@@ -30,7 +32,6 @@ func (job *Job) fetchWork() error {
 	var defaultCtx = context.Background()
 	var jobCzar = MakeClient(gConfig.JOBCZAR_IP)
 	infraJob, err := jobCzar.FetchWork(defaultCtx, gConfig.WORKER_NAME, gConfig.INSTANCE_NAME)
-
 	if err != nil {
 		return err
 	}
@@ -41,6 +42,20 @@ func (job *Job) fetchWork() error {
 	job.agentCfg = infraJob.AgentCfg
 	job.worldCfg = infraJob.WorldCfg
 	job.result.JobID = job.jobID
+
+	var exists bool
+	job.agentDesc, exists = gConfig.AGENTS[job.agentName]
+	if !exists {
+		job.result.Status = jobFailed
+		return errors.New("Unknown Agent" + job.agentName)
+	}
+
+	job.worldDesc, exists = gConfig.WORLDS[job.worldName]
+	if !exists {
+		job.result.Status = jobFailed
+		return errors.New("Unknown World" + job.worldName)
+	}
+
 	return nil
 }
 
@@ -66,6 +81,7 @@ func (job *Job) setCfgs() {
 	if err != nil {
 		fmt.Println("Couldn't create file", err)
 	}
+	file.WriteString("GITHASH=\"" + job.agentDesc.GITHASH + "\"\n")
 	file.WriteString(job.agentCfg)
 	file.Close()
 
@@ -73,6 +89,7 @@ func (job *Job) setCfgs() {
 	if err != nil {
 		fmt.Println("Couldn't create file", err)
 	}
+	file.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
 	file.WriteString(job.worldCfg)
 	file.Close()
 }
@@ -97,27 +114,13 @@ func (job *Job) returnResults() error {
 // need to bail from one process if the other dies
 func (job *Job) doJob() {
 
-	agentDesc, exists := gConfig.AGENTS[job.agentName]
-	if !exists {
-		fmt.Println("Unknown Agent: ", job.agentName)
-		job.result.Status = jobFailed
-		return
-	}
-
-	worldDesc, exists := gConfig.WORLDS[job.worldName]
-	if !exists {
-		fmt.Println("Unknown World: ", job.worldName)
-		job.result.Status = jobFailed
-		return
-	}
-
 	agentCtx, agentCancel := context.WithCancel(context.Background())
 	worldCtx, worldCancel := context.WithCancel(agentCtx)
 	defer agentCancel()
 	defer worldCancel()
 
-	agentCmd := exec.CommandContext(agentCtx, agentDesc.PATH)
-	worldCmd := exec.CommandContext(worldCtx, worldDesc.PATH)
+	agentCmd := exec.CommandContext(agentCtx, job.agentDesc.PATH)
+	worldCmd := exec.CommandContext(worldCtx, job.worldDesc.PATH)
 	err := worldCmd.Start()
 	if err != nil {
 		fmt.Println("world:", err)
@@ -134,6 +137,12 @@ func (job *Job) doJob() {
 	go worldCmd.Wait()
 
 	err = agentCmd.Wait()
+
+	// cd back out of the job dir
+	err2 := os.Chdir("..")
+	if err2 != nil {
+		fmt.Println("Couldn't cd ", err2)
+	}
 
 	if err != nil {
 		fmt.Println("agent:", err)

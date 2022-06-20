@@ -54,7 +54,7 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 			return false, err
 		}
 	} else { // this worker wasn't up to the task. return the job to the pool
-		sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name=`` where job_id=%d", result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name='' where job_id=%d", result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)

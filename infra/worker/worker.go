@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -19,6 +20,26 @@ var gConfig Config
 func main() {
 	gConfig.Load()
 
+	go mainLoop()
+
+	for true {
+		var command string
+		fmt.Scan(&command)
+		switch command {
+		case "q":
+			os.Exit(0)
+		default:
+			printHelp()
+		}
+	}
+}
+
+func printHelp() {
+	fmt.Println("Valid Commands:")
+	fmt.Println("q: quit")
+}
+
+func mainLoop() {
 	var waitSeconds int = 1
 
 	for true {
