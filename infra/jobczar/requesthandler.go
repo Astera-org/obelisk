@@ -95,7 +95,7 @@ func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool,
 }
 
 func (handler RequestHandler) QueryJobs(ctx context.Context) ([]map[string]string, error) {
-	sql := fmt.Sprintf("SELECT * from jobs")
+	sql := fmt.Sprintf("SELECT * from jobs order by job_id desc LIMIT 1000")
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {
 		fmt.Println(err)
