@@ -42,7 +42,14 @@ func printHelp() {
 func mainLoop() {
 	var still bool = true
 
+	startDir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error getting current dir: ", err)
+		os.Exit(-1)
+	}
+
 	for still {
+		os.Chdir(startDir)
 		var job Job
 		fetchJob(&job)
 
