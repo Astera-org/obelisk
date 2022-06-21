@@ -5,13 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-)
 
-type Result struct {
-	Seconds int32   `json:"seconds"`
-	Cycles  int32   `json:"cycles"`
-	Score   float64 `json:"score"`
-}
+	"github.com/Astera-org/obelisk/infra"
+)
 
 // if result file isn't there tell server it failed
 func readResults(job *Job) {
@@ -28,7 +24,7 @@ func readResults(job *Job) {
 		// parse the result file
 		byteValue, _ := ioutil.ReadAll(file)
 
-		var result Result
+		var result infra.Result
 		json.Unmarshal(byteValue, &result)
 		job.result.Cycles = result.Cycles
 		job.result.Score = result.Score

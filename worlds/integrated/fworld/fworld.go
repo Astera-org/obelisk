@@ -18,10 +18,10 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
 	"github.com/Astera-org/worlds/network_agent"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/env"
 	"github.com/emer/emergent/erand"
 	"github.com/emer/emergent/evec"
@@ -1600,7 +1600,7 @@ func main() {
 
 	err := log.Init(
 		log.SetLevel(log.INFO),
-		log.SetFileName("brain.log"),
+		log.SetFileName("world.log"),
 	)
 	if err != nil {
 		panic(err)

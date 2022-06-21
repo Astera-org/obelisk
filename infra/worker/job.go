@@ -51,10 +51,12 @@ func (job *Job) fetchWork() error {
 		return errors.New("Unknown Agent" + job.agentName)
 	}
 
-	job.worldDesc, exists = gConfig.WORLDS[job.worldName]
-	if !exists {
-		job.result.Status = jobFailed
-		return errors.New("Unknown World" + job.worldName)
+	if job.worldName != "" {
+		job.worldDesc, exists = gConfig.WORLDS[job.worldName]
+		if !exists {
+			job.result.Status = jobFailed
+			return errors.New("Unknown World" + job.worldName)
+		}
 	}
 
 	return nil
@@ -93,16 +95,18 @@ func (job *Job) setCfgs() error {
 	agentFile.WriteString(job.agentCfg)
 	agentFile.Close()
 
-	worldFile, err := os.Create("world.cfg")
-	if err != nil {
-		job.result.Status = jobFailed
-		return err
+	if job.worldName != "" {
+		worldFile, err := os.Create("world.cfg")
+		if err != nil {
+			job.result.Status = jobFailed
+			return err
+		}
+		defer worldFile.Close()
+		worldFile.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
+		agentFile.WriteString("##### end manifest ####\n\n")
+		worldFile.WriteString(job.worldCfg)
+		worldFile.Close()
 	}
-	defer worldFile.Close()
-	worldFile.WriteString("GITHASH=\"" + job.worldDesc.GITHASH + "\"\n")
-	agentFile.WriteString("##### end manifest ####\n\n")
-	worldFile.WriteString(job.worldCfg)
-	worldFile.Close()
 	return nil
 }
 
@@ -127,35 +131,31 @@ func (job *Job) returnResults() error {
 func (job *Job) doJob() {
 
 	agentCtx, agentCancel := context.WithCancel(context.Background())
-	worldCtx, worldCancel := context.WithCancel(agentCtx)
 	defer agentCancel()
-	defer worldCancel()
-
 	agentCmd := exec.CommandContext(agentCtx, job.agentDesc.PATH)
-	worldCmd := exec.CommandContext(worldCtx, job.worldDesc.PATH)
-	err := worldCmd.Start()
-	if err != nil {
-		fmt.Println("world:", err)
-		job.result.Status = jobFailed
-		return
+
+	if job.worldName != "" {
+		worldCtx, worldCancel := context.WithCancel(agentCtx)
+		defer worldCancel()
+		worldCmd := exec.CommandContext(worldCtx, job.worldDesc.PATH)
+		err := worldCmd.Start()
+		if err != nil {
+			fmt.Println("world:", err)
+			job.result.Status = jobFailed
+			return
+		}
+
+		go worldCmd.Wait()
 	}
-	err = agentCmd.Start()
+
+	err := agentCmd.Start()
 	if err != nil {
 		fmt.Println("agent:", err)
 		job.result.Status = jobFailed
 		return
 	}
 
-	go worldCmd.Wait()
-
 	err = agentCmd.Wait()
-
-	// cd back out of the job dir
-	err2 := os.Chdir("..")
-	if err2 != nil {
-		fmt.Println("Couldn't cd ", err2)
-	}
-
 	if err != nil {
 		fmt.Println("agent:", err)
 		job.result.Status = jobFailed
