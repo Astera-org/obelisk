@@ -15,6 +15,7 @@ import (
 var gConfig Config
 var defaultCtx = context.Background()
 var gDatabase Database
+var VERSION string = "v0.1.0"
 
 /*
 - Connect to DB
@@ -58,6 +59,8 @@ func main() {
 			os.Exit(0)
 		case "s":
 			printStats()
+		case "v":
+			fmt.Println("Version: ", VERSION)
 		default:
 			printHelp()
 		}
@@ -68,6 +71,7 @@ func printHelp() {
 	fmt.Println("Valid Commands:")
 	fmt.Println("q: quit")
 	fmt.Println("s: print stats")
+	fmt.Println("v: print version")
 }
 
 func printStats() {

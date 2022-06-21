@@ -3,9 +3,9 @@ package main
 import (
 	log "github.com/zajann/easylog"
 
+	"github.com/Astera-org/models/agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/erand"

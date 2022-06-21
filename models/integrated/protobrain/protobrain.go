@@ -7,11 +7,11 @@ package main
 import (
 	"fmt"
 
+	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
@@ -53,21 +53,26 @@ func main() {
 	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
 	sim.WorldEnv = world
 
-	userInterface := &autoui.AutoUI{
-		StructForView:             &sim,
-		Looper:                    sim.Loops,
-		Network:                   sim.Net.EmerNet,
-		ViewUpdt:                  &sim.NetDeets.ViewUpdt,
-		AppName:                   "Protobrain solves FWorld",
-		AppTitle:                  "Protobrain",
-		AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
-		DoLogging:                 true,
-		HaveGui:                   gConfig.GUI,
-		StartAsServer:             true,
-		ServerFunc:                serverFunc,
+	if gConfig.WORKER {
+		startWorkerLoop(&sim)
+	} else {
+		userInterface := &autoui.AutoUI{
+			StructForView:             &sim,
+			Looper:                    sim.Loops,
+			Network:                   sim.Net.EmerNet,
+			ViewUpdt:                  &sim.NetDeets.ViewUpdt,
+			AppName:                   "Protobrain solves FWorld",
+			AppTitle:                  "Protobrain",
+			AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
+			AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
+			DoLogging:                 true,
+			HaveGui:                   gConfig.GUI,
+			StartAsServer:             true,
+			ServerFunc:                serverFunc,
+		}
+		userInterface.Start() // Start blocks, so don't put any code after this.
 	}
-	userInterface.Start() // Start blocks, so don't put any code after this.
+
 }
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
@@ -98,14 +103,14 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 		log.Fatal("PlusPhase not found")
 	}
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
 	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
 		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
-			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
+			agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
 				return ss.WorldEnv.Observe(name)
 			})
 		}
@@ -136,4 +141,8 @@ func (ss *Sim) NewRun() {
 	ss.Time.Reset()
 	ss.Net.InitWts()
 	ss.NetDeets.InitStats()
+}
+
+func startWorkerLoop(sim *Sim) {
+
 }

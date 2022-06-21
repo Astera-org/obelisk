@@ -9,3 +9,8 @@ go build
 cd ../../../run
 copy ..\worlds\integrated\fworld\fworld.exe fworld.exe
 
+cd ../infra/mock
+go build
+cd ../../run
+copy ..\infra\mock\mock.exe mock.exe
+

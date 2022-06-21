@@ -12,6 +12,7 @@ import (
 type Config struct {
 	GUI     bool
 	PROFILE bool
+	WORKER  bool
 }
 
 func (config *Config) Load() {
@@ -23,5 +24,6 @@ func (config *Config) Load() {
 
 		config.GUI = true
 		config.PROFILE = false
+		config.WORKER = false
 	}
 }
