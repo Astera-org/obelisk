@@ -2,6 +2,7 @@ package network_agent
 
 import (
 	"context"
+
 	"github.com/emer/emergent/agent"
 
 	"github.com/Astera-org/worlds/network"
@@ -9,13 +10,6 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 )
-
-// GetServerFunc returns a function that starts a server. I recommend passing an AgentProxyWithWorldCache in.
-func GetWorldAndServerFunc(loops *looper.Manager) (world agent.WorldInterface, serverFunc func()) {
-	agentRep := agent.AgentProxyWithWorldCache{}
-	handler := AgentHandler{Agent: &agentRep}
-	return &agentRep, handler.GetServerFunc(loops)
-}
 
 // AgentHandler implements the thrift interface and serves as a proxy
 // between the network world and the local types
@@ -25,6 +19,13 @@ type AgentHandler struct {
 
 type Servable interface {
 	GetServerFunc(loops *looper.Manager) func()
+}
+
+// GetServerFunc returns a function that starts a server. I recommend passing an AgentProxyWithWorldCache in.
+func GetWorldAndServerFunc(loops *looper.Manager) (world agent.WorldInterface, serverFunc func()) {
+	agentRep := agent.AgentProxyWithWorldCache{}
+	handler := AgentHandler{Agent: &agentRep}
+	return &agentRep, handler.GetServerFunc(loops)
 }
 
 // GetServerFunc returns a function that blocks, waiting for calls from the environment.
@@ -38,10 +39,6 @@ func (handler *AgentHandler) GetServerFunc(loops *looper.Manager) func() {
 		server := network.MakeServer(handler)
 		server.Serve()
 	}
-}
-
-type Serverable interface {
-	GetServerFunc(loops *looper.Manager) func()
 }
 
 // Thrift Agent interface implementation (stuff that comes in over the network)
