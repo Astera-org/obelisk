@@ -21,6 +21,6 @@ func WriteResults(score float64, cycles int32, seconds int32) {
 
 	file, _ := json.MarshalIndent(result, "", " ")
 
-	_ = ioutil.WriteFile("test.json", file, 0644)
+	_ = ioutil.WriteFile("result.json", file, 0644)
 
 }
