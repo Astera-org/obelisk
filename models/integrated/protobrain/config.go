@@ -10,9 +10,10 @@ import (
 // LATER move parts of this to a separate package
 
 type Config struct {
-	GUI     bool
-	PROFILE bool
-	WORKER  bool
+	GUI      bool
+	PROFILE  bool
+	WORKER   bool
+	LIFETIME int32 // how many times the world will call step before we exit
 }
 
 func (config *Config) Load() {
@@ -25,5 +26,6 @@ func (config *Config) Load() {
 		config.GUI = true
 		config.PROFILE = false
 		config.WORKER = false
+		config.LIFETIME = 100
 	}
 }
