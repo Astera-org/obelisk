@@ -8,11 +8,6 @@ let gClient = null;
 // separate thrift client code
 // how should we organize javascript? modules?
 
-function onSendSQLButton() {
-    const sqlString = $('#sqlString').val();
-    sendQuery(sqlString);
-}
-
 function getClient() {
     if (gClient == null) {
         const transport = new Thrift.TXHRTransport(gServerURL, {useCORS: true});
@@ -22,6 +17,7 @@ function getClient() {
     return gClient;
 }
 
+// TODO: remove if unused
 function sendQuery(sqlString) {
     console.log("sendQuery query", sqlString);
     const client = getClient();
@@ -48,8 +44,20 @@ function addJob(model, world) {
     })
 }
 
+// TODO: pagination, user id
+function queryJobs() {
+    console.log("queryJobs");
+    const client = getClient();
+    const sqlString = "SELECT * from jobs";
+    client.queryJobs(function (result) {
+        console.log("queryJobs result", result);
+    })
+}
+
 $(function() {
-    console.log("document ready")
+    console.log("document ready");
+
+    queryJobs();
 
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
