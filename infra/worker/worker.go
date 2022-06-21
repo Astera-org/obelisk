@@ -16,6 +16,7 @@ import (
 7) delete the spawn result report
 */
 var gConfig Config
+var VERSION string = "v0.1.0"
 
 func main() {
 	gConfig.Load()
@@ -28,6 +29,8 @@ func main() {
 		switch command {
 		case "q":
 			os.Exit(0)
+		case "v":
+			fmt.Println("Version: ", VERSION)
 		default:
 			printHelp()
 		}
@@ -37,6 +40,7 @@ func main() {
 func printHelp() {
 	fmt.Println("Valid Commands:")
 	fmt.Println("q: quit")
+	fmt.Println("v: print version")
 }
 
 func mainLoop() {

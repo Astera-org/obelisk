@@ -1,5 +1,7 @@
 package infra
 
+// Utility functions to work with the infra system
+
 import (
 	"encoding/json"
 	"io/ioutil"

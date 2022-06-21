@@ -3,7 +3,7 @@ package network_agent
 import (
 	"context"
 
-	"github.com/emer/emergent/agent"
+	"github.com/Astera-org/models/agent"
 
 	"github.com/Astera-org/worlds/network"
 	"github.com/Astera-org/worlds/network/gengo/env"
