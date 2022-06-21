@@ -1600,7 +1600,7 @@ func main() {
 
 	err := log.Init(
 		log.SetLevel(log.INFO),
-		log.SetFileName("brain.log"),
+		log.SetFileName("world.log"),
 	)
 	if err != nil {
 		panic(err)
