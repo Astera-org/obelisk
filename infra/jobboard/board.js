@@ -41,17 +41,55 @@ function addJob(model, world) {
     const client = getClient();
     client.addJob(model, world, null, null, -1, -1, function (result) {
         console.log("addJob result", result);
+        queryJobs();
     })
 }
 
-// TODO: pagination, user id
+// convert a json object to a table row
+// see database.sql for the column names
+// keep in sync with the table headers in jobboard.html
+function toHtml(row) {
+    return `
+      <tr>
+        <td>${row.job_id}</td>
+        <td>${row.agent_name}</td>
+        <td>${row.world_name}</td>
+        <td>${row.score}</td>
+        <td>${toStatus(row.status)}</td>
+        <!-- TODO: add more columns, cancel job, etc -->
+       </tr>
+     `;
+}
+
+function toStatus(status) {
+    status = parseInt(status);
+    // from database.sql: status (0-pending,1-working,2-complete,3-errored)
+    switch (status) {
+        case 0: return "pending"
+        case 1: return "working"
+        case 2: return "complete"
+        case 3: return "errored"
+    }
+    return "unknown status " + status
+}
+
+function generateJobsTable(rows) {
+    const table = $('#jobs_table > tbody');
+    table.empty();
+
+    rows.forEach(function (row) {
+        table.append(toHtml(row));
+    });
+}
+
+// TODO: pagination, fetch by user id, etc.
 function queryJobs() {
     console.log("queryJobs");
     const client = getClient();
-    const sqlString = "SELECT * from jobs";
+
     client.queryJobs(function (result) {
-        console.log("queryJobs result", result);
-    })
+        generateJobsTable(result);
+    });
 }
 
 $(function() {
