@@ -28,3 +28,24 @@ func TestNaiveMultiArmedBandit(t *testing.T) {
 		}
 	}
 }
+
+func TestSampling(t *testing.T) {
+	world, _ := (&NaiveMultiArmedBandit{}).New([]float32{.25, .01}, []float32{1, 100})
+	agent := (&EpsilonGreedy{}).New(*world, .5)
+
+	pullArms := 5000
+	for i := 0; i < pullArms; i++ {
+		actionTaken := agent.SelectAction()
+		world.StepWorld(actionTaken, false)
+		agent.UpdateStatistics((*world))
+	}
+
+	estimatedRatio := []float32{agent.payoutHistory[0] / float32(agent.visitCounts[0]), agent.payoutHistory[1] / float32(agent.visitCounts[1])}
+	for i := 0; i < len(estimatedRatio); i++ {
+		distance := math.Abs(float64(world.utility[i] - estimatedRatio[i]))
+		if distance > .2 {
+			t.Fatalf("calculated payoff is greater than expected result: %f ", distance)
+		}
+	}
+
+}
