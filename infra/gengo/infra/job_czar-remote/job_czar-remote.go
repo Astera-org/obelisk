@@ -24,7 +24,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "\nFunctions:")
   fmt.Fprintln(os.Stderr, "  Job fetchWork(string workerName, string instanceName)")
   fmt.Fprintln(os.Stderr, "  bool submitResult(ResultWork result)")
-  fmt.Fprintln(os.Stderr, "  i32 addJob(string agentName, string worldName, string agentCfg, string worldCfg, i32 priority, i32 userID)")
+  fmt.Fprintln(os.Stderr, "  i32 addJob(string agentName, string worldName, string agentCfg, string worldCfg, i32 priority, i32 userID, string note)")
   fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
   fmt.Fprintln(os.Stderr, "  bool removeJob(i32 jobID)")
   fmt.Fprintln(os.Stderr, "   queryJobs()")
@@ -188,8 +188,8 @@ func main() {
     fmt.Print("\n")
     break
   case "addJob":
-    if flag.NArg() - 1 != 6 {
-      fmt.Fprintln(os.Stderr, "AddJob requires 6 args")
+    if flag.NArg() - 1 != 7 {
+      fmt.Fprintln(os.Stderr, "AddJob requires 7 args")
       flag.Usage()
     }
     argvalue0 := flag.Arg(1)
@@ -214,7 +214,9 @@ func main() {
     }
     argvalue5 := int32(tmp5)
     value5 := argvalue5
-    fmt.Print(client.AddJob(context.Background(), value0, value1, value2, value3, value4, value5))
+    argvalue6 := flag.Arg(7)
+    value6 := argvalue6
+    fmt.Print(client.AddJob(context.Background(), value0, value1, value2, value3, value4, value5, value6))
     fmt.Print("\n")
     break
   case "runSQL":
@@ -232,8 +234,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "RemoveJob requires 1 args")
       flag.Usage()
     }
-    tmp0, err39 := (strconv.Atoi(flag.Arg(1)))
-    if err39 != nil {
+    tmp0, err40 := (strconv.Atoi(flag.Arg(1)))
+    if err40 != nil {
       Usage()
       return
     }

@@ -1,5 +1,5 @@
 
-create database obelisk;
+# create database obelisk;
 use obelisk;
 
 #status (0-pending,1-working,2-complete,3-errored)
@@ -10,7 +10,8 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     time_added TIMESTAMP DEFAULT NOW(), 
     agent_name VARCHAR(10) NOT NULL,agent_version INT DEFAULT 0,
     world_name VARCHAR(10) NOT NULL,world_version INT DEFAULT 0,
-    agent_param VARCHAR(1024) default "", world_param VARCHAR(1024) default "", 
+    agent_param VARCHAR(1024) default "", world_param VARCHAR(1024) default "",
+    note VARCHAR(1024) default "",
     bail_threshold DOUBLE DEFAULT 0, 
     worker_name VARCHAR(10), instance_name VARCHAR(10),
     time_handed TIMESTAMP, seconds INT,
