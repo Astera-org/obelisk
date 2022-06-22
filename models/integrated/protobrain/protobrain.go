@@ -6,11 +6,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+
+	log "github.com/Astera-org/easylog"
+	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/models/library/autoui"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/infra"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
@@ -30,32 +33,45 @@ func main() {
 
 	gConfig.Load() // LATER specify the .cfg as a cmd line arg
 
-	if gConfig.PROFILE {
-		fmt.Println("Starting profiling")
-		defer profile.Start(profile.ProfilePath(".")).Stop()
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("brain.log"),
+	)
+	if err != nil {
+		panic(err)
 	}
 
+	log.Info("Starting Protobrain ==========")
+
+	if gConfig.PROFILE {
+		log.Info("Starting profiling")
+		defer profile.Start(profile.ProfilePath(".")).Stop()
+	}
 	var sim Sim
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
-	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
-	sim.WorldEnv = world
+	sim.WorldEnv = &agent.NetworkWorld{}
 
-	userInterface := &autoui.AutoUI{
-		StructForView:             &sim,
-		Looper:                    sim.Loops,
-		Network:                   sim.Net.EmerNet,
-		ViewUpdt:                  &sim.NetDeets.ViewUpdt,
-		AppName:                   "Protobrain solves FWorld",
-		AppTitle:                  "Protobrain",
-		AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
-		DoLogging:                 true,
-		HaveGui:                   gConfig.GUI,
-		StartAsServer:             true,
-		ServerFunc:                serverFunc,
+	if gConfig.WORKER {
+		sim.startWorkerLoop()
+	} else {
+		userInterface := &autoui.AutoUI{
+			StructForView:             &sim,
+			Looper:                    sim.Loops,
+			Network:                   sim.Net.EmerNet,
+			ViewUpdt:                  &sim.NetDeets.ViewUpdt,
+			AppName:                   "Protobrain solves FWorld",
+			AppTitle:                  "Protobrain",
+			AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
+			AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
+			DoLogging:                 true,
+			HaveGui:                   gConfig.GUI,
+			StartAsServer:             true,
+			ServerFunc:                sim.startWorkerLoop,
+		}
+		userInterface.Start() // Start blocks, so don't put any code after this.
 	}
-	userInterface.Start() // Start blocks, so don't put any code after this.
+
 }
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
@@ -66,6 +82,7 @@ type Sim struct {
 	WorldEnv agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
 	Time     axon.Time            `desc:"axon timing parameters and state"`
 	LoopTime string               `desc:"Printout of the current time."`
+	NumSteps int32
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -83,33 +100,27 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
 	if !ok {
-		panic("PlusPhase not found")
+		log.Fatal("PlusPhase not found")
 	}
+	// TODO this doesn't make sense. we should wait for the next Step call to come in from the
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
-			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return ss.WorldEnv.Observe(name)
-			})
-		}
-
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
 
 	// Initialize and print loop structure, then add to Sim
-	fmt.Println(manager.DocString())
+	log.Info(manager.DocString())
 
 	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("QuickScore", func() {
 		loss := ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr()
 		s := fmt.Sprintf("%f", loss)
-		fmt.Println("the pctuniterror is " + s)
+		log.Info("the pctuniterror is " + s)
 	})
 
 	return manager
@@ -124,4 +135,41 @@ func (ss *Sim) NewRun() {
 	ss.Time.Reset()
 	ss.Net.InitWts()
 	ss.NetDeets.InitStats()
+}
+
+func (sim *Sim) OnObserve() {
+	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
+		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
+	}
+}
+
+func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
+	sim.NumSteps++
+	if sim.NumSteps >= gConfig.LIFETIME {
+		// TODO figure score and seconds
+		log.Info("LIFETIME reached")
+		infra.WriteResults(.5, sim.NumSteps, 100)
+		os.Exit(0)
+	}
+
+	sim.WorldEnv.SetObservations(obs)
+
+	log.Info("OnStep: ", sim.NumSteps)
+	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+	actions := agent.GetAction(sim.Net.AsAxon())
+
+	return actions
+}
+
+func (sim *Sim) startWorkerLoop() {
+	// start the server listening for the world telling you to step
+	// 		Step Called by the world:
+	// 		increment the count of steps
+	// 		run the lopper
+	// 		get the action from the current brain state
+	// 		return the action to the world
+	// write results after LIFETIME steps
+	// exit
+	addr := fmt.Sprint("127.0.0.1:", gConfig.INTERNAL_PORT)
+	agent.StartServer(addr, sim.OnStep)
 }

@@ -22,9 +22,9 @@ const (
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
 
-	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name FROM jobs where status=0 order by priority desc LIMIT 1")
+	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1")
 
-	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName)
+	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName, &job.AgentCfg, &job.WorldCfg)
 	if err == sql.ErrNoRows {
 		fmt.Println(err)
 		return &job, errors.New("empty")
@@ -34,7 +34,8 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 		return &job, errors.New("db error")
 	}
 
-	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d", workerName, instanceName, job.JobID)
+	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d",
+		workerName, instanceName, job.JobID)
 	_, err = gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
@@ -45,14 +46,16 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
 	if result.Status == goodJob {
-		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,time_start=%d,time_end=%d,score=%f where job_id=%d", result.Cycles, result.TimeStart, result.TimeStop, result.Score, result.JobID)
+
+		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,seconds=%d,score=%f where job_id=%d",
+			result.Cycles, result.Seconds, result.Score, result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)
 			return false, err
 		}
 	} else { // this worker wasn't up to the task. return the job to the pool
-		sql := fmt.Sprintf("UPDATE jobs set status=0, woker_name='', instance_name=`` where job_id=%d", result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name='' where job_id=%d", result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
 			fmt.Println(err)
@@ -65,28 +68,20 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 
 func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
 	agentCfg string, worldCfg string, priority int32, userID int32) (int32, error) {
-
-	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')", userID, priority, agentName, worldName, agentCfg, worldCfg)
-	_, err := gDatabase.db.Exec(sql)
-
+	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')",
+		userID, priority, agentName, worldName, agentCfg, worldCfg)
+	result, err := gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
-		return 0, err
+		return -1, err
 	}
-
-	rows, err := gDatabase.db.Query("SELECT LAST_INSERT_ID()")
+	insertID, err := result.LastInsertId()
 	if err != nil {
 		fmt.Println(err)
-		return 0, errors.New("db error")
+		return -1, err
 	}
-	var insertID int32
-	err = rows.Scan(&insertID)
-	if err != nil {
-		fmt.Println(err)
-		return 0, errors.New("empty")
-	}
-
-	return insertID, nil
+	// javascript doesn't support int64
+	return int32(insertID), nil
 }
 
 // only allow you to delete unservered up jobs
@@ -97,6 +92,24 @@ func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool,
 		return false, err
 	}
 	return true, nil
+}
+
+func (handler RequestHandler) QueryJobs(ctx context.Context) ([]map[string]string, error) {
+	sql := fmt.Sprintf("SELECT * from jobs order by job_id desc LIMIT 1000")
+	rows, err := gDatabase.db.Query(sql)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	res := make([]map[string]string, 0)
+	for rows.Next() {
+		m, err := rowToMap(rows)
+		if err == nil {
+			res = append(res, m)
+		}
+	}
+	return res, nil
 }
 
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
@@ -154,4 +167,36 @@ func printDBResult(rows *sql.Rows) string {
 		retString += err.Error()
 	}
 	return retString
+}
+
+// convert a single row to a map
+// TODO: create a type for job row once the api is more stable
+// but for now just map to strings, which is fine because we want to display them
+func rowToMap(row *sql.Rows) (map[string]string, error) {
+	columns, _ := row.Columns()
+	values := make([]sql.RawBytes, len(columns))
+	scanArgs := make([]interface{}, len(values))
+	for i := range values {
+		scanArgs[i] = &values[i]
+	}
+
+	res := make(map[string]string)
+
+	err := row.Scan(scanArgs...)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	var value string
+	for i, col := range values {
+		if col == nil {
+			value = "NULL"
+		} else {
+			value = string(col)
+		}
+		res[columns[i]] = value
+	}
+
+	return res, nil
 }

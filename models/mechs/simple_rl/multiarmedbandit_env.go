@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"github.com/emer/emergent/agent"
 	"github.com/emer/etable/etensor"
 	"math/rand"
@@ -36,25 +37,45 @@ func (mab *NaiveMultiArmedBandit) InitWorld(details map[string]string) (
 	}
 
 	reward := agent.SpaceSpec{
-		ContinuousShape: []int{10},
+		ContinuousShape: []int{len(mab.armPayout)},
 		Min:             0.0,
-		Max:             1.0,
+		Max:             10.0,
 	}
-	return map[string]agent.SpaceSpec{"Output": discreteActions, "Input": reward},
-		map[string]agent.SpaceSpec{"Input": reward, "Output": discreteActions}
+	return map[string]agent.SpaceSpec{"ArmPulled": discreteActions},
+		map[string]agent.SpaceSpec{"ArmPulled": reward, "ObservedReward": discreteActions}
 }
 
 // StepWorld steps the index of the current pattern.
 func (mab *NaiveMultiArmedBandit) StepWorld(actions map[string]agent.Action, agentDone bool) (worldDone bool, debug string) {
-	whichAction := actions["Output"].DiscreteOption
+	whichAction := actions["ArmPulled"].DiscreteOption
 	mab.lastAction = whichAction
-
+	mab.lastReward = mab.PullArm(whichAction)
 	return false, ""
 }
 
 // Observe returns an observation from the cache.
 func (mab *NaiveMultiArmedBandit) Observe(name string) etensor.Tensor {
-	if name == "Input" {
+
+	if mab.lastAction == -1 {
+		if name == "ObservedReward" {
+			tensor := etensor.New(etensor.FLOAT32, []int{len(mab.armPayout)}, nil, []string{"observedReward"})
+			tensor.SetFloat1D(0, 0)
+			return tensor
+		} else if name == "ArmPulled" {
+			tensor := etensor.New(etensor.FLOAT32, []int{len(mab.armPayout)}, nil, []string{"armPulled"})
+			tensor.SetFloat1D(0, float64(1.0))
+			return tensor
+		}
+	} else {
+		if name == "ObservedReward" {
+			tensor := etensor.New(etensor.FLOAT32, []int{len(mab.armPayout)}, nil, []string{"observedReward"})
+			tensor.SetFloat1D(mab.lastAction, float64(mab.lastReward))
+			return tensor
+		} else if name == "ArmPulled" {
+			tensor := etensor.New(etensor.FLOAT32, []int{len(mab.armPayout)}, nil, []string{"armPulled"})
+			tensor.SetFloat1D(mab.lastAction, float64(1.0))
+			return tensor
+		}
 	}
 	return nil
 }
@@ -93,5 +114,12 @@ func (mab NaiveMultiArmedBandit) PullArm(whichArm int) float32 {
 }
 
 func main() {
+	world, _ := (&NaiveMultiArmedBandit{}).NewUniformPayout([]float32{0, 1})
+	world.Observe("Input")
 
+	action := map[string]agent.Action{}
+	action["ArmPulled"] = agent.Action{DiscreteOption: 1}
+	world.StepWorld(action, false)
+	fmt.Println(world.Observe("ObservedReward"))
+	fmt.Println(world.Observe("ArmPulled"))
 }

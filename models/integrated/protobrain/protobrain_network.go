@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
+	log "github.com/Astera-org/easylog"
 
+	"github.com/Astera-org/models/agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/erand"
@@ -484,7 +484,7 @@ func DefineNetworkStructure(deets *NetworkDeets, net *deep.Network) {
 	deets.Params.SetObject("Network")
 	err := net.Build()
 	if err != nil {
-		log.Println(err)
+		log.Error("", err)
 		return
 	}
 	net.InitWts()

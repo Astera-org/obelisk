@@ -10,15 +10,17 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     time_added TIMESTAMP DEFAULT NOW(), 
     agent_name VARCHAR(10) NOT NULL,agent_version INT DEFAULT 0,
     world_name VARCHAR(10) NOT NULL,world_version INT DEFAULT 0,
-    agent_param LONGBLOB, world_param LONGBLOB, 
+    agent_param VARCHAR(1024) default "", world_param VARCHAR(1024) default "", 
     bail_threshold DOUBLE DEFAULT 0, 
     worker_name VARCHAR(10), instance_name VARCHAR(10),
-    time_handed TIMESTAMP DEFAULT 0, time_start TIMESTAMP DEFAULT 0, time_end TIMESTAMP DEFAULT 0,
+    time_handed TIMESTAMP, seconds INT,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
+
+create table cfgs (cfg_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, cfg VARCHAR(1024));
 
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_name VARCHAR(10));
 
 ####################
 
-INSERT INTO jobs (agent_name,world_name) values ("brain","fworld");
+INSERT INTO jobs (agent_name,world_name,agent_param,world_param) values ("brain","fworld","GUI=false","GUI=false");
 

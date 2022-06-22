@@ -602,6 +602,119 @@ JobCzar_removeJob_result.prototype.write = function(output) {
   return;
 };
 
+JobCzar_queryJobs_args = function(args) {
+};
+JobCzar_queryJobs_args.prototype = {};
+JobCzar_queryJobs_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_queryJobs_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_queryJobs_args');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_queryJobs_result = function(args) {
+  this.success = null;
+  if (args) {
+    if (args.success !== undefined && args.success !== null) {
+      this.success = Thrift.copyList(args.success, [Thrift.copyMap, null]);
+    }
+  }
+};
+JobCzar_queryJobs_result.prototype = {};
+JobCzar_queryJobs_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 0:
+      if (ftype == Thrift.Type.LIST) {
+        this.success = [];
+        var _rtmp31 = input.readListBegin();
+        var _size0 = _rtmp31.size || 0;
+        for (var _i2 = 0; _i2 < _size0; ++_i2) {
+          var elem3 = null;
+          elem3 = {};
+          var _rtmp35 = input.readMapBegin();
+          var _size4 = _rtmp35.size || 0;
+          for (var _i6 = 0; _i6 < _size4; ++_i6) {
+            if (_i6 > 0 ) {
+              if (input.rstack.length > input.rpos[input.rpos.length -1] + 1) {
+                input.rstack.pop();
+              }
+            }
+            var key7 = null;
+            var val8 = null;
+            key7 = input.readString().value;
+            val8 = input.readString().value;
+            elem3[key7] = val8;
+          }
+          input.readMapEnd();
+          this.success.push(elem3);
+        }
+        input.readListEnd();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_queryJobs_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_queryJobs_result');
+  if (this.success !== null && this.success !== undefined) {
+    output.writeFieldBegin('success', Thrift.Type.LIST, 0);
+    output.writeListBegin(Thrift.Type.MAP, this.success.length);
+    for (var iter9 in this.success) {
+      if (this.success.hasOwnProperty(iter9)) {
+        iter9 = this.success[iter9];
+        output.writeMapBegin(Thrift.Type.STRING, Thrift.Type.STRING, Thrift.objectLength(iter9));
+        for (var kiter10 in iter9) {
+          if (iter9.hasOwnProperty(kiter10)) {
+            var viter11 = iter9[kiter10];
+            output.writeString(kiter10);
+            output.writeString(viter11);
+          }
+        }
+        output.writeMapEnd();
+      }
+    }
+    output.writeListEnd();
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 JobCzarClient = function(input, output) {
   this.input = input;
   this.output = (!output) ? input : output;
@@ -903,4 +1016,59 @@ JobCzarClient.prototype.recv_removeJob = function() {
     return result.success;
   }
   throw 'removeJob failed: unknown result';
+};
+
+JobCzarClient.prototype.queryJobs = function(callback) {
+  this.send_queryJobs(callback); 
+  if (!callback) {
+    return this.recv_queryJobs();
+  }
+};
+
+JobCzarClient.prototype.send_queryJobs = function(callback) {
+  var args = new JobCzar_queryJobs_args();
+  try {
+    this.output.writeMessageBegin('queryJobs', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_queryJobs();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_queryJobs = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_queryJobs_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  if (null !== result.success) {
+    return result.success;
+  }
+  throw 'queryJobs failed: unknown result';
 };

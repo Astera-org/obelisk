@@ -20,11 +20,19 @@
         <form id="add_job_form">
             <div class="form-group">
                 <label for="model">Model</label>
-                <input class="form-control" id="model" placeholder="protobrain">
+                <input class="form-control" id="model" placeholder="protobrain" required>
+            </div>
+            <div class="form-group">
+                <label for="model-config">Model Config</label>
+                <input class="form-control" id="model-config">
             </div>
             <div class="form-group">
                 <label for="world">World</label>
-                <input class="form-control" id="world" placeholder="fworld">
+                <input class="form-control" id="world" placeholder="fworld" required>
+            </div>
+            <div class="form-group">
+                <label for="world-config">World Config</label>
+                <input class="form-control" id="world-config">
             </div>
 
             <!-- TODO: model config and world config-->
@@ -35,6 +43,27 @@
         </form>
 
         <!-- Show jobs -->
+
+        <!-- see database.sql for the column names -->
+        <!-- keep in sync with toHtml in board.js -->
+        <table id="jobs_table" class="table table-hover">
+            <thead>
+            <tr>
+                <th scope="col">Job id</th>
+                <th scope="col">Model</th>
+                <th scope="col">World</th>
+                <th scope="col">Score</th>
+                <th scope="col">Status</th>
+                <th scope="col">Cancel</th>
+                <!-- TODO: add more columns -->
+            </tr>
+            </thead>
+
+            <tbody>
+            <!-- This gets filled in board.js generateJobsTable -->
+            </tbody>
+
+        </table>
 
     </body>
 </html>
