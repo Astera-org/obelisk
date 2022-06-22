@@ -170,7 +170,6 @@ func (sim *Sim) startWorkerLoop() {
 	// 		return the action to the world
 	// write results after LIFETIME steps
 	// exit
-
-	agent.StartServer("127.0.0.1:9090", sim.OnStep)
-
+	addr := fmt.Sprint("127.0.0.1:", gConfig.INTERNAL_PORT)
+	agent.StartServer(addr, sim.OnStep)
 }
