@@ -9,3 +9,4 @@ wandb/*
 wandb/
 __pycache__/
 go.work
+*.log
