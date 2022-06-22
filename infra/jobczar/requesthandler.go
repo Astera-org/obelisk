@@ -67,9 +67,9 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 }
 
 func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
-	agentCfg string, worldCfg string, priority int32, userID int32) (int32, error) {
-	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param) values (%d,%d,'%s','%s','%s','%s')",
-		userID, priority, agentName, worldName, agentCfg, worldCfg)
+	agentCfg string, worldCfg string, priority int32, userID int32, note string) (int32, error) {
+	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param,note) values (%d,%d,'%s','%s','%s','%s','%s')",
+		userID, priority, agentName, worldName, agentCfg, worldCfg, note)
 	result, err := gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
