@@ -36,11 +36,11 @@ function sendQuery(sqlString) {
     }
 }
 
-function addJob(model, modelConfig, world, worldConfig) {
-    console.log("addJob model:", model, "model config", modelConfig, "world:",
-        world, "world config", worldConfig);
+function addJob(model, modelConfig, world, worldConfig, note) {
+    console.log("addJob model:", model, "model config:", modelConfig, "world:",
+        world, "world config:", worldConfig, "note:", note);
     const client = getClient();
-    client.addJob(model, world, modelConfig, worldConfig, -1, -1, function (result) {
+    client.addJob(model, world, modelConfig, worldConfig, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
     })
@@ -122,8 +122,9 @@ $(function() {
         const modelConfig = $("#model-config").val();
         const world = $("#world").val();
         const worldConfig = $("#world-config").val();
+        const note = $("#note").val();
 
-        addJob(model, modelConfig, world, worldConfig);
+        addJob(model, modelConfig, world, worldConfig, note);
     });
 
 });

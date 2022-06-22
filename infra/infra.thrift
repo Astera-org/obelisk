@@ -35,7 +35,7 @@ service JobCzar {
     bool submitResult(1:ResultWork result);
 
     i32 addJob(1:string agentName, 2:string worldName, 3:string agentCfg, 
-        4:string worldCfg, 5:i32 priority, 6:i32 userID);
+        4:string worldCfg, 5:i32 priority, 6:i32 userID, 7:string note);
 
     string runSQL(1:string query);
 
