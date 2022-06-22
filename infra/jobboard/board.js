@@ -56,6 +56,7 @@ function toHtml(row) {
         <td>${row.world_name}</td>
         <td>${row.score}</td>
         <td>${toStatus(row.status)}</td>
+        <td><button type="button" class="btn" id="${row.job_id}">cancel</button></td>
         <!-- TODO: add more columns, cancel job, etc -->
        </tr>
      `;
@@ -76,9 +77,26 @@ function toStatus(status) {
 function generateJobsTable(rows) {
     const table = $('#jobs_table > tbody');
     table.empty();
+    // clear out old click listeners or they pile up
+    table.off('click');
 
     rows.forEach(function (row) {
         table.append(toHtml(row));
+    });
+
+    // handle cancel job click
+    table.on('click', 'button', function () {
+        const job_id = parseInt($(this).attr('id'));
+        cancelJob(job_id);
+    });
+}
+
+function cancelJob(job_id) {
+    console.log("cancel job", job_id);
+    const client = getClient();
+    client.removeJob(job_id, function (result) {
+       console.log("remove job ", job_id, result);
+       queryJobs();
     });
 }
 
