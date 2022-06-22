@@ -18,14 +18,17 @@ type Config struct {
 
 func (config *Config) Load() {
 
+	config.setDefaults()
 	_, err := toml.DecodeFile("brain.cfg", &config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stderr, "Using defaults")
-
-		config.GUI = true
-		config.PROFILE = false
-		config.WORKER = false
-		config.LIFETIME = 100
 	}
+}
+
+func (config *Config) setDefaults() {
+	config.GUI = true
+	config.PROFILE = false
+	config.WORKER = false
+	config.LIFETIME = 100
 }
