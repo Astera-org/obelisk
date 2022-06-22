@@ -6,10 +6,12 @@ package main
 
 import (
 	"fmt"
+	"os"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/models/library/autoui"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/infra"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/emer"
@@ -17,7 +19,6 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
-	log "github.com/zajann/easylog"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -46,15 +47,13 @@ func main() {
 		log.Info("Starting profiling")
 		defer profile.Start(profile.ProfilePath(".")).Stop()
 	}
-
 	var sim Sim
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
-	world, serverFunc := network_agent.GetWorldAndServerFunc(sim.Loops)
-	sim.WorldEnv = world
+	sim.WorldEnv = &agent.NetworkWorld{}
 
 	if gConfig.WORKER {
-		startWorkerLoop(&sim)
+		sim.startWorkerLoop()
 	} else {
 		userInterface := &autoui.AutoUI{
 			StructForView:             &sim,
@@ -68,7 +67,7 @@ func main() {
 			DoLogging:                 true,
 			HaveGui:                   gConfig.GUI,
 			StartAsServer:             true,
-			ServerFunc:                serverFunc,
+			ServerFunc:                sim.startWorkerLoop,
 		}
 		userInterface.Start() // Start blocks, so don't put any code after this.
 	}
@@ -83,6 +82,7 @@ type Sim struct {
 	WorldEnv agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
 	Time     axon.Time            `desc:"axon timing parameters and state"`
 	LoopTime string               `desc:"Printout of the current time."`
+	NumSteps int32
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -102,20 +102,14 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
+	// TODO this doesn't make sense. we should wait for the next Step call to come in from the
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		for _, name := range ss.Net.LayersByClass(emer.Input.String()) { // DO NOT SUBMIT Make sure this works
-			agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return ss.WorldEnv.Observe(name)
-			})
-		}
-
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
@@ -143,6 +137,39 @@ func (ss *Sim) NewRun() {
 	ss.NetDeets.InitStats()
 }
 
-func startWorkerLoop(sim *Sim) {
+func (sim *Sim) OnObserve() {
+	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
+		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
+	}
+}
 
+func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
+	sim.NumSteps++
+	if sim.NumSteps >= gConfig.LIFETIME {
+		// TODO figure score and seconds
+		log.Info("LIFETIME reached")
+		infra.WriteResults(.5, sim.NumSteps, 100)
+		os.Exit(0)
+	}
+
+	sim.WorldEnv.SetObservations(obs)
+
+	log.Info("OnStep: ", sim.NumSteps)
+	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+	actions := agent.GetAction(sim.Net.AsAxon())
+
+	return actions
+}
+
+func (sim *Sim) startWorkerLoop() {
+	// start the server listening for the world telling you to step
+	// 		Step Called by the world:
+	// 		increment the count of steps
+	// 		run the lopper
+	// 		get the action from the current brain state
+	// 		return the action to the world
+	// write results after LIFETIME steps
+	// exit
+	addr := fmt.Sprint("127.0.0.1:", gConfig.INTERNAL_PORT)
+	agent.StartServer(addr, sim.OnStep)
 }
