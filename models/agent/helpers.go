@@ -1,10 +1,10 @@
 package agent
 
 import (
+	log "github.com/Astera-org/easylog"
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/etable/etensor"
-	log "github.com/zajann/easylog"
 )
 
 /////////////////////////////////////////////////////

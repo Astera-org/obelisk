@@ -18,6 +18,7 @@ import (
 	"os"
 	"strconv"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
@@ -38,7 +39,6 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
-	log "github.com/zajann/easylog"
 )
 
 // FWorld is a flat-world grid-based environment

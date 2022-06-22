@@ -2,11 +2,10 @@ package worlds
 
 import (
 	"context"
-	"fmt"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/worlds/network"
 	"github.com/Astera-org/worlds/network/gengo/env"
-	log "github.com/zajann/easylog"
 )
 
 const ADDR = "localhost:9090"

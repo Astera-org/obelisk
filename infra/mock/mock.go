@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"time"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra"
-	log "github.com/zajann/easylog"
 )
 
 func main() {

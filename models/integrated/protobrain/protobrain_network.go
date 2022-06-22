@@ -1,7 +1,7 @@
 package main
 
 import (
-	log "github.com/zajann/easylog"
+	log "github.com/Astera-org/easylog"
 
 	"github.com/Astera-org/models/agent"
 	"github.com/emer/axon/axon"

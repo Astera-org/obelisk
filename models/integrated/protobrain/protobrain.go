@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/obelisk/infra"
@@ -18,7 +19,6 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
-	log "github.com/zajann/easylog"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
