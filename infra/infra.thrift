@@ -30,7 +30,6 @@ service JobCzar {
     // workers call this when they are ready for a new Job
     Job fetchWork(1:string workerName,2:string instanceName);
 
-    
     // workers call this when they are done with an assigned task
     // if doesn't return true the worker should try to tell it again that the work is complete
     bool submitResult(1:ResultWork result);
@@ -41,4 +40,6 @@ service JobCzar {
     string runSQL(1:string query);
 
     bool removeJob(1:i32 jobID);
+
+    list<map<string, string>> queryJobs();
 }

@@ -27,6 +27,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  i32 addJob(string agentName, string worldName, string agentCfg, string worldCfg, i32 priority, i32 userID)")
   fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
   fmt.Fprintln(os.Stderr, "  bool removeJob(i32 jobID)")
+  fmt.Fprintln(os.Stderr, "   queryJobs()")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -166,19 +167,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "SubmitResult_ requires 1 args")
       flag.Usage()
     }
-    arg20 := flag.Arg(1)
-    mbTrans21 := thrift.NewTMemoryBufferLen(len(arg20))
-    defer mbTrans21.Close()
-    _, err22 := mbTrans21.WriteString(arg20)
-    if err22 != nil {
+    arg26 := flag.Arg(1)
+    mbTrans27 := thrift.NewTMemoryBufferLen(len(arg26))
+    defer mbTrans27.Close()
+    _, err28 := mbTrans27.WriteString(arg26)
+    if err28 != nil {
       Usage()
       return
     }
-    factory23 := thrift.NewTJSONProtocolFactory()
-    jsProt24 := factory23.GetProtocol(mbTrans21)
+    factory29 := thrift.NewTJSONProtocolFactory()
+    jsProt30 := factory29.GetProtocol(mbTrans27)
     argvalue0 := infra.NewResultWork()
-    err25 := argvalue0.Read(context.Background(), jsProt24)
-    if err25 != nil {
+    err31 := argvalue0.Read(context.Background(), jsProt30)
+    if err31 != nil {
       Usage()
       return
     }
@@ -199,15 +200,15 @@ func main() {
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
-    tmp4, err30 := (strconv.Atoi(flag.Arg(5)))
-    if err30 != nil {
+    tmp4, err36 := (strconv.Atoi(flag.Arg(5)))
+    if err36 != nil {
       Usage()
       return
     }
     argvalue4 := int32(tmp4)
     value4 := argvalue4
-    tmp5, err31 := (strconv.Atoi(flag.Arg(6)))
-    if err31 != nil {
+    tmp5, err37 := (strconv.Atoi(flag.Arg(6)))
+    if err37 != nil {
       Usage()
       return
     }
@@ -231,14 +232,22 @@ func main() {
       fmt.Fprintln(os.Stderr, "RemoveJob requires 1 args")
       flag.Usage()
     }
-    tmp0, err33 := (strconv.Atoi(flag.Arg(1)))
-    if err33 != nil {
+    tmp0, err39 := (strconv.Atoi(flag.Arg(1)))
+    if err39 != nil {
       Usage()
       return
     }
     argvalue0 := int32(tmp0)
     value0 := argvalue0
     fmt.Print(client.RemoveJob(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "queryJobs":
+    if flag.NArg() - 1 != 0 {
+      fmt.Fprintln(os.Stderr, "QueryJobs requires 0 args")
+      flag.Usage()
+    }
+    fmt.Print(client.QueryJobs(context.Background()))
     fmt.Print("\n")
     break
   case "":

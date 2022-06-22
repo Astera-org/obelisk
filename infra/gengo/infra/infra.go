@@ -612,6 +612,7 @@ type JobCzar interface {
   // Parameters:
   //  - JobID
   RemoveJob(ctx context.Context, jobID int32) (_r bool, _err error)
+  QueryJobs(ctx context.Context) (_r []map[string]string, _err error)
 }
 
 type JobCzarClient struct {
@@ -739,6 +740,18 @@ func (p *JobCzarClient) RemoveJob(ctx context.Context, jobID int32) (_r bool, _e
   return _result15.GetSuccess(), nil
 }
 
+func (p *JobCzarClient) QueryJobs(ctx context.Context) (_r []map[string]string, _err error) {
+  var _args16 JobCzarQueryJobsArgs
+  var _result18 JobCzarQueryJobsResult
+  var _meta17 thrift.ResponseMeta
+  _meta17, _err = p.Client_().Call(ctx, "queryJobs", &_args16, &_result18)
+  p.SetLastResponseMeta_(_meta17)
+  if _err != nil {
+    return
+  }
+  return _result18.GetSuccess(), nil
+}
+
 type JobCzarProcessor struct {
   processorMap map[string]thrift.TProcessorFunction
   handler JobCzar
@@ -759,13 +772,14 @@ func (p *JobCzarProcessor) ProcessorMap() map[string]thrift.TProcessorFunction {
 
 func NewJobCzarProcessor(handler JobCzar) *JobCzarProcessor {
 
-  self16 := &JobCzarProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
-  self16.processorMap["fetchWork"] = &jobCzarProcessorFetchWork{handler:handler}
-  self16.processorMap["submitResult"] = &jobCzarProcessorSubmitResult_{handler:handler}
-  self16.processorMap["addJob"] = &jobCzarProcessorAddJob{handler:handler}
-  self16.processorMap["runSQL"] = &jobCzarProcessorRunSQL{handler:handler}
-  self16.processorMap["removeJob"] = &jobCzarProcessorRemoveJob{handler:handler}
-return self16
+  self19 := &JobCzarProcessor{handler:handler, processorMap:make(map[string]thrift.TProcessorFunction)}
+  self19.processorMap["fetchWork"] = &jobCzarProcessorFetchWork{handler:handler}
+  self19.processorMap["submitResult"] = &jobCzarProcessorSubmitResult_{handler:handler}
+  self19.processorMap["addJob"] = &jobCzarProcessorAddJob{handler:handler}
+  self19.processorMap["runSQL"] = &jobCzarProcessorRunSQL{handler:handler}
+  self19.processorMap["removeJob"] = &jobCzarProcessorRemoveJob{handler:handler}
+  self19.processorMap["queryJobs"] = &jobCzarProcessorQueryJobs{handler:handler}
+return self19
 }
 
 func (p *JobCzarProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -776,12 +790,12 @@ func (p *JobCzarProcessor) Process(ctx context.Context, iprot, oprot thrift.TPro
   }
   iprot.Skip(ctx, thrift.STRUCT)
   iprot.ReadMessageEnd(ctx)
-  x17 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
+  x20 := thrift.NewTApplicationException(thrift.UNKNOWN_METHOD, "Unknown function " + name)
   oprot.WriteMessageBegin(ctx, name, thrift.EXCEPTION, seqId)
-  x17.Write(ctx, oprot)
+  x20.Write(ctx, oprot)
   oprot.WriteMessageEnd(ctx)
   oprot.Flush(ctx)
-  return false, x17
+  return false, x20
 
 }
 
@@ -1163,6 +1177,85 @@ func (p *jobCzarProcessorRemoveJob) Process(ctx context.Context, seqId int32, ip
   }
   tickerCancel()
   if err2 = oprot.WriteMessageBegin(ctx, "removeJob", thrift.REPLY, seqId); err2 != nil {
+    err = thrift.WrapTException(err2)
+  }
+  if err2 = result.Write(ctx, oprot); err == nil && err2 != nil {
+    err = thrift.WrapTException(err2)
+  }
+  if err2 = oprot.WriteMessageEnd(ctx); err == nil && err2 != nil {
+    err = thrift.WrapTException(err2)
+  }
+  if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+    err = thrift.WrapTException(err2)
+  }
+  if err != nil {
+    return
+  }
+  return true, err
+}
+
+type jobCzarProcessorQueryJobs struct {
+  handler JobCzar
+}
+
+func (p *jobCzarProcessorQueryJobs) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+  args := JobCzarQueryJobsArgs{}
+  var err2 error
+  if err2 = args.Read(ctx, iprot); err2 != nil {
+    iprot.ReadMessageEnd(ctx)
+    x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err2.Error())
+    oprot.WriteMessageBegin(ctx, "queryJobs", thrift.EXCEPTION, seqId)
+    x.Write(ctx, oprot)
+    oprot.WriteMessageEnd(ctx)
+    oprot.Flush(ctx)
+    return false, thrift.WrapTException(err2)
+  }
+  iprot.ReadMessageEnd(ctx)
+
+  tickerCancel := func() {}
+  // Start a goroutine to do server side connectivity check.
+  if thrift.ServerConnectivityCheckInterval > 0 {
+    var cancel context.CancelFunc
+    ctx, cancel = context.WithCancel(ctx)
+    defer cancel()
+    var tickerCtx context.Context
+    tickerCtx, tickerCancel = context.WithCancel(context.Background())
+    defer tickerCancel()
+    go func(ctx context.Context, cancel context.CancelFunc) {
+      ticker := time.NewTicker(thrift.ServerConnectivityCheckInterval)
+      defer ticker.Stop()
+      for {
+        select {
+        case <-ctx.Done():
+          return
+        case <-ticker.C:
+          if !iprot.Transport().IsOpen() {
+            cancel()
+            return
+          }
+        }
+      }
+    }(tickerCtx, cancel)
+  }
+
+  result := JobCzarQueryJobsResult{}
+  var retval []map[string]string
+  if retval, err2 = p.handler.QueryJobs(ctx); err2 != nil {
+    tickerCancel()
+    if err2 == thrift.ErrAbandonRequest {
+      return false, thrift.WrapTException(err2)
+    }
+    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing queryJobs: " + err2.Error())
+    oprot.WriteMessageBegin(ctx, "queryJobs", thrift.EXCEPTION, seqId)
+    x.Write(ctx, oprot)
+    oprot.WriteMessageEnd(ctx)
+    oprot.Flush(ctx)
+    return true, thrift.WrapTException(err2)
+  } else {
+    result.Success = retval
+  }
+  tickerCancel()
+  if err2 = oprot.WriteMessageBegin(ctx, "queryJobs", thrift.REPLY, seqId); err2 != nil {
     err = thrift.WrapTException(err2)
   }
   if err2 = result.Write(ctx, oprot); err == nil && err2 != nil {
@@ -2359,6 +2452,204 @@ func (p *JobCzarRemoveJobResult) String() string {
     return "<nil>"
   }
   return fmt.Sprintf("JobCzarRemoveJobResult(%+v)", *p)
+}
+
+type JobCzarQueryJobsArgs struct {
+}
+
+func NewJobCzarQueryJobsArgs() *JobCzarQueryJobsArgs {
+  return &JobCzarQueryJobsArgs{}
+}
+
+func (p *JobCzarQueryJobsArgs) Read(ctx context.Context, iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin(ctx)
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+      return err
+    }
+    if err := iprot.ReadFieldEnd(ctx); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *JobCzarQueryJobsArgs) Write(ctx context.Context, oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin(ctx, "queryJobs_args"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+  }
+  if err := oprot.WriteFieldStop(ctx); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(ctx); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *JobCzarQueryJobsArgs) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("JobCzarQueryJobsArgs(%+v)", *p)
+}
+
+// Attributes:
+//  - Success
+type JobCzarQueryJobsResult struct {
+  Success []map[string]string `thrift:"success,0" db:"success" json:"success,omitempty"`
+}
+
+func NewJobCzarQueryJobsResult() *JobCzarQueryJobsResult {
+  return &JobCzarQueryJobsResult{}
+}
+
+var JobCzarQueryJobsResult_Success_DEFAULT []map[string]string
+
+func (p *JobCzarQueryJobsResult) GetSuccess() []map[string]string {
+  return p.Success
+}
+func (p *JobCzarQueryJobsResult) IsSetSuccess() bool {
+  return p.Success != nil
+}
+
+func (p *JobCzarQueryJobsResult) Read(ctx context.Context, iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin(ctx)
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 0:
+      if fieldTypeId == thrift.LIST {
+        if err := p.ReadField0(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(ctx); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *JobCzarQueryJobsResult)  ReadField0(ctx context.Context, iprot thrift.TProtocol) error {
+  _, size, err := iprot.ReadListBegin(ctx)
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make([]map[string]string, 0, size)
+  p.Success =  tSlice
+  for i := 0; i < size; i ++ {
+    _, _, size, err := iprot.ReadMapBegin(ctx)
+    if err != nil {
+      return thrift.PrependError("error reading map begin: ", err)
+    }
+    tMap := make(map[string]string, size)
+    _elem21 :=  tMap
+    for i := 0; i < size; i ++ {
+var _key22 string
+      if v, err := iprot.ReadString(ctx); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
+} else {
+      _key22 = v
+}
+var _val23 string
+      if v, err := iprot.ReadString(ctx); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
+} else {
+      _val23 = v
+}
+      _elem21[_key22] = _val23
+    }
+    if err := iprot.ReadMapEnd(ctx); err != nil {
+      return thrift.PrependError("error reading map end: ", err)
+    }
+    p.Success = append(p.Success, _elem21)
+  }
+  if err := iprot.ReadListEnd(ctx); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
+  }
+  return nil
+}
+
+func (p *JobCzarQueryJobsResult) Write(ctx context.Context, oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin(ctx, "queryJobs_result"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+    if err := p.writeField0(ctx, oprot); err != nil { return err }
+  }
+  if err := oprot.WriteFieldStop(ctx); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(ctx); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *JobCzarQueryJobsResult) writeField0(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetSuccess() {
+    if err := oprot.WriteFieldBegin(ctx, "success", thrift.LIST, 0); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
+    if err := oprot.WriteListBegin(ctx, thrift.MAP, len(p.Success)); err != nil {
+      return thrift.PrependError("error writing list begin: ", err)
+    }
+    for _, v := range p.Success {
+      if err := oprot.WriteMapBegin(ctx, thrift.STRING, thrift.STRING, len(v)); err != nil {
+        return thrift.PrependError("error writing map begin: ", err)
+      }
+      for k, v := range v {
+        if err := oprot.WriteString(ctx, string(k)); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+        if err := oprot.WriteString(ctx, string(v)); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+      }
+      if err := oprot.WriteMapEnd(ctx); err != nil {
+        return thrift.PrependError("error writing map end: ", err)
+      }
+    }
+    if err := oprot.WriteListEnd(ctx); err != nil {
+      return thrift.PrependError("error writing list end: ", err)
+    }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 0:success: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobCzarQueryJobsResult) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("JobCzarQueryJobsResult(%+v)", *p)
 }
 
 

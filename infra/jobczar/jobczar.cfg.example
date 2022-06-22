@@ -1,0 +1,6 @@
+# make sure you setup your mysql installation first
+# and run the database.sql script which creates the obelisk database and tables
+
+# here jobs is a user identified by password on the obelisk database
+# so replace that with your own credentials
+DB_CONNECT="jobs:password@tcp(127.0.0.1)/obelisk"
