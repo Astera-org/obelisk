@@ -1,5 +1,5 @@
 
-# create database obelisk;
+create database obelisk;
 use obelisk;
 
 #status (0-pending,1-working,2-complete,3-errored)
