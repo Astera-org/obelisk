@@ -138,10 +138,16 @@ func (ss *Sim) NewRun() {
 }
 
 func (sim *Sim) OnObserve() {
+	//set inputs to all layers of type input
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-	agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, "VL")
+
+	//set expected output/groundtruth to layers of type target
+	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
+		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
+	}
+
 }
 
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
