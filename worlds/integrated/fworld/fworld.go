@@ -12,12 +12,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
-
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/worlds/network"
@@ -39,6 +33,11 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
 )
 
 // FWorld is a flat-world grid-based environment
@@ -116,6 +115,10 @@ type FWorld struct {
 	Event         env.Ctr                     `view:"arbitrary counter for steps within a scene -- resets at consumption event"`
 	Scene         env.Ctr                     `view:"arbitrary counter incrementing over a coherent sequence of events: e.g., approaching food -- increments at consumption"`
 	Episode       env.Ctr                     `view:"arbitrary counter incrementing over scenes within larger episode: feeding, drinking, exploring, etc"`
+
+	// State variables that help with control flow.
+	paused  bool
+	stepOne bool
 
 	UseGUI bool `view:"determines if gui is going to be used or not"`
 }
@@ -1511,10 +1514,35 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 		vp.SetFullReRender()
 	})
 
-	toolbar.AddAction(gi.ActOpts{Label: "Connect to Server", Icon: "svg", Tooltip: "Connect to an intelligent model that is serving actions as a server.", UpdateFunc: func(act *gi.Action) {
+	alreadyConnected := false // Don't let the user connect twice
+	toolbar.AddAction(gi.ActOpts{Label: "Connect to Server and Run", Icon: "svg", Tooltip: "Connect to an intelligent model that is serving actions as a server.", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
 	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
-		connectAndQueryAgent(ev)
+		ev.paused = false
+		if !alreadyConnected {
+			go connectAndQueryAgent(ev)
+			alreadyConnected = true
+		}
+	})
+
+	toolbar.AddAction(gi.ActOpts{Label: "Pause", Icon: "pause", Tooltip: "Pause stepping", UpdateFunc: func(act *gi.Action) {
+		act.SetActiveStateUpdt(!ev.IsRunning)
+	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
+		ev.paused = true
+	})
+
+	toolbar.AddAction(gi.ActOpts{Label: "Step 1", Icon: "step", Tooltip: "Step one timestep", UpdateFunc: func(act *gi.Action) {
+		act.SetActiveStateUpdt(!ev.IsRunning)
+	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
+		ev.paused = false
+		ev.stepOne = true
+	})
+
+	toolbar.AddAction(gi.ActOpts{Label: "Run", Icon: "svg", Tooltip: "Run continuously forever", UpdateFunc: func(act *gi.Action) {
+		act.SetActiveStateUpdt(!ev.IsRunning)
+	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
+		ev.paused = false
+		ev.stepOne = false
 	})
 
 	vp.UpdateEndNoSig(updt)
@@ -1560,8 +1588,28 @@ func (ev *FWorld) ConfigWorldView(tg *etview.TensorGrid) {
 	tg.SetStretchMax()
 }
 
-func connectAndQueryAgent(ev *FWorld) {
+func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx context.Context) (success bool) {
+	observations := ev.getAllObservations()
+	// Step the agent
+	actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
+	if actions == nil {
+		log.Error("disconnected from agent, exiting")
+		return false
+	}
 
+	move, ok := actions["move"] // This contains a discrete option.
+
+	if ok {
+		// We've received a discrete action and can use it directly to StepWorld.
+		ev.StepWorld(int(move.DiscreteOption), false)
+	} else {
+		// Assume VL is in actions and treat it continuously and also apply the teaching function.
+		ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+	}
+	return true
+}
+
+func connectAndQueryAgent(ev *FWorld) {
 	agent := network.MakeClient()
 	var defaultCtx = context.Background()
 
@@ -1572,22 +1620,15 @@ func connectAndQueryAgent(ev *FWorld) {
 	} else { //if successfully connected
 		// This is the main loop.
 		for {
-			observations := ev.getAllObservations()
-			// Step the agent
-			actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
-			if actions == nil {
-				log.Error("disconnected from agent, exiting")
+			if ev.paused {
+				continue
+			}
+			if !stepWorldAndAgentOnce(ev, agent, defaultCtx) {
 				break
 			}
-
-			move, ok := actions["move"] // This contains a discrete option.
-
-			if ok {
-				// We've received a discrete action and can use it directly to StepWorld.
-				ev.StepWorld(int(move.DiscreteOption), false)
-			} else {
-				// Assume VL is in actions and treat it continuously and also apply the teaching function.
-				ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+			if ev.stepOne {
+				ev.paused = true
+				ev.stepOne = false
 			}
 		}
 	}
@@ -1620,9 +1661,6 @@ func main() {
 			// TODO Get the server connection to start automatically on window open
 
 			fwin.StartEventLoop()
-
 		})
-
 	}
-
 }
