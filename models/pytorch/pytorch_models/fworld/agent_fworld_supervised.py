@@ -1,7 +1,7 @@
 # TODO(michael): Move this into models/ and fix the Python import issues
 
 
-from typing import Any, Dict, List, AnyStr
+from typing import Dict, List, AnyStr
 import math
 import numpy as np
 import os
@@ -13,17 +13,16 @@ import torch.optim as optim
 import wandb
 from torch.distributions import Categorical
 
-from network.genpy.env.ttypes import ETensor, Action
+from network.genpy.env.ttypes import Action
 from network.thrift_agent_server import setup_server
 import pandas as pd
 
 # FWorld
-from worlds.agent_models.fworld.config_experiment import ConfigETensorVariable
-from worlds.agent_models.fworld.config_experiment import ConfigFWorldVariables
-from worlds.agent_models.fworld.config_experiment import file_to_fworldconfig
-from worlds.agent_models.fworld.config_experiment import ConfigRuns
-from worlds.agent_models.fworld import fworld_metrics
-
+from models.pytorch.pytorch_models.fworld.config_experiment import ConfigETensorVariable
+from models.pytorch.pytorch_models.fworld.config_experiment import ConfigFWorldVariables
+from models.pytorch.pytorch_models.fworld.config_experiment import file_to_fworldconfig
+from models.pytorch.pytorch_models.fworld.config_experiment import ConfigRuns
+from models.pytorch.pytorch_models.fworld import fworld_metrics
 
 import pickle
 
@@ -193,7 +192,7 @@ class FWorldHandler:
             self.model.rewards = []
 
             #store a small log of results
-            file = open('fworld_{}.pkl'.format(wandb.run.name), 'wb')
+            file = open('fworld_{}.pkl'.format(wandb.run.ablation_feature), 'wb')
             pickle.dump(self.stored_observations, file)
             file.close()
 
@@ -220,8 +219,8 @@ class FWorldHandler:
                 ground_truth = group["ground_truth"].values
                 predicted = group["predicted"].values
                 reward = group["rewards"].mean()
-                kl_divergence:float = fworld_metrics.calc_kl(predicted,ground_truth)
-                f1_score:float = fworld_metrics.calc_precision(predicted,ground_truth)
+                kl_divergence:float = fworld_metrics.calc_kl(predicted, ground_truth)
+                f1_score:float = fworld_metrics.calc_precision(predicted, ground_truth)
 
                 wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
                 wandb.log({"{}_f1".format(title):f1_score},step=step)
@@ -230,8 +229,8 @@ class FWorldHandler:
 
             wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
 
-            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted,actions.ground_truth)
-            wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted,actions.ground_truth)
+            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted, actions.ground_truth)
+            wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted, actions.ground_truth)
 
             sample_amount = len(input_space) if len(input_space) < 1000 else 1000
             history = pd.DataFrame(input_space).sample(sample_amount)#so don't make this thing lag
@@ -245,19 +244,19 @@ if __name__ == '__main__':
 
 
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
-    config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
+    config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config", "run_config.yaml"))
 
     wandb.init(project="fworld-evaluations2")
     wandb.config.update(config_run.asdict()) #given conftext information
 
-    wandb.run.name = "{}-{}".format(config_run.name,str(wandb.run.id))
+    wandb.run.ablation_feature = "{}-{}".format(config_run.name, str(wandb.run.id))
 
     all_input_information:List[ConfigETensorVariable] = [config_fworld.object_seen,config_fworld.visionwide,
                               config_fworld.visionlocal,config_fworld.internal_state,
                               config_fworld.sensory_local2,config_fworld.sensory_local]
 
     model_dync = PolicyDynamicInput([config_fworld.object_seen,config_fworld.visionwide,config_fworld.visionlocal,config_fworld.internal_state],
-                                    config_run.hidden_size)
+                                    config_run.hidden_size[0])
 
     wandb.config.update({"inputsize":model_dync.affine1.in_features})
     wandb.config.update({"inputareas":",".join([i.name for i in all_input_information])})

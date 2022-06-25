@@ -35,7 +35,7 @@ class ConfigRuns():
     train_runs: int
     max_runs: int
     description: str
-    hidden_size: float = 125.0
+    hidden_size: List[float] = field(default_factory=list)
     infer_offpolicy: bool = True
     log_remote: Optional[bool] = field(default=True)
     max_epochs: Optional[int] = field(default=-1)
@@ -112,7 +112,7 @@ def test_flatten():
     assert configFWorld.sensory_local.flattened_shape == 8, "shape mismatch, default size has changed"
 
 def test_configrun():
-    config_run = ConfigRuns.file_to_configrun(os.path.join("config","run_config.yaml"))
+    config_run = ConfigRuns.file_to_configrun(os.path.join("config", "run_config.yaml"))
     assert config_run!=None, "lazy assert, just check if it can run"
 
 if __name__ == '__main__':

@@ -117,7 +117,8 @@ type FWorld struct {
 	Scene         env.Ctr                     `view:"arbitrary counter incrementing over a coherent sequence of events: e.g., approaching food -- increments at consumption"`
 	Episode       env.Ctr                     `view:"arbitrary counter incrementing over scenes within larger episode: feeding, drinking, exploring, etc"`
 
-	UseGUI bool `view:"determines if gui is going to be used or not"`
+	LastActionPredicted int  `view:"-" desc:"last action suggested by model over network"`
+	UseGUI              bool `view:"determines if gui is going to be used or not"`
 }
 
 var KiT_FWorld = kit.Types.AddType(&FWorld{}, FWorldProps)
@@ -1326,9 +1327,10 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	expectedAction, _ := ev.ActGen()
 	genAction := ev.Acts[expectedAction]
 	actionTensor := ev.Pats[genAction]
-	obs["VL"] = network_agent.FromTensor(actionTensor)
-	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction)
-	ev.calculateAndRecordReward(&obs) // Add reward.
+	obs["VL"] = network_agent.FromTensor(actionTensor)                                                            //Heuristic is a distributed rep of best
+	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction)                                                 //This is a a discrete action of best action
+	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, ev.Acts[ev.LastActionPredicted]) //This is a discrete action of last action
+	ev.calculateAndRecordReward(&obs)                                                                             // Add reward.
 
 	return obs
 }
@@ -1587,7 +1589,9 @@ func connectAndQueryAgent(ev *FWorld) {
 				ev.StepWorld(int(move.DiscreteOption), false)
 			} else {
 				// Assume VL is in actions and treat it continuously and also apply the teaching function.
-				ev.StepWorld(ev.ApplyTeachingFunction(ev.GetActionIdFromVL(transformActions(actions))), false)
+				modelGeneratedAction := ev.GetActionIdFromVL(transformActions(actions))
+				ev.LastActionPredicted = modelGeneratedAction //action suggested for the previous time step
+				ev.StepWorld(ev.ApplyTeachingFunction(modelGeneratedAction), false)
 			}
 		}
 	}

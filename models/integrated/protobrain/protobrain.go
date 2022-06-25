@@ -146,7 +146,6 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-
 }
 
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {

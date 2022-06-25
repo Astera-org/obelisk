@@ -1,0 +1,2 @@
+The following files are meant to provide baselines for doing different RL and supervised tasks using simple standard implementations of traditional bp algorithms.
+The current tasks include FWorld and polecart
