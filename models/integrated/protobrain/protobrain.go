@@ -142,6 +142,7 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
+
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)

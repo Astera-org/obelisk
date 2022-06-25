@@ -232,6 +232,7 @@ JobCzar_addJob_args = function(args) {
   this.worldCfg = null;
   this.priority = null;
   this.userID = null;
+  this.note = null;
   if (args) {
     if (args.agentName !== undefined && args.agentName !== null) {
       this.agentName = args.agentName;
@@ -250,6 +251,9 @@ JobCzar_addJob_args = function(args) {
     }
     if (args.userID !== undefined && args.userID !== null) {
       this.userID = args.userID;
+    }
+    if (args.note !== undefined && args.note !== null) {
+      this.note = args.note;
     }
   }
 };
@@ -306,6 +310,13 @@ JobCzar_addJob_args.prototype.read = function(input) {
         input.skip(ftype);
       }
       break;
+      case 7:
+      if (ftype == Thrift.Type.STRING) {
+        this.note = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
       default:
         input.skip(ftype);
     }
@@ -345,6 +356,11 @@ JobCzar_addJob_args.prototype.write = function(output) {
   if (this.userID !== null && this.userID !== undefined) {
     output.writeFieldBegin('userID', Thrift.Type.I32, 6);
     output.writeI32(this.userID);
+    output.writeFieldEnd();
+  }
+  if (this.note !== null && this.note !== undefined) {
+    output.writeFieldBegin('note', Thrift.Type.STRING, 7);
+    output.writeString(this.note);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -839,21 +855,22 @@ JobCzarClient.prototype.recv_submitResult = function() {
   throw 'submitResult failed: unknown result';
 };
 
-JobCzarClient.prototype.addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, callback) {
-  this.send_addJob(agentName, worldName, agentCfg, worldCfg, priority, userID, callback); 
+JobCzarClient.prototype.addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback) {
+  this.send_addJob(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback); 
   if (!callback) {
     return this.recv_addJob();
   }
 };
 
-JobCzarClient.prototype.send_addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, callback) {
+JobCzarClient.prototype.send_addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback) {
   var params = {
     agentName: agentName,
     worldName: worldName,
     agentCfg: agentCfg,
     worldCfg: worldCfg,
     priority: priority,
-    userID: userID
+    userID: userID,
+    note: note
   };
   var args = new JobCzar_addJob_args(params);
   try {
