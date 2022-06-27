@@ -1,9 +1,7 @@
 # TODO(michael): Move this into models/ and fix the Python import issues
 
 import argparse
-import random
-
-import math
+import gym
 import numpy as np
 from itertools import count
 from collections import namedtuple
@@ -14,12 +12,10 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.distributions import Categorical
 
-
 from network.genpy.env.ttypes import ETensor, Action
 from network.thrift_agent_server import setup_server
 
-# FWorld
-
+# Cart Pole
 
 parser = argparse.ArgumentParser(description='PyTorch actor-critic example')
 parser.add_argument('--gamma', type=float, default=0.99, metavar='G',
@@ -36,7 +32,7 @@ args = parser.parse_args()
 torch.manual_seed(args.seed)
 
 
-SavedAction = namedtuple('SavedAction', ['log_prob', 'value']) # TODO What is this?
+SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
 
 
 class Policy(nn.Module):
@@ -45,10 +41,10 @@ class Policy(nn.Module):
     """
     def __init__(self):
         super(Policy, self).__init__()
-        self.affine1 = nn.Linear(416, 128) # Inputs from V2Wd
+        self.affine1 = nn.Linear(4, 128)
 
         # actor's layer
-        self.action_head = nn.Linear(128, 5) # 5 actions
+        self.action_head = nn.Linear(128, 2)
 
         # critic's layer
         self.value_head = nn.Linear(128, 1)
@@ -84,15 +80,6 @@ eps = np.finfo(np.float32).eps.item()
 def select_action(state):
     state = torch.from_numpy(state).float()
     probs, state_value = model(state)
-
-    probs = torch.nan_to_num(probs, nan=0.1)
-    foundNan = False
-    for i in range(len(probs)):
-        if math.isnan(probs[i]):
-            foundNan = True
-    if foundNan:
-        print("Found some NaN values")
-
 
     # create a categorical distribution over the list of probabilities of actions
     m = Categorical(probs)
@@ -150,7 +137,6 @@ def finish_episode():
     del model.saved_actions[:]
 
 
-
 class GymHandler:
 
     def __init__(self):
@@ -159,7 +145,6 @@ class GymHandler:
     def init(self, actionSpace, observationSpace):
         self.actionSpace = actionSpace
         self.observationSpace = observationSpace
-        print("Action Space:", actionSpace, "\n\nObservation Space:", observationSpace)
         # reset episode reward
         self.ep_reward = 0
         self.running_reward = 10
@@ -169,17 +154,10 @@ class GymHandler:
         print(f'step called obs: {observations} debug: {debug}')
 
         i_episode = 0
-        if ":" in debug: # TODO Get i from here!
+        if ":" in debug:
             i_episode = int(debug.split(":")[-1])
 
-        # TODO This should happen every time step I guess?
-        do_learning = True
-        # Do learning for the previous timestep
-        if (i_episode > 0) and do_learning:
-            reward = observations["Reward"].values[0]
-            model.rewards.append(reward)
-            self.ep_reward += reward
-
+        if "done" in observations:
             # update cumulative reward
             running_reward = 0.05 * self.ep_reward + (1 - 0.05) * self.running_reward
 
@@ -191,10 +169,18 @@ class GymHandler:
                 print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                     i_episode, self.ep_reward, running_reward))
 
+            # Done with done
+            return {}
+
         # select action from policy
-        world_state = np.array(observations["V2Wd"].values)
+        world_state = np.array(observations["world"].values)
         # TODO Handle n-dimensional shapes
         action = select_action(world_state)
+
+        if i_episode > 0:
+            reward = observations["past_reward"].values[0]
+            model.rewards.append(reward)
+            self.ep_reward += reward
 
         return {"move":Action(discreteOption=action)}
 
