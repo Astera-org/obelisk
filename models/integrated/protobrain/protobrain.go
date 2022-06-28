@@ -7,6 +7,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
@@ -76,13 +77,14 @@ func main() {
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
 type Sim struct {
-	Net      *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
-	NetDeets NetworkDeets         `desc:"Contains details about the network."`
-	Loops    *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
-	WorldEnv agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
-	Time     axon.Time            `desc:"axon timing parameters and state"`
-	LoopTime string               `desc:"Printout of the current time."`
-	NumSteps int32
+	Net       *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
+	NetDeets  NetworkDeets         `desc:"Contains details about the network."`
+	Loops     *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
+	WorldEnv  agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
+	Time      axon.Time            `desc:"axon timing parameters and state"`
+	LoopTime  string               `desc:"Printout of the current time."`
+	NumSteps  int32
+	StartTime time.Time
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -152,9 +154,10 @@ func (sim *Sim) OnObserve() {
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
 	if sim.NumSteps >= gConfig.LIFETIME {
-		// TODO figure score and seconds
-		log.Info("LIFETIME reached")
-		infra.WriteResults(.5, sim.NumSteps, 100)
+		// TODO figure score
+		seconds := time.Since(sim.StartTime).Seconds()
+		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
+		infra.WriteResults(.5, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
@@ -176,6 +179,7 @@ func (sim *Sim) startWorkerLoop() {
 	// 		return the action to the world
 	// write results after LIFETIME steps
 	// exit
+	sim.StartTime = time.Now()
 	addr := fmt.Sprint("127.0.0.1:", gConfig.INTERNAL_PORT)
 	agent.StartServer(addr, sim.OnStep)
 }

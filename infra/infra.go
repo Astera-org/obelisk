@@ -24,5 +24,10 @@ func WriteResults(score float64, cycles int32, seconds int32) {
 	file, _ := json.MarshalIndent(result, "", " ")
 
 	_ = ioutil.WriteFile("result.json", file, 0644)
+}
 
+// calculates the hash of the given directory
+func HashDir(path string) string {
+	// TODO
+	return ""
 }

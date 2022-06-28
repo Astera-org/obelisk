@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 
-	"goji.io"
 	"goji.io/pat"
 )
 
@@ -16,21 +16,20 @@ var defaultCtx = context.Background()
 var gDatabase Database
 var VERSION string = "v0.1.0"
 
-/*
-- Connect to DB
-- Create server
-- Handle requests
-*/
-
 func main() {
 	gConfig.Load()
 	gDatabase.Connect()
 
 	fmt.Println("listening on", gConfig.SERVER_PORT)
 
-	mux := goji.NewMux()
-	mux.HandleFunc(pat.Get("/getBinary/:id"), getBinary)
+	fileServer := http.FileServer(http.Dir("./" + gConfig.BINARY_ROOT + "/"))
+	mux := http.NewServeMux()
+	mux.Handle("/binaries/", http.StripPrefix("/binaries", fileServer))
+
+	//mux := goji.NewMux()
+	//mux.HandleFunc(pat.Get("/getBinary/:id"), getBinary)
 	mux.HandleFunc("/addBinary", addBinary)
+	//mux.HandleFunc("/binaries/", getFile)
 
 	go http.ListenAndServe(":"+gConfig.SERVER_PORT, mux)
 
@@ -52,6 +51,11 @@ func printHelp() {
 	fmt.Println("Valid Commands:")
 	fmt.Println("q: quit")
 	fmt.Println("v: print version")
+}
+
+func getFile(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("getFile: " + r.URL.Path)
+	http.ServeFile(w, r, r.URL.Path)
 }
 
 func addBinary(w http.ResponseWriter, r *http.Request) {
@@ -105,10 +109,13 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 func getBinary(w http.ResponseWriter, r *http.Request) {
 	binID := pat.Param(r, "id")
 
-	name, version := gDatabase.getNameVersion(binID)
+	id, _ := strconv.Atoi(binID)
+
+	name, version := gDatabase.getNameVersion(id)
 	if name == "" {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
+	r.URL.Path = "/" + name + "/" + version + "/binary"
+	getFile(w, r)
 }

@@ -17,7 +17,7 @@ type Config struct {
 func (config *Config) Load() {
 
 	config.setDefaults()
-	_, err := toml.DecodeFile("worker.cfg", &config)
+	_, err := toml.DecodeFile("binserver.cfg", &config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stderr, "Using defaults")
@@ -33,8 +33,5 @@ func (config *Config) setDefaults() {
 }
 
 func (config *Config) ensureRequired() {
-	if config.DB_CONNECT == "" {
-		fmt.Println("DB_CONNECT must be set")
-		panic(-1)
-	}
+
 }

@@ -6,8 +6,8 @@ namespace go infra
 // Controller giving a Job to a worker
 struct Job {
     1: i32 jobID,
-    2: string agentName,
-    3: string worldName,
+    2: i32 agentID,
+    3: i32 worldID,
     4: string agentCfg,
     5: string worldCfg
 }
@@ -41,8 +41,10 @@ service JobCzar {
     // if doesn't return true the worker should try to tell it again that the work is complete
     bool submitResult(1:ResultWork result);
 
-    i32 addJob(1:string agentName, 2:string worldName, 3:string agentCfg, 
+    i32 addJob(1:i32 agentID, 2:i32 worldID, 3:string agentCfg, 
         4:string worldCfg, 5:i32 priority, 6:i32 userID, 7:string note);
+
+    void appendNote(1:i32 jobID, 2:string note);
 
     BinInfo getBinInfo(1:i32 binID);
 
