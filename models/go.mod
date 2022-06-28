@@ -24,6 +24,7 @@ require (
 	github.com/apache/thrift v0.16.0
 	github.com/pkg/profile v1.6.0
 	github.com/stretchr/testify v1.7.0
+	github.com/zajann/easylog v0.0.0-20200206104745-8a5a24208b3a
 )
 
 require (
