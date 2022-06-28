@@ -9,18 +9,17 @@ import (
 	"time"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
-	"github.com/apache/thrift/lib/go/thrift"
 )
 
 type Job struct {
-	jobID     int32
-	agentName string
-	worldName string
-	agentDesc AgentDesc
-	worldDesc WorldDesc
-	agentCfg  string
-	worldCfg  string
-	result    infra.ResultWork
+	jobID        int32
+	agentName    string
+	worldName    string
+	agentVersion string
+	worldVersion string
+	agentCfg     string
+	worldCfg     string
+	result       infra.ResultWork
 }
 
 const (
@@ -30,34 +29,28 @@ const (
 )
 
 func (job *Job) fetchWork() error {
-	var defaultCtx = context.Background()
-	var jobCzar = MakeClient(gConfig.JOBCZAR_IP)
-	infraJob, err := jobCzar.FetchWork(defaultCtx, gConfig.WORKER_NAME, gConfig.INSTANCE_NAME)
+	infraJob, err := gApp.jobCzar.FetchWork(gApp.context, gConfig.WORKER_NAME, gConfig.INSTANCE_NAME)
 	if err != nil {
 		return err
 	}
 
+	agentBinInfo := gApp.binCache.GetBinInfo(infraJob.AgentID)
+	if agentBinInfo == nil {
+		job.result.Status = jobFailed
+		return errors.New(fmt.Sprint("agent not found", infraJob.AgentID))
+	}
+	worldBinInfo := gApp.binCache.GetBinInfo(infraJob.WorldID)
+
 	job.jobID = infraJob.JobID
-	job.agentName = infraJob.AgentName
-	job.worldName = infraJob.WorldName
+	job.agentName = agentBinInfo.Name
+	job.agentVersion = agentBinInfo.Version
+	if worldBinInfo != nil {
+		job.worldName = worldBinInfo.Name
+		job.worldVersion = worldBinInfo.Version
+	}
 	job.agentCfg = infraJob.AgentCfg
 	job.worldCfg = infraJob.WorldCfg
 	job.result.JobID = job.jobID
-
-	var exists bool
-	job.agentDesc, exists = gConfig.AGENTS[job.agentName]
-	if !exists {
-		job.result.Status = jobFailed
-		return errors.New("Unknown Agent" + job.agentName)
-	}
-
-	if job.worldName != "" {
-		job.worldDesc, exists = gConfig.WORLDS[job.worldName]
-		if !exists {
-			job.result.Status = jobFailed
-			return errors.New("Unknown World" + job.worldName)
-		}
-	}
 
 	return nil
 }
@@ -112,10 +105,7 @@ func (job *Job) setCfgs() error {
 }
 
 func (job *Job) returnResults() error {
-	var defaultCtx = context.Background()
-	var jobCzar = MakeClient(gConfig.JOBCZAR_IP)
-
-	ok, err := jobCzar.SubmitResult_(defaultCtx, &job.result)
+	ok, err := gApp.jobCzar.SubmitResult_(gApp.context, &job.result)
 
 	if err != nil {
 		return err
@@ -162,19 +152,4 @@ func (job *Job) doJob() {
 		job.result.Status = jobFailed
 		return
 	}
-}
-
-func MakeClient(addr string) *infra.JobCzarClient {
-	transportFactory := thrift.NewTBufferedTransportFactory(8192)
-	transportSocket := thrift.NewTSocketConf(addr, nil)
-	transport, _ := transportFactory.GetTransport(transportSocket)
-
-	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
-
-	iprot := protocolFactory.GetProtocol(transport)
-	oprot := protocolFactory.GetProtocol(transport)
-
-	transport.Open()
-
-	return infra.NewJobCzarClient(thrift.NewTStandardClient(iprot, oprot))
 }

@@ -17,13 +17,16 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     time_handed TIMESTAMP, seconds INT,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
 
+
+#type (0-agent,1-world)
+#status (0-current,1-archived)
+create table binaries (bin_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10), version VARCHAR(10), 
+    hash VARCHAR(40), time_added TIMESTAMP DEFAULT NOW(), type INT DEFAULt 0, status INT DEFAULT 0);
+
+
 create table cfgs (cfg_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, cfg VARCHAR(1024));
 
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10));
-
-#status (0-current,1-archived)
-create table binaries (bin_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10), version VARCHAR(10), 
-    hash VARCHAR(40), time_added TIMESTAMP DEFAULT NOW(), status INT DEFAULT 0);
 
 ####################
 

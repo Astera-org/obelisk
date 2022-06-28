@@ -16,10 +16,12 @@ import (
 7) delete the spawn result report
 */
 var gConfig Config
+var gApp WorkerApp
 var VERSION string = "v0.1.0"
 
 func main() {
 	gConfig.Load()
+	gApp.Init()
 
 	go mainLoop()
 
