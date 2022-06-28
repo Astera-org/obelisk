@@ -6,8 +6,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
 	"github.com/Astera-org/models/library/autoui"
@@ -17,8 +15,10 @@ import (
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
+	"os"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -51,6 +51,7 @@ func main() {
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
 	sim.WorldEnv = &agent.NetworkWorld{}
+	sim.ActionHistory = &etable.Table{} //A recording of actions taken and actions predicted
 
 	if gConfig.WORKER {
 		sim.startWorkerLoop()
@@ -76,19 +77,62 @@ func main() {
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
 type Sim struct {
-	Net      *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
-	NetDeets NetworkDeets         `desc:"Contains details about the network."`
-	Loops    *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
-	WorldEnv agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
-	Time     axon.Time            `desc:"axon timing parameters and state"`
-	LoopTime string               `desc:"Printout of the current time."`
-	NumSteps int32
+	Net           *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
+	NetDeets      NetworkDeets         `desc:"Contains details about the network."`
+	Loops         *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
+	WorldEnv      agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
+	Time          axon.Time            `desc:"axon timing parameters and state"`
+	LoopTime      string               `desc:"Printout of the current time."`
+	NumSteps      int32
+	ActionHistory *etable.Table `desc:"a recording of actions taken and predicted per trial"`
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
 	net := &deep.Network{}
 	DefineNetworkStructure(&ss.NetDeets, net)
 	return net
+}
+
+func wrapperTensorFloat(value float64) etensor.Tensor {
+	predictedTensor := etensor.New(etensor.FLOAT64, []int{1.0}, nil, nil)
+	predictedTensor.SetFloat1D(0, float64(value))
+	return predictedTensor
+}
+func wrapperTensorString(value string) etensor.Tensor {
+	predictedTensor := etensor.New(etensor.STRING, []int{1}, nil, nil)
+	predictedTensor.SetString1D(0, value)
+
+	return predictedTensor
+}
+
+func createActionHistoryRow(predicted, groundtruth, run float64, timescale string) etable.Table {
+	table := etable.Table{}
+	table.AddCol(wrapperTensorFloat(predicted), "Predicted")
+	table.AddCol(wrapperTensorFloat(groundtruth), "GroundTruth")
+	table.AddCol(wrapperTensorString(timescale), "Timescale")
+	table.AddCol(wrapperTensorFloat(run), "Run")
+	table.SetNumRows(1)
+	return table
+
+}
+
+func (ss *Sim) AddActionHistory(observations map[string]etensor.Tensor, timeScale string) {
+	bestAction, actionExists := observations["Heuristic"]
+	prevPredictedAction, predictedExists := observations["PredictedActionLastTimeStep"]
+	if (actionExists == false) || (predictedExists == false) { //if not getting info across network, perhaps using diff world
+		log.Error("Heuristic or Predicted Action keys are not found in observations, cannot log results")
+	} else {
+		floatAction := float64(bestAction.FloatVal1D(0))
+		floatPredictedPrevious := float64(prevPredictedAction.FloatVal1D(0))
+		runNum := float64(ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur)
+		dframe := createActionHistoryRow(-1.0, floatAction, runNum, timeScale)
+		if ss.ActionHistory.Rows == 0 {
+			ss.ActionHistory = &dframe
+		} else {
+			ss.ActionHistory.AppendRows(&dframe)
+			ss.ActionHistory.SetCellFloat("Predicted", ss.ActionHistory.Rows-2, floatPredictedPrevious) //set n-1 one values
+		}
+	}
 }
 
 // ConfigLoops configures the control loops
@@ -142,7 +186,6 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
@@ -154,6 +197,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		// TODO figure score and seconds
 		log.Info("LIFETIME reached")
+		sim.ActionHistory.SaveCSV("results.csv", ',', true)
 		infra.WriteResults(.5, sim.NumSteps, 100)
 		os.Exit(0)
 	}
@@ -162,6 +206,9 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+
+	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
+
 	actions := agent.GetAction(sim.Net.AsAxon())
 
 	return actions
