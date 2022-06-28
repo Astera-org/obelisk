@@ -25,6 +25,13 @@ struct ResultWork {
     8: string instanceName
 }
 
+struct BinInfo {
+    1: i32 binID,
+    2: string name,
+    3: string version,
+    4: string hash
+}
+
 service JobCzar {
 
     // workers call this when they are ready for a new Job
@@ -36,6 +43,8 @@ service JobCzar {
 
     i32 addJob(1:string agentName, 2:string worldName, 3:string agentCfg, 
         4:string worldCfg, 5:i32 priority, 6:i32 userID, 7:string note);
+
+    BinInfo getBinInfo(1:i32 binID);
 
     string runSQL(1:string query);
 

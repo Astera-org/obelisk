@@ -102,7 +102,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
-	// TODO this doesn't make sense. we should wait for the next Step call to come in from the
+	// TODO this doesn't make sense. we should wait for the next Step call to come in from the world
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
