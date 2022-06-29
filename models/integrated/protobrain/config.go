@@ -15,6 +15,7 @@ type Config struct {
 	WORKER        bool
 	LIFETIME      int32 // how many times the world will call step before we exit
 	INTERNAL_PORT int32
+	HISTORYFILE   string //location to log files over the history of an agent
 }
 
 func (config *Config) Load() {
@@ -32,5 +33,6 @@ func (config *Config) setDefaults() {
 	config.PROFILE = false
 	config.WORKER = false
 	config.LIFETIME = 100
+	config.HISTORYFILE = "actions.csv"
 	config.INTERNAL_PORT = 9090
 }

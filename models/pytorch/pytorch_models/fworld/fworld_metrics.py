@@ -7,10 +7,10 @@ from scipy.special import kl_div
 from sklearn.metrics import confusion_matrix as c_m
 from sklearn.metrics import precision_score
 
-def calc_kl(x:List[int],y:List[int])->float:
+def calc_kl(predicted:List[int], ground_truth:List[int])->float:
     data_table = pd.DataFrame()
-    data_table["ground_truth"] = y
-    data_table["predicted"] = x
+    data_table["ground_truth"] = ground_truth
+    data_table["predicted"] = predicted
     ground_truth_valuecounts = data_table["ground_truth"].value_counts(normalize=True)
     predicted_valuecounts = data_table["predicted"].value_counts(normalize=True)
 
@@ -22,18 +22,18 @@ def calc_kl(x:List[int],y:List[int])->float:
     for i in data_table["ground_truth"].unique(): #if values show up in predicted, but don't exist in ground truth ignore, a bit of a hack
         if (i in data_table["predicted"].unique()) == False:
             predicted_valuecounts[i] = 0.0
-    predicted_valuecounts = predicted_valuecounts/predicted_valuecounts.sum() #renormalize after deleting
+    predicted_valuecounts = (predicted_valuecounts/(predicted_valuecounts.sum()+.0001)) #renormalize after deleting, add small constant if 0
 
     assert len(set(predicted_valuecounts.index).intersection(ground_truth_valuecounts.index)) == len(ground_truth_valuecounts.index), "should have same number of classes"
 
     ground_truth_distribution = ground_truth_valuecounts.sort_index().values
     prediction_distributed = predicted_valuecounts.sort_index().values
     kl_divergence = kl_div(prediction_distributed,ground_truth_distribution)
-
     return kl_divergence.sum()
+
 def calc_performance_overtime(x:List[int],y:List[int]):
     pass
-def calc_precision(predicted:List[int],ground_truth:List[int]): #calculate the weighted precisoin
+def calc_f1(predicted:List[int], ground_truth:List[int]): #calculate the weighted precisoin
     f1 = precision_score(ground_truth,predicted, average="macro")
     return f1
 def calc_confusion_matrix(predicted:List[int],ground_truth:List[int], labels:List[AnyStr])->pd.DataFrame:

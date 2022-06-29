@@ -17,6 +17,7 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
+	"github.com/goki/gi/gi"
 	"github.com/pkg/profile"
 	"os"
 )
@@ -93,48 +94,6 @@ func (ss *Sim) ConfigNet() *deep.Network {
 	return net
 }
 
-func wrapperTensorFloat(value float64) etensor.Tensor {
-	predictedTensor := etensor.New(etensor.FLOAT64, []int{1.0}, nil, nil)
-	predictedTensor.SetFloat1D(0, float64(value))
-	return predictedTensor
-}
-func wrapperTensorString(value string) etensor.Tensor {
-	predictedTensor := etensor.New(etensor.STRING, []int{1}, nil, nil)
-	predictedTensor.SetString1D(0, value)
-
-	return predictedTensor
-}
-
-func createActionHistoryRow(predicted, groundtruth, run float64, timescale string) etable.Table {
-	table := etable.Table{}
-	table.AddCol(wrapperTensorFloat(predicted), "Predicted")
-	table.AddCol(wrapperTensorFloat(groundtruth), "GroundTruth")
-	table.AddCol(wrapperTensorString(timescale), "Timescale")
-	table.AddCol(wrapperTensorFloat(run), "Run")
-	table.SetNumRows(1)
-	return table
-
-}
-
-func (ss *Sim) AddActionHistory(observations map[string]etensor.Tensor, timeScale string) {
-	bestAction, actionExists := observations["Heuristic"]
-	prevPredictedAction, predictedExists := observations["PredictedActionLastTimeStep"]
-	if (actionExists == false) || (predictedExists == false) { //if not getting info across network, perhaps using diff world
-		log.Error("Heuristic or Predicted Action keys are not found in observations, cannot log results")
-	} else {
-		floatAction := float64(bestAction.FloatVal1D(0))
-		floatPredictedPrevious := float64(prevPredictedAction.FloatVal1D(0))
-		runNum := float64(ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur)
-		dframe := createActionHistoryRow(-1.0, floatAction, runNum, timeScale)
-		if ss.ActionHistory.Rows == 0 {
-			ss.ActionHistory = &dframe
-		} else {
-			ss.ActionHistory.AppendRows(&dframe)
-			ss.ActionHistory.SetCellFloat("Predicted", ss.ActionHistory.Rows-2, floatPredictedPrevious) //set n-1 one values
-		}
-	}
-}
-
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
@@ -197,8 +156,9 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		// TODO figure score and seconds
 		log.Info("LIFETIME reached")
-		sim.ActionHistory.SaveCSV("results.csv", ',', true)
-		infra.WriteResults(.5, sim.NumSteps, 100)
+		WriteActionHistory(sim.ActionHistory, gi.FileName(gConfig.HISTORYFILE))
+		score := calcF1(sim.ActionHistory, "Predicted", "GroundTruth")
+		infra.WriteResults(score, sim.NumSteps, 100)
 		os.Exit(0)
 	}
 
