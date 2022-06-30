@@ -20,6 +20,7 @@ import (
 	"github.com/goki/gi/gi"
 	"github.com/pkg/profile"
 	"os"
+	"strconv"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -162,7 +163,20 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 		os.Exit(0)
 	}
 
+	t := etable.Table{}
+	t.OpenCSV(gi.FileName("OneStep"+strconv.Itoa(int(sim.NumSteps))+".csv"), ',')
+
+	for name, _ := range obs {
+		obs[name] = t.ColByName(name)
+	}
 	sim.WorldEnv.SetObservations(obs)
+
+	//temp := etable.Table{}
+	//temp.Rows = 1
+	//for name, value := range obs {
+	//	temp.AddCol(value, name)
+	//}
+	//temp.SaveCSV(gi.FileName("OneStep"+strconv.Itoa(int(sim.NumSteps))+".csv"), ',', true)
 
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
