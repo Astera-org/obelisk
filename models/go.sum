@@ -5,6 +5,10 @@ dmitri.shuralyov.com/gpu/mtl v0.0.0-20201218220906-28db891af037/go.mod h1:H6x//7
 gioui.org v0.0.0-20210308172011-57750fc8a0a6/go.mod h1:RSH6KIUZ0p2xy5zHDxgAM4zumjgTw83q2ge/PI+yyw8=
 git.sr.ht/~sbinet/gg v0.3.1 h1:LNhjNn8DerC8f9DHLz6lS0YYul/b602DUxDgGkd/Aik=
 git.sr.ht/~sbinet/gg v0.3.1/go.mod h1:KGYtlADtqsqANL9ueOFkWymvzUvLMQllU5Ixo+8v3pc=
+github.com/Astera-org/easylog v0.2.0 h1:OyD27+NdXxCZqgubJTjRTfNgA82btJAGOlcKouCI7yU=
+github.com/Astera-org/easylog v0.2.0/go.mod h1:c6Yt1NqBxVu5xMcLTt+IYz4x0zCaIWKnPapWgam25yw=
+github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76 h1:b3CD0O4wEj5lRYwVib0ELGWSF3RxW4L5Uqi4/xQkXcU=
+github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76/go.mod h1:u6XW5Kzy5HwRWBNM1Mx4iCFXK2u9CK4uqybO1k2sgZI=
 github.com/Astera-org/worlds v0.0.0-20220513203205-17959e9bff37/go.mod h1:Rtq5XvgbiXtMgfEf0wHFEk38JmsVeD6xE1mrCO6HFRY=
 github.com/Astera-org/worlds v0.0.3 h1:wT6mePlS/QyNR62uoAtKB2fDRCMaa0FyVibCH1CaMUo=
 github.com/Astera-org/worlds v0.0.3/go.mod h1:H0pBrfKbM6fqF8ju7hZPef3hcMkw97SbGx9kRwgluvM=
@@ -12,8 +16,9 @@ github.com/BurntSushi/freetype-go v0.0.0-20160129220410-b763ddbfe298 h1:1qlsVAQJ
 github.com/BurntSushi/freetype-go v0.0.0-20160129220410-b763ddbfe298/go.mod h1:D+QujdIlUNfa0igpNMk6UIvlb6C252URs4yupRUV4lQ=
 github.com/BurntSushi/graphics-go v0.0.0-20160129215708-b43f31a4a966 h1:lTG4HQym5oPKjL7nGs+csTgiDna685ZXjxijkne828g=
 github.com/BurntSushi/graphics-go v0.0.0-20160129215708-b43f31a4a966/go.mod h1:Mid70uvE93zn9wgF92A/r5ixgnvX8Lh68fxp9KQBaI0=
-github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
+github.com/BurntSushi/toml v1.1.0 h1:ksErzDEI1khOiGPgpwuI7x2ebx/uXQNw7xJpn9Eq1+I=
+github.com/BurntSushi/toml v1.1.0/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc h1:7D+Bh06CRPCJO3gr2F7h1sriovOZ8BMhca2Rg85c2nk=
 github.com/BurntSushi/xgb v0.0.0-20210121224620-deaf085860bc/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
@@ -492,6 +497,8 @@ github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/yuin/goldmark v1.4.0/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
+github.com/zajann/easylog v0.0.0-20200206104745-8a5a24208b3a h1:seJxHFcdNDaaw3F2DJseoXV4eFqW+l4XLQtx3FMkZTc=
+github.com/zajann/easylog v0.0.0-20200206104745-8a5a24208b3a/go.mod h1:4yF/fFAWGhB3Yv+LEBslfAfU4eWY8uEwiPv1h9FpS1Y=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=
 go.etcd.io/etcd v0.0.0-20191023171146-3cf2f69b5738/go.mod h1:dnLIgRNXwCJa5e+c6mIZCrds/GIG4ncV9HhK5PX7jPg=
 go.opencensus.io v0.20.1/go.mod h1:6WKK9ahsWS3RSO+PY9ZHZUfv2irvY6gN279GOPZjmmk=

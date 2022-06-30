@@ -16,10 +16,12 @@ import (
 7) delete the spawn result report
 */
 var gConfig Config
+var gApp WorkerApp
 var VERSION string = "v0.1.0"
 
 func main() {
 	gConfig.Load()
+	gApp.Init()
 
 	go mainLoop()
 
@@ -46,14 +48,8 @@ func printHelp() {
 func mainLoop() {
 	var still bool = true
 
-	startDir, err := os.Getwd()
-	if err != nil {
-		fmt.Println("Error getting current dir: ", err)
-		os.Exit(-1)
-	}
-
 	for still {
-		os.Chdir(startDir)
+
 		var job Job
 		fetchJob(&job)
 

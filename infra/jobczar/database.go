@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -27,4 +28,16 @@ func (db *Database) GetJobCount(status int32) int32 {
 		fmt.Println(err)
 	}
 	return count
+}
+
+func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
+	sql := fmt.Sprintf("SELECT name, version,hash FROM binaries where bin_id = %d", binID)
+	row := db.db.QueryRow(sql)
+	binInfo := infra.BinInfo{}
+	err := row.Scan(&binInfo.Name, &binInfo.Version, &binInfo.Hash)
+	if err != nil {
+		fmt.Println(err)
+		return nil
+	}
+	return &binInfo
 }

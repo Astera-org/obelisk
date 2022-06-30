@@ -9,6 +9,9 @@ require (
 )
 
 require (
+	github.com/Astera-org/easylog v0.2.0
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/grokify/html-strip-tags-go v0.0.1
 	github.com/rs/cors v1.8.2
+	goji.io v2.0.2+incompatible
 )

@@ -7,24 +7,16 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-// LATER move parts of this to a separate package
-type AgentDesc struct {
-	PATH    string
-	GITHASH string
-}
-
-type WorldDesc struct {
-	PATH    string
-	GITHASH string
-}
-
 type Config struct {
 	WORKER_NAME   string
 	INSTANCE_NAME string
-	JOBDIR_ROOT   string
+	JOBDIR        string
+	JOBDIRPREFIX  string
+	BINDIR        string
 	JOBCZAR_IP    string
-	AGENTS        map[string]AgentDesc
-	WORLDS        map[string]WorldDesc
+	JOBCZAR_PORT  int32
+	BINSERVER_URL string
+	WINDOWS       bool
 }
 
 func (config *Config) Load() {
@@ -41,8 +33,14 @@ func (config *Config) Load() {
 func (config *Config) setDefaults() {
 	config.WORKER_NAME = ""
 	config.INSTANCE_NAME = "?"
-	config.JOBDIR_ROOT = "job"
-	config.JOBCZAR_IP = "127.0.0.1:9009"
+	config.JOBDIR = "jobs"
+	config.JOBDIRPREFIX = "job"
+	config.BINDIR = "bins"
+	config.WINDOWS = false
+
+	config.JOBCZAR_IP = "127.0.0.1"
+	config.BINSERVER_URL = "127.0.0.1:8080"
+	config.JOBCZAR_PORT = 9009
 }
 
 func (config *Config) ensureRequired() {

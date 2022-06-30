@@ -19,11 +19,14 @@ require (
 )
 
 require (
+	github.com/Astera-org/easylog v0.2.0
+	github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76
 	github.com/Astera-org/worlds v0.0.3
-	github.com/BurntSushi/toml v0.3.1
+	github.com/BurntSushi/toml v1.1.0
 	github.com/apache/thrift v0.16.0
 	github.com/pkg/profile v1.6.0
 	github.com/stretchr/testify v1.7.0
+	github.com/zajann/easylog v0.0.0-20200206104745-8a5a24208b3a
 )
 
 require (
