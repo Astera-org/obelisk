@@ -2,6 +2,7 @@ package main
 
 import (
 	log "github.com/Astera-org/easylog"
+	"github.com/Astera-org/models/library/metrics"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
@@ -50,22 +51,34 @@ func (ss *Sim) AddActionHistory(observations map[string]etensor.Tensor, timeScal
 	}
 }
 
-// TensorToDense converts etensors to 1d float64 matrices
-func TensorToDense(tensor etensor.Tensor) []float64 {
-	ary := make([]float64, tensor.Len())
+// TensorToAryFloat converts etensors to 1d float64 matrices
+func TensorToAryFloat(tensor *etensor.Tensor) []float64 {
+	ary := make([]float64, (*tensor).Len())
 	i := 0
-	for i = 0; i < tensor.Len(); i++ {
-		ary[i] = tensor.FloatVal1D(i)
+	for i = 0; i < (*tensor).Len(); i++ {
+		ary[i] = (*tensor).FloatVal1D(i)
 	}
 	return ary
 }
 
-// calcF1, using a package that is port of sklearn to ensure identical calculation of F1
-func calcF1(sourceTable *etable.Table, predicted, groundTruth string) float64 {
-	//predictedAry := TensorToDense(sourceTable.ColByName(predicted))
-	//groundTruthAry := TensorToDense(sourceTable.ColByName(groundTruth))
-	//Ytrue, Ypred := mat.NewDense(len(predictedAry), 1, predictedAry), mat.NewDense(len(groundTruthAry), 1, groundTruthAry)
-	return 0.0 //metrics.F1Score(Ytrue, Ypred, "macro", nil)
+// TensorToAryFloat converts etensors to 1d float64 matrices
+func TensorToAryInt(tensor *etensor.Tensor) []int32 {
+	floatary := TensorToAryFloat(tensor)
+	ary := make([]int32, len(floatary))
+	for i := 0; i < len(floatary); i++ {
+		ary[i] = int32(floatary[i])
+	}
+	return ary
+}
+
+// StoreTensors stores a map of tensors in a table for ease of saving and loading back
+func StoreTensors(observations map[string]etensor.Tensor) *etable.Table {
+	temp := etable.Table{}
+	temp.Rows = 1
+	for name, value := range observations {
+		temp.AddCol(value, name)
+	}
+	return &temp
 }
 
 // WriteActionHistory stores a history of action patterns, removes the last most pattern (since conversion is happening in fworld, and last action won't have a corresponding class)
@@ -75,5 +88,34 @@ func WriteActionHistory(sourceTable *etable.Table, filename gi.FileName) {
 	} else {
 		sourceTable.SetNumRows(sourceTable.NumRows() - 1) //skip last one, since no action correspondance
 		sourceTable.SaveCSV(filename, ',', true)
+	}
+}
+
+// ActionF1Score calculates the F1 score for a given action and expected action, the last most prediction is not logged, so skip it
+func ActionF1Score(sourceTable *etable.Table) float64 {
+
+	if sourceTable.Rows == 0 {
+		log.Warn("ActionHistory is empty, check if discrete actions are coming from Fworld")
+		return -1.0
+	} else {
+		predictTensor := (sourceTable.ColByName("Predicted"))
+		groundTensor := sourceTable.ColByName("GroundTruth")
+		predicted := TensorToAryInt(&predictTensor)
+		groundtruth := TensorToAryInt(&groundTensor)
+		return metrics.F1ScoreMacro(predicted[:len(predicted)-1], groundtruth[:len(groundtruth)-1], []int32{0, 1, 2, 3, 4}) //skip last one, since no action correspondance
+	}
+}
+
+//	ActionKL calculates kldivergence for action tbale but explicitely skips last most trial where the predicted action may not have been assigned
+func ActionKL(sourceTable *etable.Table) float64 {
+	if sourceTable.Rows == 0 {
+		log.Warn("ActionHistory is empty, check if discrete actions are coming from Fworld")
+		return -1.0
+	} else {
+		predictTensor := (sourceTable.ColByName("Predicted"))
+		groundTensor := sourceTable.ColByName("GroundTruth")
+		predicted := TensorToAryInt(&predictTensor)
+		groundtruth := TensorToAryInt(&groundTensor)
+		return metrics.KLDivergence(predicted[:len(predicted)-1], groundtruth[:len(groundtruth)-1])
 	}
 }
