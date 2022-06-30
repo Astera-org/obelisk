@@ -1309,11 +1309,10 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 }
 
 func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
-	// TODO Maybe treat Hydra and Energy differently since they're temporally discounted or something.
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
-		Names:  []string{"name"},
+		Names:  []string{name},
 	}, Values: []float64{float64(action)}}
 }
 
