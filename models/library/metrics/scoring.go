@@ -66,14 +66,14 @@ func F1ScoreMacro(predicted, groundtruth, classes []int32) float64 {
 	return f1
 }
 
-func calculateCounts(ary []int, normalize bool) map[int]float64 {
+func CalculateCounts(ary []int32, normalize bool) map[int]float64 {
 	amounts := make(map[int]float64)
 	total := 0.0
-	for val := range ary {
-		amounts[val] += 1.0
-		total = +1.0
+	for _, amount := range ary {
+		amounts[int(amount)] += 1.0
+		total++
 	}
-	if normalize {
+	if normalize == true {
 		for name := range amounts {
 			amounts[name] = amounts[name] / total
 		}
@@ -99,9 +99,9 @@ func alignCounts(predicted, actual map[int]float64) (map[int]float64, map[int]fl
 }
 
 // KLDivergegence calculates kl divergence given raw predictions and actual values
-func KLDivergence(predicted, groundtruth []int) float64 {
-	predictedCounts := calculateCounts(predicted, true)
-	groundtruthCounts := calculateCounts(groundtruth, true)
+func KLDivergence(predicted, groundtruth []int32) float64 {
+	predictedCounts := CalculateCounts(predicted, true)
+	groundtruthCounts := CalculateCounts(groundtruth, true)
 	return KLDivergeDistributions(predictedCounts, groundtruthCounts)
 
 }
@@ -117,8 +117,10 @@ func KLDivergeDistributions(predDistribution, actualDistribution map[int]float64
 		} else if q == 0.0 {
 			q = .0001
 		}
-		logpq := mat32.Log2(float32(p / q))
-		diverge += (p * float64(logpq))
+
+		logpq := mat32.Log(float32(p / q))
+		plogpq := p * float64(logpq)
+		diverge += plogpq
 	}
 	return diverge
 

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, AnyStr
 
 import pandas as pd
 import numpy as np
-from scipy.special import kl_div
+from scipy.special import rel_entr
 from sklearn.metrics import confusion_matrix as c_m
 from sklearn.metrics import precision_score
 
@@ -28,7 +28,7 @@ def calc_kl(predicted:List[int], ground_truth:List[int])->float:
 
     ground_truth_distribution = ground_truth_valuecounts.sort_index().values
     prediction_distributed = predicted_valuecounts.sort_index().values
-    kl_divergence = kl_div(prediction_distributed,ground_truth_distribution)
+    kl_divergence = rel_entr(ground_truth_distribution,prediction_distributed) #rel_entr is the KL divergence without -(x+y) they added in scipy
     return kl_divergence.sum()
 
 def calc_performance_overtime(x:List[int],y:List[int]):

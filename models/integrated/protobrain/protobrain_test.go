@@ -42,34 +42,45 @@ func (pworld *ProtoworldTest) Observe(name string) etensor.Tensor {
 func (pworld *ProtoworldTest) SetObservations(obs map[string]etensor.Tensor) {
 }
 
-// ConfigLoops configures the control loops
-func (ss *Sim) ConfigTestLoop() *looper.Manager {
-	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 1).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
-	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
-	plusPhase, _ := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
-	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+// ConfigLoops configures the control loops, pass a point to record pct record over multiple time stpes
+func (ss *Sim) ConfigTestLoop(pct_correct *[]float64) *looper.Manager {
+	originalLoop := ss.ConfigLoops()
+	originalLoop.GetLoop(etime.Train, etime.Trial).OnEnd.Add("TrialLoss", func() {
+		loss := (ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr())
+		(*pct_correct)[0] = loss
 	})
-	mode := etime.Train // For closures
-	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
-	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
-	axon.LooperSimCycleAndLearn(manager, ss.Net.AsAxon(), &ss.Time, &ss.NetDeets.ViewUpdt)
-	return manager
+	return originalLoop
+
 }
 
-//load csv datafile
+//TestProto checks that basic activity actually gets sent through the network and we get NON zero values
 func TestProto(t *testing.T) {
-	log.SetLevel(900)() // suppress logging
+	gConfig.Load()
+	testPath := gConfig.TESTFILE
+	log.SetLevel(900)()          // suppress logging
+	pctCorrect := []float64{0.0} //maybe we want
 	var sim Sim
 	sim.Net = sim.ConfigNet()
-	sim.Loops = sim.ConfigLoops()
-	sim.WorldEnv = (&ProtoworldTest{}).New("testdata.csv")
+	sim.Loops = sim.ConfigTestLoop(&pctCorrect)
+	pworldTest := (&ProtoworldTest{}).New(testPath)
+	sim.WorldEnv = pworldTest
 	sim.ActionHistory = &etable.Table{} //A recording of actions taken and actions predicted
 	sim.NewRun()
-	sim.Loops.Run(etime.Train)
-	//sim.Loops.Step(etime.Train, 1, etime.Trial)
-	//sim.Loops.Step(etime.Train, 1, etime.Trial)
-	print("HI")
+	sim.Loops.Step(etime.Train, 1, etime.Trial)
+	if pctCorrect[0] < 0.04 {
+		t.Errorf("PctUnitErr() should be above 0.04 but got %f. This implies activity not getting sent or ground truth not compared", pctCorrect[0])
+	}
+
+	//check activity of network
+	for name, _ := range pworldTest.actions {
+		vector := pworldTest.actions[name].Vector
+		sum := 0.0
+		for i := 0; i < vector.Len(); i++ {
+			sum += vector.FloatVal1D(i)
+		}
+		avg := sum / float64(vector.Len())
+		if avg < .05 {
+			t.Errorf("Action %s should have SOME avg activity but got %f", name, avg)
+		}
+	}
 }
