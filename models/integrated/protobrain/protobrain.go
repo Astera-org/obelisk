@@ -84,7 +84,7 @@ type Sim struct {
 	Time          axon.Time            `desc:"axon timing parameters and state"`
 	LoopTime      string               `desc:"Printout of the current time."`
 	NumSteps      int32
-	ActionHistory *etable.Table `desc:"a recording of actions taken and predicted per trial"`
+	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -155,8 +155,11 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		// TODO figure score and seconds
 		log.Info("LIFETIME reached")
-		//score := calcF1(sim.ActionHistory, "Predicted", "GroundTruth")
-		infra.WriteResults(0.0, sim.NumSteps, 100)
+		kl := obs["KL"].FloatVal1D(0)
+		f1 := obs["F1"].FloatVal1D(0)
+		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
+		log.Info("KL score: " + fmt.Sprintf("%f", kl))
+		infra.WriteResults(f1, sim.NumSteps, 100)
 		os.Exit(0)
 	}
 

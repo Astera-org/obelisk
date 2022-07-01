@@ -15,7 +15,6 @@ type Config struct {
 	WORKER        bool
 	LIFETIME      int32 // how many times the world will call step before we exit
 	INTERNAL_PORT int32
-	HISTORYFILE   string // location to log files over the history of an agent
 	TESTFILE      string // location of sample data to test the neural network, and performance characteristics
 }
 
@@ -35,6 +34,5 @@ func (config *Config) setDefaults() {
 	config.WORKER = false
 	config.LIFETIME = 100
 	config.INTERNAL_PORT = 9090
-	config.HISTORYFILE = "history.csv"
 	config.TESTFILE = "testdata.csv"
 }
