@@ -82,27 +82,27 @@ func StoreTensors(observations map[string]etensor.Tensor) *etable.Table {
 }
 
 // WriteActionHistory stores a history of action patterns, removes the last most pattern (since conversion is happening in fworld, and last action won't have a corresponding class)
-func WriteActionHistory(sourceTable *etable.Table, filename gi.FileName) {
+func WriteActionHistory(sourceTable *etable.Table, filename gi.FileName, numRows int) {
 	if sourceTable.Rows == 0 {
 		log.Warn("ActionHistory is empty, check if discrete actions are coming from Fworld")
 	} else {
-		sourceTable.SetNumRows(sourceTable.NumRows() - 1) //skip last one, since no action correspondance
+		sourceTable.SetNumRows(numRows) //skip last one, since no action correspondance
 		sourceTable.SaveCSV(filename, ',', true)
 	}
 }
 
 // ActionF1Score calculates the F1 score for a given action and expected action, the last most prediction is not logged, so skip it
-func ActionF1Score(sourceTable *etable.Table) float64 {
+func ActionF1Score(sourceTable *etable.Table, predictedName, groundTruthName string, classes []int32) float64 {
 
 	if sourceTable.Rows == 0 {
 		log.Warn("ActionHistory is empty, check if discrete actions are coming from Fworld")
 		return -1.0
 	} else {
-		predictTensor := (sourceTable.ColByName("Predicted"))
-		groundTensor := sourceTable.ColByName("GroundTruth")
+		predictTensor := (sourceTable.ColByName(predictedName))
+		groundTensor := sourceTable.ColByName(groundTruthName)
 		predicted := TensorToAryInt(&predictTensor)
 		groundtruth := TensorToAryInt(&groundTensor)
-		return metrics.F1ScoreMacro(predicted[:len(predicted)-1], groundtruth[:len(groundtruth)-1], []int32{0, 1, 2, 3, 4}) //skip last one, since no action correspondance
+		return metrics.F1ScoreMacro(predicted[:len(predicted)-1], groundtruth[:len(groundtruth)-1], classes) //skip last one, since no action correspondance
 	}
 }
 
