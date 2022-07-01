@@ -14,6 +14,7 @@ import (
 	"fmt"
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/models/agent"
+	"github.com/Astera-org/models/library/metrics"
 	"github.com/Astera-org/worlds/network"
 	net_env "github.com/Astera-org/worlds/network/gengo/env"
 	"github.com/Astera-org/worlds/network_agent"
@@ -120,8 +121,10 @@ type FWorld struct {
 	paused  bool
 	stepOne bool
 
-	LastActionPredicted int  `view:"-" desc:"last action suggested by model over network"`
-	UseGUI              bool `view:"determines if gui is going to be used or not"`
+	LastActionPredicted int     `view:"-" desc:"last action suggested by model over network"`
+	UseGUI              bool    `view:"determines if gui is going to be used or not"`
+	predictedActions    []int32 `view:"-" desc:"for scoring counts what action was taken on a particular trial"`
+	bestActions         []int32 `view:"-" desc:"for scoring, counts what action was taken on a particular trial"`
 }
 
 var KiT_FWorld = kit.Types.AddType(&FWorld{}, FWorldProps)
@@ -131,6 +134,8 @@ func (ev *FWorld) Desc() string { return ev.Dsc }
 
 // Config configures the world
 func (ev *FWorld) Config(ntrls int) {
+	ev.predictedActions = make([]int32, 1)
+	ev.bestActions = make([]int32, 1)
 	ev.Nm = "Demo"
 	ev.Dsc = "Example world with basic food / water / eat / drink actions"
 	ev.Disp = true
@@ -1285,9 +1290,16 @@ func (ev FWorld) ApplyTeachingFunction(agentActionId int) int {
 	return chosenAction
 }
 
+func recordPerformance(ev *FWorld, chosenAction int) {
+	bestAction, _ := ev.ActGen()
+	ev.bestActions = append(ev.bestActions, int32(bestAction))
+	ev.predictedActions = append(ev.predictedActions, int32(chosenAction))
+}
+
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
+
 	log.Info("Taking action: " + chosenActionStr)
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
@@ -1309,6 +1321,10 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 }
 
 func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
+	return ev.floatToETensor(float64(action), name)
+}
+
+func (ev FWorld) floatToETensor(action float64, name string) *net_env.ETensor {
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
@@ -1329,11 +1345,13 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	expectedAction, _ := ev.ActGen()
 	genAction := ev.Acts[expectedAction]
 	actionTensor := ev.Pats[genAction]
-	obs["VL"] = network_agent.FromTensor(actionTensor)                                                            //Heuristic is a distributed rep of best
-	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction)                                                 //This is a a discrete action of best action
-	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, ev.Acts[ev.LastActionPredicted]) //This is a discrete action of last action
-	ev.calculateAndRecordReward(&obs)                                                                             // Add reward.
-
+	obs["VL"] = network_agent.FromTensor(actionTensor)            //Heuristic is a distributed rep of best
+	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction) //This is a a discrete action of best action
+	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
+	ev.calculateAndRecordReward(&obs) // Add reward.
+	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
+	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions, ev.bestActions, []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
+	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions, ev.bestActions), "KL")                              // Add KL.
 	return obs
 }
 
@@ -1600,12 +1618,15 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 
 	move, ok := actions["move"] // This contains a discrete option.
 
+	//todo this shouldn't be a switch, we need a parasiminous way of handling model <-> env input out shapes
 	if ok {
-		// We've received a discrete action and can use it directly to StepWorld.
+		// We've received a discrete action and can use it directly to StepWorld
 		ev.StepWorld(int(move.DiscreteOption), false)
+		recordPerformance(ev, int(move.DiscreteOption))
 	} else {
 		// Assume VL is in actions and treat it continuously and also apply the teaching function.
 		modelGeneratedAction := ev.GetActionIdFromVL(transformActions(actions))
+		recordPerformance(ev, int(modelGeneratedAction))
 		ev.LastActionPredicted = modelGeneratedAction //action suggested for the previous time step
 		ev.StepWorld(ev.ApplyTeachingFunction(modelGeneratedAction), false)
 	}
