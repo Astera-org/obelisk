@@ -5,14 +5,19 @@ import "github.com/goki/mat32"
 // Precision returns a precision for a given class
 func Precision(predicted, groundtruth []int32, relevantClass int32) float64 {
 	var tp, fp int32
+	predictedExists := false
 	for i := 0; i < len(predicted); i++ {
 		if predicted[i] == relevantClass {
+			predictedExists = true
 			if predicted[i] == groundtruth[i] {
 				tp++
 			} else if predicted[i] != groundtruth[i] {
 				fp++
 			}
 		}
+	}
+	if predictedExists == false {
+		return -1.0 // -1.0 is for class does not exist in predictions
 	}
 	if tp == 0 && fp == 0 {
 		return 0.0
@@ -36,6 +41,9 @@ func Recall(predicted, groundtruth []int32, relevantClass int32) float64 {
 			total++
 		}
 	}
+	if total == 0 {
+		return -1.0 // -1.0 is for class does not exist
+	}
 	if tp == 0 && total == 0 {
 		return 0.0
 	}
@@ -48,6 +56,9 @@ func Recall(predicted, groundtruth []int32, relevantClass int32) float64 {
 func F1Score(predicted, groundtruth []int32, relevantClass int32) float64 {
 	precision := Precision(predicted, groundtruth, relevantClass)
 	recall := Recall(predicted, groundtruth, relevantClass)
+	if recall == -1.0 || precision == -1.0 {
+		return -1.0
+	}
 	if precision == 0 && recall == 0 {
 		return 0.0
 	}
@@ -60,7 +71,10 @@ func F1Score(predicted, groundtruth []int32, relevantClass int32) float64 {
 func F1ScoreMacro(predicted, groundtruth, classes []int32) float64 {
 	var f1 float64
 	for i := 0; i < len(classes); i++ {
-		f1 += F1Score(predicted, groundtruth, classes[i])
+		val := F1Score(predicted, groundtruth, classes[i])
+		if val != -1.0 {
+			f1 += val
+		}
 	}
 	f1 /= float64(len(classes))
 	return f1
@@ -112,10 +126,14 @@ func KLDivergeDistributions(predDistribution, actualDistribution map[int]float64
 	diverge := 0.0
 	for name, p := range groundtruthCounts {
 		q, _ := predictedCounts[name]
+		// handle nan issues
 		if q == 1.0 {
 			q = .9999
 		} else if q == 0.0 {
 			q = .0001
+		}
+		if p == 0.0 {
+			p = .0001
 		}
 
 		logpq := mat32.Log(float32(p / q))
