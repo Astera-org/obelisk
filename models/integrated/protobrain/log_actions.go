@@ -2,7 +2,7 @@ package main
 
 import (
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/library/helpers"
+	"github.com/Astera-org/obelisk/models/library/helpers"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"

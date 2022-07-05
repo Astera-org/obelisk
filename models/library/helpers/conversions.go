@@ -2,7 +2,7 @@ package helpers
 
 import (
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/library/metrics"
+	"github.com/Astera-org/obelisk/models/library/metrics"
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/goki/gi/gi"
