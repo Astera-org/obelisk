@@ -4,9 +4,10 @@ go 1.18
 
 require (
 	github.com/Astera-org/easylog v0.2.0
+	github.com/Astera-org/obelisk/models v0.0.0-20220705230911-5069054ae291
 	github.com/BurntSushi/toml v1.1.0
 	github.com/apache/thrift v0.16.0
-	github.com/emer/emergent v1.3.12
+	github.com/emer/emergent v1.3.17
 	github.com/emer/etable v1.1.7
 	github.com/goki/gi v1.3.5
 	github.com/goki/ki v1.1.8
@@ -29,6 +30,8 @@ require (
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/c2h5oh/datasize v0.0.0-20200825124411-48ed595a09d2 // indirect
 	github.com/dlclark/regexp2 v1.4.0 // indirect
+	github.com/emer/axon v1.4.12 // indirect
+	github.com/emer/empi v1.0.13 // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.0 // indirect

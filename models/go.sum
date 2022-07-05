@@ -9,8 +9,8 @@ github.com/Astera-org/easylog v0.2.0 h1:OyD27+NdXxCZqgubJTjRTfNgA82btJAGOlcKouCI
 github.com/Astera-org/easylog v0.2.0/go.mod h1:c6Yt1NqBxVu5xMcLTt+IYz4x0zCaIWKnPapWgam25yw=
 github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76 h1:b3CD0O4wEj5lRYwVib0ELGWSF3RxW4L5Uqi4/xQkXcU=
 github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76/go.mod h1:u6XW5Kzy5HwRWBNM1Mx4iCFXK2u9CK4uqybO1k2sgZI=
-github.com/Astera-org/worlds v0.0.2 h1:4y6zTbWyGUTxmhuMZs80LOf3Bfx/dppX4vsnBCgiBVE=
-github.com/Astera-org/worlds v0.0.2/go.mod h1:Rtq5XvgbiXtMgfEf0wHFEk38JmsVeD6xE1mrCO6HFRY=
+github.com/Astera-org/obelisk/worlds v0.0.0-20220705230911-5069054ae291 h1:24dDmqiheVs1JD/e4JFOhrRR0RXXScIPFrIck4RqyUs=
+github.com/Astera-org/obelisk/worlds v0.0.0-20220705230911-5069054ae291/go.mod h1:yx1oFt5BhGONjR6YY4mP8k+n4g556aF08xcdY1sisbc=
 github.com/BurntSushi/freetype-go v0.0.0-20160129220410-b763ddbfe298 h1:1qlsVAQJXZHsaM8b6OLVo6muQUQd4CwkH/D3fnnbHXA=
 github.com/BurntSushi/freetype-go v0.0.0-20160129220410-b763ddbfe298/go.mod h1:D+QujdIlUNfa0igpNMk6UIvlb6C252URs4yupRUV4lQ=
 github.com/BurntSushi/graphics-go v0.0.0-20160129215708-b43f31a4a966 h1:lTG4HQym5oPKjL7nGs+csTgiDna685ZXjxijkne828g=
