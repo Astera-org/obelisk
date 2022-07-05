@@ -10,3 +10,5 @@ wandb/
 __pycache__/
 go.work
 *.log
+/.vscode/launch.json
+/worlds/integrated/fworld/world.tsv

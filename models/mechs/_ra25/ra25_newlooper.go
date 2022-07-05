@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Astera-org/models/library/common"
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/common"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/envlp"

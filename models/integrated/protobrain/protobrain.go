@@ -6,10 +6,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/agent"
-	"github.com/Astera-org/models/library/autoui"
 	"github.com/Astera-org/obelisk/infra"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/emer"
@@ -18,7 +21,6 @@ import (
 	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
-	"os"
 )
 
 // Protobrain demonstrates a network model that has elements of cortical visual perception and a rudimentary action system.
@@ -85,6 +87,7 @@ type Sim struct {
 	LoopTime      string               `desc:"Printout of the current time."`
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
+	StartTime time.Time
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -104,7 +107,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
-	// TODO this doesn't make sense. we should wait for the next Step call to come in from the
+	// TODO this doesn't make sense. we should wait for the next Step call to come in from the world
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
@@ -144,6 +147,7 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
+
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
@@ -155,11 +159,14 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		// TODO figure score and seconds
 		log.Info("LIFETIME reached")
+		seconds := time.Since(sim.StartTime).Seconds()
 		kl := obs["KL"].FloatVal1D(0)
 		f1 := obs["F1"].FloatVal1D(0)
+		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
+
 		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
 		log.Info("KL score: " + fmt.Sprintf("%f", kl))
-		infra.WriteResults(f1, sim.NumSteps, 100)
+		infra.WriteResults(f1, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
@@ -184,6 +191,7 @@ func (sim *Sim) startWorkerLoop() {
 	// 		return the action to the world
 	// write results after LIFETIME steps
 	// exit
+	sim.StartTime = time.Now()
 	addr := fmt.Sprint("127.0.0.1:", gConfig.INTERNAL_PORT)
 	agent.StartServer(addr, sim.OnStep)
 }

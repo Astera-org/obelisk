@@ -22,9 +22,9 @@ const (
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
 
-	row := gDatabase.db.QueryRow("SELECT job_id,agent_name,world_name,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1")
+	row := gDatabase.db.QueryRow("SELECT job_id,agent_id,world_id,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1")
 
-	err := row.Scan(&job.JobID, &job.AgentName, &job.WorldName, &job.AgentCfg, &job.WorldCfg)
+	err := row.Scan(&job.JobID, &job.AgentID, &job.WorldID, &job.AgentCfg, &job.WorldCfg)
 	if err == sql.ErrNoRows {
 		fmt.Println(err)
 		return &job, errors.New("empty")
@@ -66,10 +66,10 @@ func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.R
 	return true, nil
 }
 
-func (handler RequestHandler) AddJob(ctx context.Context, agentName string, worldName string,
+func (handler RequestHandler) AddJob(ctx context.Context, agentID int32, worldID int32,
 	agentCfg string, worldCfg string, priority int32, userID int32, note string) (int32, error) {
-	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_name,world_name,agent_param,world_param,note) values (%d,%d,'%s','%s','%s','%s','%s')",
-		userID, priority, agentName, worldName, agentCfg, worldCfg, note)
+	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_id,world_id,agent_param,world_param,note) values (%d,%d,%d,%d,'%s','%s','%s')",
+		userID, priority, agentID, worldID, agentCfg, worldCfg, note)
 	result, err := gDatabase.db.Exec(sql)
 	if err != nil {
 		fmt.Println(err)
@@ -110,6 +110,14 @@ func (handler RequestHandler) QueryJobs(ctx context.Context) ([]map[string]strin
 		}
 	}
 	return res, nil
+}
+
+func (handler RequestHandler) GetBinInfo(ctx context.Context, binID int32) (*infra.BinInfo, error) {
+	binInfo := gDatabase.GetBinInfo(binID)
+	if binInfo == nil {
+		return nil, errors.New("bin not found")
+	}
+	return binInfo, nil
 }
 
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {

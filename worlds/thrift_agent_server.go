@@ -4,8 +4,8 @@ import (
 	"context"
 
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/worlds/network"
-	"github.com/Astera-org/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 )
 
 const ADDR = "localhost:9090"

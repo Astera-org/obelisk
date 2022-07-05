@@ -11,8 +11,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/Astera-org/models/library/common"
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/common"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/hip"
 	"github.com/emer/emergent/egui"

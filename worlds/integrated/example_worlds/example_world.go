@@ -3,9 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Astera-org/worlds/network"
-	"github.com/Astera-org/worlds/network/gengo/env"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/worlds/network"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/patgen"
 	"github.com/emer/etable/etensor"

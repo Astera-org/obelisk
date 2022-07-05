@@ -13,11 +13,11 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/agent"
-	"github.com/Astera-org/models/library/metrics"
-	"github.com/Astera-org/worlds/network"
-	net_env "github.com/Astera-org/worlds/network/gengo/env"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/models/library/metrics"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/worlds/network"
+	net_env "github.com/Astera-org/obelisk/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/emergent/env"
 	"github.com/emer/emergent/erand"
 	"github.com/emer/emergent/evec"
@@ -1299,7 +1299,6 @@ func recordPerformance(ev *FWorld, chosenAction int) {
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
-
 	log.Info("Taking action: " + chosenActionStr)
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
