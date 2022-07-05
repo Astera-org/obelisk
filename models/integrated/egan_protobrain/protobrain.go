@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"github.com/emer/etable/etensor"
 
-	"github.com/Astera-org/models/library/autoui"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/models/library/autoui"
+	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"

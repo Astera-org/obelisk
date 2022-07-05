@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/emergent/evec"
 	"github.com/emer/emergent/params"
 )

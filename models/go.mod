@@ -1,4 +1,4 @@
-module github.com/Astera-org/models
+module github.com/Astera-org/obelisk/models
 
 go 1.18
 
@@ -10,7 +10,7 @@ require (
 	github.com/emer/etable v1.1.7
 	github.com/emer/leabra v1.2.0
 	github.com/emer/vision v1.1.15
-	github.com/goki/gi v1.3.4
+	github.com/goki/gi v1.3.5
 	github.com/goki/ki v1.1.8
 	github.com/goki/mat32 v1.0.12
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd
@@ -21,12 +21,10 @@ require (
 require (
 	github.com/Astera-org/easylog v0.2.0
 	github.com/Astera-org/obelisk/infra v0.0.0-20220622172524-31c7b803ef76
-	github.com/Astera-org/worlds v0.0.3
 	github.com/BurntSushi/toml v1.1.0
 	github.com/apache/thrift v0.16.0
 	github.com/pkg/profile v1.6.0
 	github.com/stretchr/testify v1.7.0
-	github.com/zajann/easylog v0.0.0-20200206104745-8a5a24208b3a
 )
 
 require (

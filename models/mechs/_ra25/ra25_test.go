@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/etable/etable"
 	"os"
