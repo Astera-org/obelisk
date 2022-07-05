@@ -3,10 +3,10 @@ package network_agent
 import (
 	"context"
 
-	"github.com/Astera-org/models/agent"
+	"github.com/Astera-org/obelisk/models/agent"
 
-	"github.com/Astera-org/worlds/network"
-	"github.com/Astera-org/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 )

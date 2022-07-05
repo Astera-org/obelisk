@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Astera-org/models/library/autoui"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"
@@ -40,7 +40,7 @@ func main() {
 		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
 		DoLogging:                 true,
 		HaveGui:                   true,
-		StartAsServer:             false, // For an example with running as a server, look in https://github.com/Astera-org/models/blob/master/examples/simple_network_agent/simple_agent.go
+		StartAsServer:             false, // For an example with running as a server, look in https://github.com/Astera-org/obelisk/models/blob/master/examples/simple_network_agent/simple_agent.go
 	}
 	userInterface.Start() // Start blocks, so don't put any code after this.
 }

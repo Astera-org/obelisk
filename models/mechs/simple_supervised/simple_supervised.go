@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Astera-org/models/library/autoui"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/agent"

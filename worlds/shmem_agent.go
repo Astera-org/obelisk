@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/hidez8891/shm"
 
-	"github.com/Astera-org/worlds/network"
-	"github.com/Astera-org/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 )
 
 const _ADDR = "localhost:9090"

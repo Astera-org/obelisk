@@ -3,7 +3,7 @@ package network
 import (
 	"github.com/apache/thrift/lib/go/thrift"
 
-	"github.com/Astera-org/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 )
 
 const ADDR = "localhost:9090"

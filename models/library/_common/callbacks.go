@@ -2,7 +2,7 @@ package common
 
 import (
 	"fmt"
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/emergent/etime"
 	"github.com/goki/gi/gi"
 )

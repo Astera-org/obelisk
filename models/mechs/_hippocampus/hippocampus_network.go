@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"github.com/emer/emergent/etime"
 
-	"github.com/Astera-org/models/library/sim"
+	"github.com/Astera-org/obelisk/models/library/sim"
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/env"
