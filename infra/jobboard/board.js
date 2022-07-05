@@ -17,25 +17,6 @@ function getClient() {
     return gClient;
 }
 
-// TODO: remove if unused
-function sendQuery(sqlString) {
-    console.log("sendQuery query", sqlString);
-    const client = getClient();
-
-    try {
-        const result = client.runSQL(sqlString, function (result) {
-            console.log("sendQuery", result)
-            $('#result').text(result);
-            $('#result').css('color', 'black');
-        });
-    } catch (error) {
-        console.log("ERROR")
-        console.log(error)
-        $('#result').text(error.why);
-        $('#result').css('color', 'red');
-    }
-}
-
 function addJob(model, modelConfig, world, worldConfig, note) {
     console.log("addJob model:", model, "model config:", modelConfig, "world:",
         world, "world config:", worldConfig, "note:", note);
@@ -43,7 +24,16 @@ function addJob(model, modelConfig, world, worldConfig, note) {
     client.addJob(model, world, modelConfig, worldConfig, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
-    })
+    });
+}
+
+function runSql(sqlString) {
+    console.log("submitSql:", sqlString);
+    const client = getClient();
+    client.runSQL(sqlString, function (result) {
+        console.log("runSQL result", result);
+        $('#result').text(result);
+    });
 }
 
 // convert a json object to a table row
@@ -116,6 +106,7 @@ $(function() {
 
     queryJobs();
 
+    // setup add job form
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
         const model = $("#model").val();
@@ -125,6 +116,13 @@ $(function() {
         const note = $("#note").val();
 
         addJob(model, modelConfig, world, worldConfig, note);
+    });
+
+    // setup raw sql form
+    $("#submit_sql_form").submit(function(event) {
+        event.preventDefault();
+        const sqlString = $("#sqlString").val();
+        runSql(sqlString);
     });
 
 });
