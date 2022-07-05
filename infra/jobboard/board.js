@@ -17,6 +17,15 @@ function getClient() {
     return gClient;
 }
 
+function runSql(sqlString) {
+    console.log("submitSql:", sqlString);
+    const client = getClient();
+    client.runSQL(sqlString, function (result) {
+        console.log("runSQL result", result);
+        $('#result').text(result);
+    });
+}
+
 function addJob(model, modelConfig, world, worldConfig, note) {
     console.log("addJob model:", model, "model config:", modelConfig, "world:",
         world, "world config:", worldConfig, "note:", note);
@@ -24,15 +33,6 @@ function addJob(model, modelConfig, world, worldConfig, note) {
     client.addJob(model, world, modelConfig, worldConfig, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
-    });
-}
-
-function runSql(sqlString) {
-    console.log("submitSql:", sqlString);
-    const client = getClient();
-    client.runSQL(sqlString, function (result) {
-        console.log("runSQL result", result);
-        $('#result').text(result);
     });
 }
 
