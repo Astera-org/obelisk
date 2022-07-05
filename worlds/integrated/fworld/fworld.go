@@ -1516,7 +1516,7 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 		vp.SetFullReRender()
 	})
 
-	alreadyConnected := false // Don't let the user connect twice
+	alreadyConnected := true // Don't let the user connect twice
 	toolbar.AddAction(gi.ActOpts{Label: "Connect to Server and Run", Icon: "svg", Tooltip: "Connect to an intelligent model that is serving actions as a server.", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
 	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
@@ -1526,6 +1526,9 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 			alreadyConnected = true
 		}
 	})
+	// Connect to server automatically on window open
+	go connectAndQueryAgent(ev)
+	alreadyConnected = true
 
 	toolbar.AddAction(gi.ActOpts{Label: "Pause", Icon: "pause", Tooltip: "Pause stepping", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
@@ -1662,7 +1665,6 @@ func main() {
 
 		gimain.Main(func() {
 			fwin := bestWorld.ConfigWorldGui()
-			// TODO Get the server connection to start automatically on window open
 
 			fwin.StartEventLoop()
 		})
