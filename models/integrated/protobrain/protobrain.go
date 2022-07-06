@@ -87,7 +87,7 @@ type Sim struct {
 	LoopTime      string               `desc:"Printout of the current time."`
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
-	StartTime time.Time
+	StartTime     time.Time
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -170,7 +170,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 		os.Exit(0)
 	}
 
-	sim.WorldEnv.SetObservations(obs)
+	sim.WorldEnv.(*agent.NetworkWorld).SetObservations(obs)
 
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
