@@ -1284,9 +1284,6 @@ func (ev FWorld) GetActionIdFromVL(actions map[string]agent.Action) (actionId in
 // ApplyTeachingFunction gets the teaching signal.
 func (ev FWorld) ApplyTeachingFunction(agentActionId int) int {
 	chosenAction := ev.PossiblyGetTeachingSignal(agentActionId)
-	agentAction := ev.Acts[agentActionId]
-	chosenActionStr := ev.Acts[chosenAction]
-	log.Info("Action from Agent: " + agentAction + ", but Heuristic Advises: " + chosenActionStr)
 	return chosenAction
 }
 
@@ -1299,7 +1296,9 @@ func recordPerformance(ev *FWorld, chosenAction int) {
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
-	log.Info("Taking action: " + chosenActionStr)
+	heuristicAction, _ := ev.ActGen()
+
+	log.Info("Action taken: " + chosenActionStr + " " + strconv.Itoa(chosenAction) + ", but Heuristic Advises: " + ev.Acts[heuristicAction] + " " + strconv.Itoa(heuristicAction))
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
 	if ev.UseGUI {
@@ -1612,6 +1611,7 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 	actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
 	if actions == nil {
 		log.Error("disconnected from agent, exiting")
+		os.Exit(0)
 		return false
 	}
 
