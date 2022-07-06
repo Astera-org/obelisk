@@ -15,6 +15,7 @@ type Config struct {
 	WORKER        bool
 	LIFETIME      int32 // how many times the world will call step before we exit
 	INTERNAL_PORT int32
+	TESTFILE      string // location of sample data to test the neural network, and performance characteristics
 }
 
 func (config *Config) Load() {
@@ -33,4 +34,5 @@ func (config *Config) setDefaults() {
 	config.WORKER = false
 	config.LIFETIME = 100
 	config.INTERNAL_PORT = 9090
+	config.TESTFILE = "testdata.csv"
 }

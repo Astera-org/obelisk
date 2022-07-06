@@ -220,7 +220,7 @@ class FWorldHandler:
                 predicted = group["predicted"].values
                 reward = group["rewards"].mean()
                 kl_divergence:float = fworld_metrics.calc_kl(predicted, ground_truth)
-                f1_score:float = fworld_metrics.calc_precision(predicted, ground_truth)
+                f1_score:float = fworld_metrics.calc_f1(predicted, ground_truth)
 
                 wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
                 wandb.log({"{}_f1".format(title):f1_score},step=step)
@@ -229,7 +229,7 @@ class FWorldHandler:
 
             wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
 
-            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted, actions.ground_truth)
+            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_f1(actions.predicted, actions.ground_truth)
             wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted, actions.ground_truth)
 
             sample_amount = len(input_space) if len(input_space) < 1000 else 1000

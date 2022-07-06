@@ -18,6 +18,7 @@ import (
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
@@ -52,6 +53,7 @@ func main() {
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
 	sim.WorldEnv = &agent.NetworkWorld{}
+	sim.ActionHistory = &etable.Table{} //A recording of actions taken and actions predicted
 
 	if gConfig.WORKER {
 		sim.startWorkerLoop()
@@ -77,13 +79,14 @@ func main() {
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
 type Sim struct {
-	Net       *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
-	NetDeets  NetworkDeets         `desc:"Contains details about the network."`
-	Loops     *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
-	WorldEnv  agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
-	Time      axon.Time            `desc:"axon timing parameters and state"`
-	LoopTime  string               `desc:"Printout of the current time."`
-	NumSteps  int32
+	Net           *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
+	NetDeets      NetworkDeets         `desc:"Contains details about the network."`
+	Loops         *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
+	WorldEnv      agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
+	Time          axon.Time            `desc:"axon timing parameters and state"`
+	LoopTime      string               `desc:"Printout of the current time."`
+	NumSteps      int32
+	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
 	StartTime time.Time
 }
 
@@ -154,10 +157,16 @@ func (sim *Sim) OnObserve() {
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
 	if sim.NumSteps >= gConfig.LIFETIME {
-		// TODO figure score
+		// TODO figure score and seconds
+		log.Info("LIFETIME reached")
 		seconds := time.Since(sim.StartTime).Seconds()
+		kl := obs["KL"].FloatVal1D(0)
+		f1 := obs["F1"].FloatVal1D(0)
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-		infra.WriteResults(.5, sim.NumSteps, int32(seconds))
+
+		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
+		log.Info("KL score: " + fmt.Sprintf("%f", kl))
+		infra.WriteResults(f1, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
@@ -165,6 +174,9 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+
+	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
+
 	actions := agent.GetAction(sim.Net.AsAxon())
 
 	return actions
