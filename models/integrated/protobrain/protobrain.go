@@ -87,7 +87,7 @@ type Sim struct {
 	LoopTime      string               `desc:"Printout of the current time."`
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
-	StartTime time.Time
+	StartTime     time.Time
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -99,7 +99,7 @@ func (ss *Sim) ConfigNet() *deep.Network {
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 200).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
