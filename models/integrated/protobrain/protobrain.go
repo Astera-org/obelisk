@@ -175,9 +175,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.WorldEnv.SetObservations(obs)
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
-
 	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
-
 	actions := agent.GetAction(sim.Net.AsAxon())
 
 	return actions
