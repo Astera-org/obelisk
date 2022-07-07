@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     for hidden_size in config_run.hidden_size:
         for feature_index in range(len(all_input_information)+1):
-                wandb.init(project="fworldsupervised-clean")
+                wandb.init(project="fworldsupervised-updated")
                 config_variables = config_run.asdict()
                 config_variables["hidden_size"] = hidden_size
                 ##give logging context

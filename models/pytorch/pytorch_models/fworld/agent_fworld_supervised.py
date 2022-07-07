@@ -189,7 +189,7 @@ class FWorldHandler:
             self.model.rewards = []
 
             #store a small log of results
-            file = open('fworld_{}.pkl'.format(wandb.run.ablation_feature), 'wb')
+            file = open('fworld_{}.pkl'.format(wandb.config.ablation_feature), 'wb')
             pickle.dump(self.stored_observations, file)
             file.close()
 
@@ -209,6 +209,7 @@ class FWorldHandler:
             actions["predicted"] = predicted_actions
             actions["rewards"] = rewards
             bins = pd.cut(actions.index,bins = 10)
+            #todo this crashse if actions are not evenly distributed, this should also be logged online
             actions["bins"]=[bin.left for bin in bins ]
 
             step =0
