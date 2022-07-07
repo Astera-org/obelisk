@@ -1293,12 +1293,15 @@ func recordPerformance(ev *FWorld, chosenAction int) {
 	ev.predictedActions = append(ev.predictedActions, int32(chosenAction))
 }
 
+func (ev *FWorld) logActionChoices(chosenAction int) {
+	chosenActionStr := ev.Acts[chosenAction]
+	heuristicAction, _ := ev.ActGen()
+	log.Info("Action taken: " + chosenActionStr + " " + strconv.Itoa(chosenAction) + ", but Heuristic Advises: " + ev.Acts[heuristicAction] + " " + strconv.Itoa(heuristicAction))
+}
+
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
-	heuristicAction, _ := ev.ActGen()
-
-	log.Info("Action taken: " + chosenActionStr + " " + strconv.Itoa(chosenAction) + ", but Heuristic Advises: " + ev.Acts[heuristicAction] + " " + strconv.Itoa(heuristicAction))
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
 	if ev.UseGUI {
@@ -1348,8 +1351,15 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
 	ev.calculateAndRecordReward(&obs) // Add reward.
 	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
-	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions, ev.bestActions, []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
-	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions, ev.bestActions), "KL")                              // Add KL.
+	window := len(ev.predictedActions)
+	if len(ev.predictedActions) < window {
+		window = 0
+	} else {
+		window = len(ev.predictedActions) - window //so only look at last N
+	}
+	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1Score")
+	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
+	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions[window:], ev.bestActions[window:]), "KL")                              // Add KL.
 	return obs
 }
 
@@ -1616,15 +1626,22 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 
 	move, ok := actions["move"] // This contains a discrete option.
 
-	//todo this shouldn't be a switch, we need a parasiminous way of handling model <-> env input out shapes
+	//todo this shouldn't be a switch, we need a parsimonious way of handling model <-> env input out shapes
 	if ok {
+		ev.logActionChoices(int(move.DiscreteOption))
 		// We've received a discrete action and can use it directly to StepWorld
-		ev.StepWorld(int(move.DiscreteOption), false)
+		useFWorldRules := actions["use_heuristic"].DiscreteOption //if you want to use heuristic instead
+		chosenAction := int(move.DiscreteOption)
+		if useFWorldRules == 1 { //if use hueristic instead of agent predictions
+			chosenAction, _ = ev.ActGen()
+		}
+		ev.StepWorld(int(chosenAction), false)
 		recordPerformance(ev, int(move.DiscreteOption))
 	} else {
 		// Assume VL is in actions and treat it continuously and also apply the teaching function.
 		modelGeneratedAction := ev.GetActionIdFromVL(transformActions(actions))
 		recordPerformance(ev, int(modelGeneratedAction))
+		ev.logActionChoices(int(modelGeneratedAction))
 		ev.LastActionPredicted = modelGeneratedAction //action suggested for the previous time step
 		ev.StepWorld(ev.ApplyTeachingFunction(modelGeneratedAction), false)
 	}
@@ -1646,7 +1663,12 @@ func connectAndQueryAgent(ev *FWorld) {
 				continue
 			}
 			if stepWorldAndAgentOnce(ev, agent, defaultCtx) != true {
-				os.Exit(0)
+				if ev.UseGUI == true {
+					os.Exit(0)
+				} else {
+					break
+				}
+
 			}
 			if ev.stepOne {
 				ev.paused = true
