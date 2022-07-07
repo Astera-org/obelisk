@@ -66,7 +66,7 @@ func main() {
 			AppName:                   "Protobrain solves FWorld",
 			AppTitle:                  "Protobrain",
 			AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-			AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
+			AddNetworkLoggingCallback: sim.AddExtraLogItemsFWorlds,
 			DoLogging:                 true,
 			HaveGui:                   gConfig.GUI,
 			StartAsServer:             true,
@@ -88,6 +88,8 @@ type Sim struct {
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
 	StartTime     time.Time
+	F1Score       float32
+	KLScore       float32
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -156,22 +158,21 @@ func (sim *Sim) OnObserve() {
 
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
-	if sim.NumSteps >= gConfig.LIFETIME {
-		// TODO figure score and seconds
-		log.Info("LIFETIME reached")
-		seconds := time.Since(sim.StartTime).Seconds()
-		kl := obs["KL"].FloatVal1D(0)
-		f1 := obs["F1"].FloatVal1D(0)
-		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
+	kl := obs["KL"].FloatVal1D(0)
+	f1 := obs["F1"].FloatVal1D(0)
+	sim.F1Score = float32(f1)
+	sim.KLScore = float32(kl)
+	log.Info("F1 score: " + fmt.Sprintf("%f", f1))
+	log.Info("KL score: " + fmt.Sprintf("%f", kl))
 
-		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
-		log.Info("KL score: " + fmt.Sprintf("%f", kl))
+	if sim.NumSteps >= gConfig.LIFETIME {
+		seconds := time.Since(sim.StartTime).Seconds()
+		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
 		infra.WriteResults(f1, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
 	sim.WorldEnv.SetObservations(obs)
-
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
 
