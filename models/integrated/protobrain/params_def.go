@@ -153,7 +153,9 @@ var ParamSets = params.Sets{
 				}},
 			{Sel: "#SMA", Desc: "",
 				Params: params.Params{
-					// todo: update the noises to new kind..
+					"Layer.Act.Noise.On": "true",
+					"Layer.Act.Noise.Ge": "0.001",
+					"Layer.Act.Noise.Gi": "0.001",
 				}},
 			{Sel: "#SMAP", Desc: "pulv",
 				Params: params.Params{
@@ -208,11 +210,11 @@ var ParamSets = params.Sets{
 
 			{Sel: "Prjn", Desc: "norm and momentum on is critical, wt bal not as much but fine",
 				Params: params.Params{
-					"Prjn.Learn.Lrate.Base":       "0.04", // .04 for SynSpkTheta
-					"Prjn.SWt.Adapt.Lrate":        "0.01", // 0.01 seems to work fine, but .1 maybe more reliable
-					"Prjn.SWt.Adapt.DreamVar":     "0.01", // 0.01 is just tolerable
-					"Prjn.SWt.Init.SPct":          "1.0",  // .5 ok here, 1 best for larger nets: objrec, lvis
-					"Prjn.Learn.KinaseCa.SpikeG":  "12",   // 12 matches theta exactly, higher dwtavg but ok
+					"Prjn.Learn.Lrate.Base":       "0.1",   // .01 for SynSpkTheta
+					"Prjn.SWt.Adapt.Lrate":        "0.001", // 0.001 seems to work fine, but .001 maybe more reliable
+					"Prjn.SWt.Adapt.DreamVar":     "0.01",  // 0.01 is just tolerable
+					"Prjn.SWt.Init.SPct":          "1.0",   // .5 ok here, 1 best for larger nets: objrec, lvis
+					"Prjn.Learn.KinaseCa.SpikeG":  "12",    // 12 matches theta exactly, higher dwtavg but ok
 					"Prjn.Learn.KinaseCa.NMDAG":   "1",
 					"Prjn.Learn.KinaseCa.Rule":    "SynSpkTheta",
 					"Prjn.Learn.KinaseCa.MTau":    "5",    // 5 > 10 test more
@@ -256,7 +258,7 @@ var ParamSets = params.Sets{
 				}},
 			{Sel: ".SuperFwd", Desc: "standard superficial forward prjns -- not to output",
 				Params: params.Params{
-					"Prjn.Com.PFail":    "0.2",   // 0.5 sig worse perf, 0.2 ~= 0.1
+					"Prjn.Com.PFail":    "0.0",   // 0.5 sig worse perf, 0.2 ~= 0.1
 					"Prjn.Com.PFailSWt": "false", // try
 				}},
 			{Sel: ".FmPulv", Desc: "default for pulvinar",

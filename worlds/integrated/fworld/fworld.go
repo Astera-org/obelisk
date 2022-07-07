@@ -1610,8 +1610,7 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 	// Step the agent
 	actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
 	if actions == nil {
-		log.Error("disconnected from agent, exiting")
-		os.Exit(0)
+		log.Error("failed to get actions from agent, should exit")
 		return false
 	}
 
@@ -1646,8 +1645,8 @@ func connectAndQueryAgent(ev *FWorld) {
 			if ev.paused {
 				continue
 			}
-			if !stepWorldAndAgentOnce(ev, agent, defaultCtx) {
-				break
+			if stepWorldAndAgentOnce(ev, agent, defaultCtx) != true {
+				os.Exit(0)
 			}
 			if ev.stepOne {
 				ev.paused = true
