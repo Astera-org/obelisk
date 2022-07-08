@@ -1350,17 +1350,27 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction) //This is a a discrete action of best action
 	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
 	ev.calculateAndRecordReward(&obs) // Add reward.
+	ev.addMetrics(obs)
 	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
+	return obs
+}
+
+// addMetrics adds various results and passes back to Protobrain
+func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
 	window := 100 //len(ev.predictedActions)
 	if len(ev.predictedActions) < window {
 		window = 0
 	} else {
 		window = len(ev.predictedActions) - window //so only look at last N
 	}
-	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1Score")
+	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1DrinkFood")
 	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
 	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions[window:], ev.bestActions[window:]), "KL")                              // Add KL.
-	return obs
+	obs["Energy"] = ev.floatToETensor(float64(ev.InterStates["Energy"]), "Energy")
+	obs["Hydra"] = ev.floatToETensor(float64(ev.InterStates["Hydra"]), "Hydra")
+	obs["EatF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3}), "EatF1")
+	obs["DrinkF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{4}), "DrinkF1")
+
 }
 
 // TODO(Erdal) These helper methods are being moved to a central location. WIP by Erdal.
