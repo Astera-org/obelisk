@@ -12,26 +12,6 @@ import (
 	"github.com/emer/etable/minmax"
 )
 
-// logExtra handles default logging plus the we get back from Fworld
-//func (ss *Sim) AddExtraLogItemsFWorlds(ui *autoui.AutoUI) {
-//	autoui.AddCommonLogItemsForOutputLayers(ui)
-//	f1Map := elog.WriteMap{}
-//	f1Map[etime.Scope(etime.Train, etime.Trial)] = func(ctx *elog.Context) {
-//		ctx.SetFloat64(float64(ss.F1Score))
-//	}
-//	f1Map[etime.Scope(etime.Train, etime.Epoch)] = func(ctx *elog.Context) {
-//		ctx.SetFloat64(float64(ss.F1Score))
-//	}
-//	// Add it to the list.
-//	ui.Logs.AddItem(&elog.Item{
-//		Name:   "F1Windows",
-//		Type:   etensor.FLOAT64,
-//		Plot:   elog.DTrue,
-//		Range:  minmax.F64{Min: 0, Max: 1},
-//		FixMax: elog.DTrue,
-//		Write:  f1Map})
-//}
-
 // AddExtraFWorldItems to capture range of values and behavior as well as internal values
 func (ss *Sim) AddExtraFWorldItems(ui *autoui.AutoUI) {
 	autoui.AddCommonLogItemsForOutputLayers(ui)
