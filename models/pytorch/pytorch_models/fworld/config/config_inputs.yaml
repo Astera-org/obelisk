@@ -25,3 +25,6 @@ best_action:
 gui_purposes:
   name: "Act"
   shape: [5,5]
+best_discrete_action:
+  name: "Heuristic"
+  shape: [1,1]
