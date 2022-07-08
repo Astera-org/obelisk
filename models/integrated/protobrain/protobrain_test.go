@@ -2,7 +2,7 @@ package main
 
 import (
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/agent"
+	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"

@@ -4,6 +4,6 @@ max_runs: 10001
 description: "a simple model using inputs and outputs from fworld in a bp network"
 hidden_size:
   - 125
-infer_offpolicy: False
+infer_offpolicy: False #is the model going to follow what the heuristic says or not
 max_epochs: 10
 log_remote: False
