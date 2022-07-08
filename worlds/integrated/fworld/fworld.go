@@ -1296,7 +1296,7 @@ func recordPerformance(ev *FWorld, chosenAction int) {
 func (ev *FWorld) logActionChoices(chosenAction int) {
 	chosenActionStr := ev.Acts[chosenAction]
 	heuristicAction, _ := ev.ActGen()
-	log.Info("Action taken: " + chosenActionStr + " " + strconv.Itoa(chosenAction) + ", but Heuristic Advises: " + ev.Acts[heuristicAction] + " " + strconv.Itoa(heuristicAction))
+	log.Info("Action taken: ", chosenActionStr, " ", chosenAction, ", but Heuristic Advises: ", ev.Acts[heuristicAction], " ", heuristicAction)
 }
 
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
@@ -1351,7 +1351,7 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
 	ev.calculateAndRecordReward(&obs) // Add reward.
 	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
-	window := len(ev.predictedActions)
+	window := 100 //len(ev.predictedActions)
 	if len(ev.predictedActions) < window {
 		window = 0
 	} else {
