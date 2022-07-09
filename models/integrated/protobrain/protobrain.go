@@ -10,7 +10,7 @@ import (
 	"time"
 
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/obelisk/infra"
+	commonInfra "github.com/Astera-org/obelisk/infra"
 	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
@@ -87,7 +87,7 @@ type Sim struct {
 	LoopTime      string               `desc:"Printout of the current time."`
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
-	StartTime time.Time
+	StartTime     time.Time
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -157,7 +157,6 @@ func (sim *Sim) OnObserve() {
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
 	if sim.NumSteps >= gConfig.LIFETIME {
-		// TODO figure score and seconds
 		log.Info("LIFETIME reached")
 		seconds := time.Since(sim.StartTime).Seconds()
 		kl := obs["KL"].FloatVal1D(0)
@@ -166,7 +165,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 
 		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
 		log.Info("KL score: " + fmt.Sprintf("%f", kl))
-		infra.WriteResults(f1, sim.NumSteps, int32(seconds))
+		commonInfra.WriteResults(f1, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 

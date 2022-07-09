@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	log "github.com/Astera-org/easylog"
+
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/rs/cors"
@@ -35,9 +37,18 @@ func NewThriftHandlerFunc(processor thrift.TProcessor,
 
 func main() {
 	gConfig.Load()
+
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("jobczar.log"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	gDatabase.Connect()
 
-	fmt.Println("listening on", gConfig.SERVER_ADDR)
+	log.Info("listening on", gConfig.SERVER_ADDR)
 
 	// this is just a hack for localhost testing
 	c := cors.New(cors.Options{

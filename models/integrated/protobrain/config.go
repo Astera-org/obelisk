@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -21,10 +20,15 @@ type Config struct {
 func (config *Config) Load() {
 
 	config.setDefaults()
-	_, err := toml.DecodeFile("brain.cfg", &config)
+	_, err := toml.DecodeFile("package/default.cfg", &config)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		fmt.Fprintln(os.Stderr, "Using defaults")
+		fmt.Println(err)
+		fmt.Println("default.cfg not found")
+	}
+	_, err = toml.DecodeFile("protobrain.cfg", &config)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("protobrain.cfg not found")
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/obelisk/infra"
+	commonInfra "github.com/Astera-org/obelisk/infra"
 )
 
 func main() {
@@ -24,5 +24,5 @@ func main() {
 	cycles := int32(rand.Intn(1000))
 	seconds := int32(rand.Intn(1000))
 
-	infra.WriteResults(score, cycles, seconds)
+	commonInfra.WriteResults(score, cycles, seconds)
 }
