@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -25,19 +26,29 @@ func (db *Database) GetJobCount(status int32) int32 {
 	sql := fmt.Sprintf("SELECT COUNT(*) FROM jobs WHERE status = %d", status)
 	err := db.db.QueryRow(sql).Scan(&count)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 	return count
 }
 
 func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
-	sql := fmt.Sprintf("SELECT name, version,hash FROM binaries where bin_id = %d", binID)
+	sql := fmt.Sprintf("SELECT name, version,package_hash FROM binaries where bin_id = %d", binID)
 	row := db.db.QueryRow(sql)
 	binInfo := infra.BinInfo{}
-	err := row.Scan(&binInfo.Name, &binInfo.Version, &binInfo.Hash)
+	err := row.Scan(&binInfo.Name, &binInfo.Version, &binInfo.PackageHash)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return nil
 	}
 	return &binInfo
+}
+
+func (db *Database) GetCallback(jobID int32) string {
+	var callback string = ""
+	sql := fmt.Sprint("SELECT callback from jobs where job_id =", jobID)
+	err := db.db.QueryRow(sql).Scan(&callback)
+	if err != nil {
+		log.Error(err)
+	}
+	return callback
 }

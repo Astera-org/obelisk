@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/BurntSushi/toml"
@@ -17,6 +18,7 @@ type Config struct {
 	JOBCZAR_PORT  int32
 	BINSERVER_URL string
 	WINDOWS       bool
+	CPU_FACTOR    float32
 }
 
 func (config *Config) Load() {
@@ -41,11 +43,11 @@ func (config *Config) setDefaults() {
 	config.JOBCZAR_IP = "127.0.0.1"
 	config.BINSERVER_URL = "127.0.0.1:8080"
 	config.JOBCZAR_PORT = 9009
+	config.CPU_FACTOR = 1
 }
 
 func (config *Config) ensureRequired() {
 	if config.WORKER_NAME == "" {
-		fmt.Println("WORKER_NAME must be set")
-		panic(-1)
+		log.Fatal("WORKER_NAME must be set")
 	}
 }
