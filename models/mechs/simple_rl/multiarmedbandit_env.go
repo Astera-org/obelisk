@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/emer/emergent/agent"
+	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/emer/etable/etensor"
 	"math/rand"
 )
