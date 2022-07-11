@@ -29,6 +29,21 @@ jobs:
         make build
         popd
 
+    - name: Build models
+      run: |
+        pushd .
+        cd models
+        make build
+        popd
+
+    - name: Build worlds
+      run: |
+        pushd .
+        cd worlds
+        make build
+        popd
+
+
 # TODO: build models, worlds
 # TODO: maybe also run staticcheck, go vet, golint, tests
 # TODO: see https://www.alexedwards.net/blog/ci-with-go-and-github-actions
