@@ -16,6 +16,15 @@
 
         <div class="container">Match idle workers with rewarding work.</div>
 
+        <form id="submit_sql_form">
+            <div class="form-group">
+                <label for="sqlString">Sql string</label>
+                <input class="form-control" id="sqlString" required>
+            </div>
+            <button type="submit" class="btn">Send Query</button>
+            <div id="result"></div>
+        </form>
+
         <!-- Add job -->
         <form id="add_job_form">
             <div class="form-group">
