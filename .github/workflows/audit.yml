@@ -18,8 +18,10 @@ jobs:
       with:
         go-version: 1.18
 
-    - name: Verify dependencies
-      run: go mod verify
+    # TODO: uncomment this once the issue with go workspace is fixed
+    # https://github.com/ignite/cli/issues/137
+    #- name: Verify dependencies
+    #  run: go mod verify
 
     - name: Build infra
       run: |
