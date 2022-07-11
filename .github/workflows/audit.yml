@@ -1,11 +1,10 @@
-name: Audit
+name: Build
 
 on:
   pull_request:
 
-
 jobs:
-  audit:
+  build:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -42,8 +41,3 @@ jobs:
         cd worlds
         make build
         popd
-
-
-# TODO: build models, worlds
-# TODO: maybe also run staticcheck, go vet, golint, tests
-# TODO: see https://www.alexedwards.net/blog/ci-with-go-and-github-actions
