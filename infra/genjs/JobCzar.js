@@ -226,19 +226,19 @@ JobCzar_submitResult_result.prototype.write = function(output) {
 };
 
 JobCzar_addJob_args = function(args) {
-  this.agentName = null;
-  this.worldName = null;
+  this.agentID = null;
+  this.worldID = null;
   this.agentCfg = null;
   this.worldCfg = null;
   this.priority = null;
   this.userID = null;
   this.note = null;
   if (args) {
-    if (args.agentName !== undefined && args.agentName !== null) {
-      this.agentName = args.agentName;
+    if (args.agentID !== undefined && args.agentID !== null) {
+      this.agentID = args.agentID;
     }
-    if (args.worldName !== undefined && args.worldName !== null) {
-      this.worldName = args.worldName;
+    if (args.worldID !== undefined && args.worldID !== null) {
+      this.worldID = args.worldID;
     }
     if (args.agentCfg !== undefined && args.agentCfg !== null) {
       this.agentCfg = args.agentCfg;
@@ -269,15 +269,15 @@ JobCzar_addJob_args.prototype.read = function(input) {
     }
     switch (fid) {
       case 1:
-      if (ftype == Thrift.Type.STRING) {
-        this.agentName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.agentID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
-      if (ftype == Thrift.Type.STRING) {
-        this.worldName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.worldID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -328,14 +328,14 @@ JobCzar_addJob_args.prototype.read = function(input) {
 
 JobCzar_addJob_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_addJob_args');
-  if (this.agentName !== null && this.agentName !== undefined) {
-    output.writeFieldBegin('agentName', Thrift.Type.STRING, 1);
-    output.writeString(this.agentName);
+  if (this.agentID !== null && this.agentID !== undefined) {
+    output.writeFieldBegin('agentID', Thrift.Type.I32, 1);
+    output.writeI32(this.agentID);
     output.writeFieldEnd();
   }
-  if (this.worldName !== null && this.worldName !== undefined) {
-    output.writeFieldBegin('worldName', Thrift.Type.STRING, 2);
-    output.writeString(this.worldName);
+  if (this.worldID !== null && this.worldID !== undefined) {
+    output.writeFieldBegin('worldID', Thrift.Type.I32, 2);
+    output.writeI32(this.worldID);
     output.writeFieldEnd();
   }
   if (this.agentCfg !== null && this.agentCfg !== undefined) {
@@ -411,6 +411,195 @@ JobCzar_addJob_result.prototype.write = function(output) {
   if (this.success !== null && this.success !== undefined) {
     output.writeFieldBegin('success', Thrift.Type.I32, 0);
     output.writeI32(this.success);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_appendNote_args = function(args) {
+  this.jobID = null;
+  this.note = null;
+  if (args) {
+    if (args.jobID !== undefined && args.jobID !== null) {
+      this.jobID = args.jobID;
+    }
+    if (args.note !== undefined && args.note !== null) {
+      this.note = args.note;
+    }
+  }
+};
+JobCzar_appendNote_args.prototype = {};
+JobCzar_appendNote_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.jobID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.note = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_appendNote_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_appendNote_args');
+  if (this.jobID !== null && this.jobID !== undefined) {
+    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
+    output.writeI32(this.jobID);
+    output.writeFieldEnd();
+  }
+  if (this.note !== null && this.note !== undefined) {
+    output.writeFieldBegin('note', Thrift.Type.STRING, 2);
+    output.writeString(this.note);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_appendNote_result = function(args) {
+};
+JobCzar_appendNote_result.prototype = {};
+JobCzar_appendNote_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_appendNote_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_appendNote_result');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_getBinInfo_args = function(args) {
+  this.binID = null;
+  if (args) {
+    if (args.binID !== undefined && args.binID !== null) {
+      this.binID = args.binID;
+    }
+  }
+};
+JobCzar_getBinInfo_args.prototype = {};
+JobCzar_getBinInfo_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.binID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_getBinInfo_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_getBinInfo_args');
+  if (this.binID !== null && this.binID !== undefined) {
+    output.writeFieldBegin('binID', Thrift.Type.I32, 1);
+    output.writeI32(this.binID);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_getBinInfo_result = function(args) {
+  this.success = null;
+  if (args) {
+    if (args.success !== undefined && args.success !== null) {
+      this.success = new BinInfo(args.success);
+    }
+  }
+};
+JobCzar_getBinInfo_result.prototype = {};
+JobCzar_getBinInfo_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 0:
+      if (ftype == Thrift.Type.STRUCT) {
+        this.success = new BinInfo();
+        this.success.read(input);
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_getBinInfo_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_getBinInfo_result');
+  if (this.success !== null && this.success !== undefined) {
+    output.writeFieldBegin('success', Thrift.Type.STRUCT, 0);
+    this.success.write(output);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -855,17 +1044,17 @@ JobCzarClient.prototype.recv_submitResult = function() {
   throw 'submitResult failed: unknown result';
 };
 
-JobCzarClient.prototype.addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback) {
-  this.send_addJob(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback); 
+JobCzarClient.prototype.addJob = function(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback) {
+  this.send_addJob(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback); 
   if (!callback) {
     return this.recv_addJob();
   }
 };
 
-JobCzarClient.prototype.send_addJob = function(agentName, worldName, agentCfg, worldCfg, priority, userID, note, callback) {
+JobCzarClient.prototype.send_addJob = function(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback) {
   var params = {
-    agentName: agentName,
-    worldName: worldName,
+    agentID: agentID,
+    worldID: worldID,
     agentCfg: agentCfg,
     worldCfg: worldCfg,
     priority: priority,
@@ -917,6 +1106,120 @@ JobCzarClient.prototype.recv_addJob = function() {
     return result.success;
   }
   throw 'addJob failed: unknown result';
+};
+
+JobCzarClient.prototype.appendNote = function(jobID, note, callback) {
+  this.send_appendNote(jobID, note, callback); 
+  if (!callback) {
+  this.recv_appendNote();
+  }
+};
+
+JobCzarClient.prototype.send_appendNote = function(jobID, note, callback) {
+  var params = {
+    jobID: jobID,
+    note: note
+  };
+  var args = new JobCzar_appendNote_args(params);
+  try {
+    this.output.writeMessageBegin('appendNote', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_appendNote();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_appendNote = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_appendNote_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  return;
+};
+
+JobCzarClient.prototype.getBinInfo = function(binID, callback) {
+  this.send_getBinInfo(binID, callback); 
+  if (!callback) {
+    return this.recv_getBinInfo();
+  }
+};
+
+JobCzarClient.prototype.send_getBinInfo = function(binID, callback) {
+  var params = {
+    binID: binID
+  };
+  var args = new JobCzar_getBinInfo_args(params);
+  try {
+    this.output.writeMessageBegin('getBinInfo', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_getBinInfo();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_getBinInfo = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_getBinInfo_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  if (null !== result.success) {
+    return result.success;
+  }
+  throw 'getBinInfo failed: unknown result';
 };
 
 JobCzarClient.prototype.runSQL = function(query, callback) {
