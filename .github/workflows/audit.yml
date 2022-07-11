@@ -21,10 +21,10 @@ jobs:
 
     - name: Build infra
       run: |
-        pushd
-	cd infra
-	make build
-	popd
+        pushd .
+        cd infra
+        make build
+        popd
 
 # TODO: build models, worlds
 # TODO: maybe also run staticcheck, go vet, golint, tests
