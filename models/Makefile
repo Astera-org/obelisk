@@ -6,7 +6,14 @@ GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 
-DIRS=`go list ./...`
+# TODO: fix the bit rot and remove the filtered out packages below
+DIRS=`go list ./... | \
+	grep -v mechs/simple_agent | \
+	grep -v mechs/simple_supervised | \
+	grep -v examples/simple_network_agent | \
+	grep -v integrated/integrated_example | \
+	grep -v mechs/ra25example_world | \
+	grep -v integrated/egan_protobrain`
 
 all: build
 
