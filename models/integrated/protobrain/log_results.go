@@ -11,24 +11,43 @@ import (
 	"github.com/emer/etable/minmax"
 )
 
-// logExtra handles default logging plus the we get back from Fworld
-func (ss *Sim) AddExtraLogItemsFWorlds(ui *autoui.AutoUI) {
+// AddExtraFWorldItems to capture range of values and behavior as well as internal values
+func (ss *Sim) AddExtraFWorldItems(ui *autoui.AutoUI) {
 	autoui.AddCommonLogItemsForOutputLayers(ui)
-	f1Map := elog.WriteMap{}
-	f1Map[etime.Scope(etime.Train, etime.Trial)] = func(ctx *elog.Context) {
-		ctx.SetFloat64(float64(ss.F1Score))
+	names := []string{"KL", "F1Resources", "Energy", "Hydra", "EatF1", "DrinkF1"}
+	for _, name := range names {
+		currentName := name
+		nameMap := elog.WriteMap{}
+		nameMap[etime.Scope(etime.Train, etime.Trial)] = func(ctx *elog.Context) {
+
+			vector := ss.WorldEnv.Observe(currentName) //a vector storing a SINGLE value
+			if vector != nil {
+				value := vector.FloatVal1D(0)
+				ctx.SetFloat64(float64(value))
+			} else {
+				log.Warn("trying to find a value that doesn't exist in fworld", currentName)
+			}
+		}
+		nameMap[etime.Scope(etime.Train, etime.Epoch)] = func(ctx *elog.Context) {
+			//Not taking Mean here BECAUSE, small classes sometimes do not exist, so just get running performance from fworld
+			vector := ss.WorldEnv.Observe(currentName) //a vector storing a SINGLE value
+			if vector != nil {
+				value := vector.FloatVal1D(0)
+				ctx.SetFloat64(float64(value))
+			} else {
+				log.Warn("trying to find a value that doesn't exist in fworld", currentName)
+			}
+		}
+
+		ui.Logs.AddItem(&elog.Item{
+			Name:   name,
+			Type:   etensor.FLOAT64,
+			Plot:   elog.DTrue,
+			Range:  minmax.F64{Min: 0, Max: 1},
+			FixMax: elog.DTrue,
+			Write:  nameMap})
+
 	}
-	f1Map[etime.Scope(etime.Train, etime.Epoch)] = func(ctx *elog.Context) {
-		ctx.SetFloat64(float64(ss.F1Score))
-	}
-	// Add it to the list.
-	ui.Logs.AddItem(&elog.Item{
-		Name:   "F1Culmulative",
-		Type:   etensor.FLOAT64,
-		Plot:   elog.DTrue,
-		Range:  minmax.F64{Min: 0, Max: 1},
-		FixMax: elog.DTrue,
-		Write:  f1Map})
 }
 
 func createActionHistoryRow(predicted, groundtruth, run float64, timescale string) etable.Table {
