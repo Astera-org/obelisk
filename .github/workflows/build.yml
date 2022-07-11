@@ -11,6 +11,13 @@ jobs:
     - name: Checkout submodules
       run: git submodule update --init --recursive
 
+    - name: Install package
+      run: |
+        sudo apt-get update
+        sudo apt-get install xlib-dev libx11-dev libxcursor-dev \
+                libxrandr-dev libxinerama-dev libxi-dev \
+                libgl1-mesa-dev libgl1-mesa-dev xorg-dev
+
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
