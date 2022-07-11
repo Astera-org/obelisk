@@ -101,7 +101,7 @@ func (ss *Sim) ConfigNet() *deep.Network {
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 24).AddTime(etime.Trial, 100).AddTime(etime.Cycle, 200)
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 200).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
