@@ -6,15 +6,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/emer/etable/etensor"
-
+	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
 
