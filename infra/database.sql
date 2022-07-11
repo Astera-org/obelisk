@@ -1,10 +1,11 @@
+drop database if exists obelisk;
 
 create database obelisk;
 use obelisk;
 
 #status (0-pending,1-working,2-complete,3-errored)
 
-drop table jobs;
+drop table if exists jobs;
 create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, 
     search_id INT DEFAULT 0, status INT DEFAULT 0, priority INT DEFAULT 0,
     time_added TIMESTAMP DEFAULT NOW(), 
@@ -20,12 +21,14 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
 
 #type (0-agent,1-world)
 #status (0-current,1-archived)
+drop table if exists binaries;
 create table binaries (bin_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10), version VARCHAR(10), 
     hash VARCHAR(40), time_added TIMESTAMP DEFAULT NOW(), type INT DEFAULt 0, status INT DEFAULT 0);
 
-
+drop table if exists cfgs;
 create table cfgs (cfg_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, cfg VARCHAR(1024));
 
+drop table if exists users;
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10));
 
 ####################

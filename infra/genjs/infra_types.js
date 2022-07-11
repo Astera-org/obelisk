@@ -10,19 +10,19 @@ if (typeof Int64 === 'undefined' && typeof require === 'function') {
 
 Job = function(args) {
   this.jobID = null;
-  this.agentName = null;
-  this.worldName = null;
+  this.agentID = null;
+  this.worldID = null;
   this.agentCfg = null;
   this.worldCfg = null;
   if (args) {
     if (args.jobID !== undefined && args.jobID !== null) {
       this.jobID = args.jobID;
     }
-    if (args.agentName !== undefined && args.agentName !== null) {
-      this.agentName = args.agentName;
+    if (args.agentID !== undefined && args.agentID !== null) {
+      this.agentID = args.agentID;
     }
-    if (args.worldName !== undefined && args.worldName !== null) {
-      this.worldName = args.worldName;
+    if (args.worldID !== undefined && args.worldID !== null) {
+      this.worldID = args.worldID;
     }
     if (args.agentCfg !== undefined && args.agentCfg !== null) {
       this.agentCfg = args.agentCfg;
@@ -51,15 +51,15 @@ Job.prototype.read = function(input) {
       }
       break;
       case 2:
-      if (ftype == Thrift.Type.STRING) {
-        this.agentName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.agentID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
-      if (ftype == Thrift.Type.STRING) {
-        this.worldName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.worldID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -94,14 +94,14 @@ Job.prototype.write = function(output) {
     output.writeI32(this.jobID);
     output.writeFieldEnd();
   }
-  if (this.agentName !== null && this.agentName !== undefined) {
-    output.writeFieldBegin('agentName', Thrift.Type.STRING, 2);
-    output.writeString(this.agentName);
+  if (this.agentID !== null && this.agentID !== undefined) {
+    output.writeFieldBegin('agentID', Thrift.Type.I32, 2);
+    output.writeI32(this.agentID);
     output.writeFieldEnd();
   }
-  if (this.worldName !== null && this.worldName !== undefined) {
-    output.writeFieldBegin('worldName', Thrift.Type.STRING, 3);
-    output.writeString(this.worldName);
+  if (this.worldID !== null && this.worldID !== undefined) {
+    output.writeFieldBegin('worldID', Thrift.Type.I32, 3);
+    output.writeI32(this.worldID);
     output.writeFieldEnd();
   }
   if (this.agentCfg !== null && this.agentCfg !== undefined) {
@@ -255,6 +255,101 @@ ResultWork.prototype.write = function(output) {
   if (this.instanceName !== null && this.instanceName !== undefined) {
     output.writeFieldBegin('instanceName', Thrift.Type.STRING, 8);
     output.writeString(this.instanceName);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+BinInfo = function(args) {
+  this.binID = null;
+  this.name = null;
+  this.version = null;
+  this.hash = null;
+  if (args) {
+    if (args.binID !== undefined && args.binID !== null) {
+      this.binID = args.binID;
+    }
+    if (args.name !== undefined && args.name !== null) {
+      this.name = args.name;
+    }
+    if (args.version !== undefined && args.version !== null) {
+      this.version = args.version;
+    }
+    if (args.hash !== undefined && args.hash !== null) {
+      this.hash = args.hash;
+    }
+  }
+};
+BinInfo.prototype = {};
+BinInfo.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.binID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.name = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 3:
+      if (ftype == Thrift.Type.STRING) {
+        this.version = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 4:
+      if (ftype == Thrift.Type.STRING) {
+        this.hash = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+BinInfo.prototype.write = function(output) {
+  output.writeStructBegin('BinInfo');
+  if (this.binID !== null && this.binID !== undefined) {
+    output.writeFieldBegin('binID', Thrift.Type.I32, 1);
+    output.writeI32(this.binID);
+    output.writeFieldEnd();
+  }
+  if (this.name !== null && this.name !== undefined) {
+    output.writeFieldBegin('name', Thrift.Type.STRING, 2);
+    output.writeString(this.name);
+    output.writeFieldEnd();
+  }
+  if (this.version !== null && this.version !== undefined) {
+    output.writeFieldBegin('version', Thrift.Type.STRING, 3);
+    output.writeString(this.version);
+    output.writeFieldEnd();
+  }
+  if (this.hash !== null && this.hash !== undefined) {
+    output.writeFieldBegin('hash', Thrift.Type.STRING, 4);
+    output.writeString(this.hash);
     output.writeFieldEnd();
   }
   output.writeFieldStop();

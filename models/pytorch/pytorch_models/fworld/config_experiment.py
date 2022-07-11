@@ -83,6 +83,7 @@ class ConfigFWorldVariables():
     reward: ConfigETensorVariable #should consider normalization, or other characteristics that need to be done
     internal_state: ConfigETensorVariable
     best_action: ConfigETensorVariable
+    best_discrete_action: ConfigETensorVariable #this is for debugging purposes to see if I train on the TRUE action, does it correctly output rihgt action in fworld
     sensory_local: ConfigETensorVariable
     sensory_local2: ConfigETensorVariable
 
