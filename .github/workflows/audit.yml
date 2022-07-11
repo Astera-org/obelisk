@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodules
+      run: git submodule update --init --recursive
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.18
+
+    # TODO: uncomment this once the issue with go workspace is fixed
+    # https://github.com/ignite/cli/issues/137
+    #- name: Verify dependencies
+    #  run: go mod verify
+
+    - name: Build infra
+      run: |
+        pushd .
+        cd infra
+        make build
+        popd
+
+    - name: Build models
+      run: |
+        pushd .
+        cd models
+        make build
+        popd
+
+    - name: Build worlds
+      run: |
+        pushd .
+        cd worlds
+        make build
+        popd
