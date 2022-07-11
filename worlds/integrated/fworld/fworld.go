@@ -1297,7 +1297,7 @@ func recordPerformance(ev *FWorld, chosenAction int) {
 func (ev *FWorld) logActionChoices(chosenAction int) {
 	chosenActionStr := ev.Acts[chosenAction]
 	heuristicAction, _ := ev.ActGen()
-	log.Info("Action taken: " + chosenActionStr + " " + strconv.Itoa(chosenAction) + ", but Heuristic Advises: " + ev.Acts[heuristicAction] + " " + strconv.Itoa(heuristicAction))
+	log.Info("Action taken: ", chosenActionStr, " ", chosenAction, ", but Heuristic Advises: ", ev.Acts[heuristicAction], " ", heuristicAction)
 }
 
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
@@ -1351,17 +1351,27 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction) //This is a a discrete action of best action
 	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
 	ev.calculateAndRecordReward(&obs) // Add reward.
+	ev.addMetrics(obs)
 	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
-	window := len(ev.predictedActions)
+	return obs
+}
+
+// addMetrics adds various results and passes back to Protobrain
+func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
+	window := 100 //len(ev.predictedActions)
 	if len(ev.predictedActions) < window {
 		window = 0
 	} else {
 		window = len(ev.predictedActions) - window //so only look at last N
 	}
-	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1Score")
+	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1DrinkFood")
 	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
 	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions[window:], ev.bestActions[window:]), "KL")                              // Add KL.
-	return obs
+	obs["Energy"] = ev.floatToETensor(float64(ev.InterStates["Energy"]), "Energy")
+	obs["Hydra"] = ev.floatToETensor(float64(ev.InterStates["Hydra"]), "Hydra")
+	obs["EatF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3}), "EatF1")
+	obs["DrinkF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{4}), "DrinkF1")
+
 }
 
 // TODO(Erdal) These helper methods are being moved to a central location. WIP by Erdal.
@@ -1542,7 +1552,7 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 		vp.SetFullReRender()
 	})
 
-	alreadyConnected := false // Don't let the user connect twice
+	alreadyConnected := true // Don't let the user connect twice
 	toolbar.AddAction(gi.ActOpts{Label: "Connect to Server and Run", Icon: "svg", Tooltip: "Connect to an intelligent model that is serving actions as a server.", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
 	}}, win.This(), func(recv, send ki.Ki, sig int64, data interface{}) {
@@ -1552,6 +1562,9 @@ func (ev *FWorld) ConfigWorldGui() *gi.Window {
 			alreadyConnected = true
 		}
 	})
+	// Connect to server automatically on window open
+	go connectAndQueryAgent(ev)
+	alreadyConnected = true
 
 	toolbar.AddAction(gi.ActOpts{Label: "Pause", Icon: "pause", Tooltip: "Pause stepping", UpdateFunc: func(act *gi.Action) {
 		act.SetActiveStateUpdt(!ev.IsRunning)
@@ -1703,7 +1716,6 @@ func main() {
 
 		gimain.Main(func() {
 			fwin := bestWorld.ConfigWorldGui()
-			// TODO Get the server connection to start automatically on window open
 
 			fwin.StartEventLoop()
 		})

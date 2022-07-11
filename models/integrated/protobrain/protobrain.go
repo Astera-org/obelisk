@@ -66,7 +66,7 @@ func main() {
 			AppName:                   "Protobrain solves FWorld",
 			AppTitle:                  "Protobrain",
 			AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-			AddNetworkLoggingCallback: sim.AddExtraLogItemsFWorlds,
+			AddNetworkLoggingCallback: sim.AddExtraFWorldItems,
 			DoLogging:                 true,
 			HaveGui:                   gConfig.GUI,
 			StartAsServer:             true,
@@ -88,11 +88,11 @@ type Sim struct {
 	NumSteps      int32
 	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
 	StartTime     time.Time
-	F1Score       float32
-	KLScore       float32
+	Score         float32 `desc:"current score being used."`
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
+
 	net := &deep.Network{}
 	DefineNetworkStructure(&ss.NetDeets, net)
 	return net
@@ -158,13 +158,11 @@ func (sim *Sim) OnObserve() {
 
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
-	kl := obs["KL"].FloatVal1D(0)
-	f1 := obs["F1"].FloatVal1D(0)
-	sim.F1Score = float32(f1)
-	sim.KLScore = float32(kl)
-	log.Info("F1 score: " + fmt.Sprintf("%f", f1))
-	log.Info("KL score: " + fmt.Sprintf("%f", kl))
 
+	f1 := obs["F1"].FloatVal1D(0) //probs should be food
+	sim.Score += float32(f1)
+
+	log.Info("F1 score ", f1)
 	if sim.NumSteps >= gConfig.LIFETIME {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
