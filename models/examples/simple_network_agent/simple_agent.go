@@ -6,10 +6,10 @@ package main
 
 import (
 	"fmt"
+	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
