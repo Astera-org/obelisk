@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"infra"
+	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
 var _ = infra.GoUnusedProtection__
