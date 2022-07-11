@@ -1,0 +1,31 @@
+name: Audit
+
+on:
+  push:
+  pull_request:
+
+
+jobs:
+  audit:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.18
+
+    - name: Verify dependencies
+      run: go mod verify
+
+    - name: Build infra
+      run: |
+        pushd
+	cd infra
+	make build
+	popd
+
+# TODO: build models, worlds
+# TODO: maybe also run staticcheck, go vet, golint, tests
+# TODO: see https://www.alexedwards.net/blog/ci-with-go-and-github-actions
