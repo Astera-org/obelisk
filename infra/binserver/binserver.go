@@ -153,6 +153,14 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "Successfully Uploaded File\n")
+
+	// TODO:
+	// file name
+	// hash the binary
+	// make sure it isn't a duplicate
+	// create new row for binary
+	// move the temp binary to the right place in the fs
+	// return the binary id
 }
 
 func getBinary(w http.ResponseWriter, r *http.Request) {
