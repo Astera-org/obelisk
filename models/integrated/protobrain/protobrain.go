@@ -109,9 +109,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
-	// TODO this doesn't make sense. we should wait for the next Step call to come in from the world
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		//todo this function is no longer doing anything, need to discuss with Andrew about original implementation
 	})
 
 	mode := etime.Train // For closures
@@ -162,11 +161,11 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	f1 := obs["F1"].FloatVal1D(0) //probs should be food
 	sim.Score += float32(f1)
 
-	log.Info("F1 score ", f1)
+	log.Info("score ", f1)
 	if sim.NumSteps >= gConfig.LIFETIME {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-		infra.WriteResults(f1/float64(sim.NumSteps), sim.NumSteps, int32(seconds))
+		infra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
@@ -174,9 +173,13 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
 	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
-	actions := agent.GetAction(sim.Net.AsAxon())
 
-	return actions
+	agentActions := agent.GetAction(sim.Net.AsAxon())                                              //what action did the agent take
+	infoAsActions := agent.GetRunInfo(sim.Loops, etime.Train, etime.Run, etime.Epoch, etime.Trial) //what is the current run, epoch, trial
+	for name, val := range infoAsActions {
+		agentActions[name] = val
+	}
+	return agentActions
 }
 
 func (sim *Sim) startWorkerLoop() {
