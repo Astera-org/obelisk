@@ -1066,7 +1066,7 @@ func (ev *FWorld) calculatePctCortex(currentEpoch, maxEpochs float64) float64 {
 			return current
 		}
 	}
-	return 0.0
+	return ev.PctCortex
 }
 
 // GenWorld generates a world -- edit to create in way desired

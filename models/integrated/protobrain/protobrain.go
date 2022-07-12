@@ -101,7 +101,7 @@ func (ss *Sim) ConfigNet() *deep.Network {
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 200).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 200).AddTime(etime.Trial, 100).AddTime(etime.Cycle, 200)
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
@@ -136,7 +136,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 func (ss *Sim) NewRun() {
 	run := ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur
 	ss.NetDeets.RndSeeds.Set(run)
-	ss.NetDeets.PctCortex = 0
+	ss.NetDeets.PctCortex = 0 //todo this should be removed
 	ss.WorldEnv.InitWorld(nil)
 	ss.Time.Reset()
 	ss.Net.InitWts()
@@ -148,7 +148,6 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
