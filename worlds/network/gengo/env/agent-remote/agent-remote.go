@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"env"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 )
 
 var _ = env.GoUnusedProtection__
