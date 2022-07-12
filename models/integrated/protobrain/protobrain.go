@@ -92,7 +92,6 @@ type Sim struct {
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
-
 	net := &deep.Network{}
 	DefineNetworkStructure(&ss.NetDeets, net)
 	return net
@@ -101,7 +100,7 @@ func (ss *Sim) ConfigNet() *deep.Network {
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 200).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 20).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
@@ -109,9 +108,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
-	// TODO this doesn't make sense. we should wait for the next Step call to come in from the world
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		//todo this function is no longer doing anything, need to discuss with Andrew about original implementation
 	})
 
 	mode := etime.Train // For closures
@@ -137,7 +135,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 func (ss *Sim) NewRun() {
 	run := ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur
 	ss.NetDeets.RndSeeds.Set(run)
-	ss.NetDeets.PctCortex = 0
+	ss.NetDeets.PctCortex = 0 //todo this should be removed
 	ss.WorldEnv.InitWorld(nil)
 	ss.Time.Reset()
 	ss.Net.InitWts()
@@ -149,7 +147,6 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
@@ -162,12 +159,11 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	f1 := obs["F1"].FloatVal1D(0) //probs should be food
 	sim.Score += float32(f1)
 
-	log.Info("F1 score ", f1)
+	log.Info("score ", f1)
 	if sim.NumSteps >= gConfig.LIFETIME {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-
-		commonInfra.WriteResults(f1, sim.NumSteps, int32(seconds))
+		commonInfra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
@@ -175,9 +171,13 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
 	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
-	actions := agent.GetAction(sim.Net.AsAxon())
 
-	return actions
+	agentActions := agent.GetAction(sim.Net.AsAxon())                                              //what action did the agent take
+	infoAsActions := agent.GetRunInfo(sim.Loops, etime.Train, etime.Run, etime.Epoch, etime.Trial) //what is the current run, epoch, trial
+	for name, val := range infoAsActions {
+		agentActions[name] = val
+	}
+	return agentActions
 }
 
 func (sim *Sim) startWorkerLoop() {
