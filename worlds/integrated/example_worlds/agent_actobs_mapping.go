@@ -1,6 +1,6 @@
 package main
 
-import "github.com/emer/emergent/agent"
+import "github.com/Astera-org/obelisk/models/agent"
 
 // Proof of concept for replacing the environment with a simpler environment that uses the network.
 
