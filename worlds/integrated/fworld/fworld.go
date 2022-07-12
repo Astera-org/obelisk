@@ -12,6 +12,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
+
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/Astera-org/obelisk/models/library/metrics"
@@ -34,11 +40,7 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
+
 )
 
 // FWorld is a flat-world grid-based environment

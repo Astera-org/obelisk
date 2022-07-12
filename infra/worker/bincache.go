@@ -3,12 +3,16 @@ package main
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 
+	log "github.com/Astera-org/easylog"
+
+	commonInfra "github.com/Astera-org/obelisk/infra"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	strip "github.com/grokify/html-strip-tags-go"
 )
@@ -22,8 +26,7 @@ Worker does the following:
 -Does name dir already exist?
 -Create name dir
 -Create name/data dir
--Get name/data/manifest.toml from binserver
--Get all files on the manifest
+-Get all files in the package dir
 -Run all the files that are in the execute section
 -Create name/version dir
 -Get name/version/binary file from binserver
@@ -59,13 +62,14 @@ func (bc *BinCache) EnsureBinary(binID int32) *infra.BinInfo {
 }
 
 func downloadBinary(binID int32) (*infra.BinInfo, error) {
-	// fectch details from jobczar
+	// fectch bininfo from jobczar
 	binInfo, err := gApp.jobCzar.GetBinInfo(gApp.context, binID)
 	if err != nil {
-		fmt.Println("error getting bin info:", err)
+		log.Error("error getting bin info:", err)
 		return nil, err
 	}
 
+	// this will happen on restart of worker
 	if isBinaryLocal(binInfo) == false {
 
 		dirName := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name
@@ -76,44 +80,71 @@ func downloadBinary(binID int32) (*infra.BinInfo, error) {
 				// this dir doesn't exist
 				err = startNewName(binInfo.Name)
 				if err != nil {
+					os.RemoveAll(dirName)
 					return nil, err
 				}
 			} else {
 				// some other error
-				fmt.Println("error1:", err)
+				log.Error("error1:", err)
 				return nil, err
 			}
 		}
 		err = downloadVersion(binInfo)
 		if err != nil {
-			fmt.Println("error downloading version:", err)
+			log.Error("error downloading version:", err)
+			// clean up dir
+			os.RemoveAll(dirName + "/" + binInfo.Version)
 			return nil, err
 		}
+		err = checkPackageHash(binInfo, dirName)
+		if err != nil {
+			log.Error("hash mismatch:", err)
+			// clean up dir
+			os.RemoveAll(dirName + "/" + binInfo.Version)
+			return nil, err
+		}
+		writeOK(dirName)
 	}
 	return binInfo, nil
 }
 
-func isBinaryLocal(binInfo *infra.BinInfo) bool {
-	binaryPath := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version + "/binary"
-	_, err := os.Stat(binaryPath)
-	if err != nil {
-		fmt.Println("not local:", err)
-		return false
-	}
-	return true
+func writeOK(dirName string) {
+	var file []byte = []byte{}
+	_ = ioutil.WriteFile("ok", file, 0644)
 }
 
-// download a new version of a binary
-func downloadVersion(binInfo *infra.BinInfo) error {
-	remoteDir := "binaries/" + binInfo.Name + "/" + binInfo.Version
-	localDirName := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version
+func checkPackageHash(binInfo *infra.BinInfo, dirName string) error {
 
-	err := downloadDir(remoteDir, localDirName)
+	list, err := os.ReadDir(dirName)
+
+	var fileList []string = make([]string, len(list))
+	for n, dirItem := range list {
+		fileList[n] = dirItem.Name()
+	}
+
+	localHash, err := commonInfra.HashFileList(dirName, fileList)
 	if err != nil {
-		fmt.Println("downloadVersion:", err)
-		return nil
+		return err
+	}
+	if localHash != binInfo.PackageHash {
+		return errors.New(localHash)
 	}
 	return nil
+}
+
+func isBinaryLocal(binInfo *infra.BinInfo) bool {
+	binaryPath := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version
+
+	// check for "ok" file so we know the package was actually downloaded completely previously
+	_, err := os.Stat(binaryPath + "/ok")
+	if err != nil {
+		log.Error("not ok:", err)
+		// clean up dir
+		os.RemoveAll(binaryPath)
+		return false
+	}
+
+	return true
 }
 
 // we don't have this binary locally, so download it
@@ -126,11 +157,17 @@ func startNewName(binName string) error {
 	remoteDir := "binaries/" + binName + "/data"
 	err := downloadDir(remoteDir, dataDirName)
 	if err != nil {
-		fmt.Println("startNewName3:", err)
+		log.Error("startNewName3:", err)
 		return nil
 	}
 
-	//processManifest(remoteDir, dataDirName)
+	os.Chdir(dataDirName)
+	// run setup.sh if it is there
+	_, err = os.Stat("setup.sh")
+	if err == nil {
+		exec.Command("setup.sh").Run()
+	}
+
 	return nil
 }
 
@@ -138,14 +175,14 @@ func downloadDir(remoteDir string, localDirName string) error {
 
 	err := os.MkdirAll(localDirName, 0755)
 	if err != nil {
-		fmt.Println("downloadDir:", localDirName, err)
+		log.Error("downloadDir:", localDirName, err)
 		return err
 	}
 
 	url := "http://" + gConfig.BINSERVER_URL + "/" + remoteDir
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("error dl dir:", url)
+		log.Error("error dl dir:", url)
 		return err
 	}
 	defer resp.Body.Close()
@@ -161,17 +198,17 @@ func downloadDir(remoteDir string, localDirName string) error {
 	for scanner.Scan() {
 		downloadFile(scanner.Text(), remoteDir, localDirName)
 	}
-	// TODO: write "ok" file
+
 	return nil
 }
 
 func downloadFile(fileName string, remoteDir string, destDir string) error {
-	fmt.Println("Download:" + fileName + " from " + remoteDir + " to " + destDir)
+	log.Info("Download:" + fileName + " from " + remoteDir + " to " + destDir)
 	destPath := remoteDir + "/" + fileName
 	url := "http://" + gConfig.BINSERVER_URL + "/" + destPath
 	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Println("downloadFile1:", err)
+		log.Error("downloadFile1:", err)
 		return err
 	}
 
@@ -186,7 +223,7 @@ func downloadFile(fileName string, remoteDir string, destDir string) error {
 	// Create the file
 	out, err := os.Create(localPath)
 	if err != nil {
-		fmt.Println("downloadFile1:", err)
+		log.Error("downloadFile1:", err)
 		return err
 	}
 	defer out.Close()
@@ -196,40 +233,15 @@ func downloadFile(fileName string, remoteDir string, destDir string) error {
 	return err
 }
 
-/*
+// download a new version of a binary
+func downloadVersion(binInfo *infra.BinInfo) error {
+	remoteDir := "binaries/" + binInfo.Name + "/" + binInfo.Version
+	localDirName := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version
 
-type Manifest struct {
-	Download []string
-	Execute  []string
-}
-
-func processManifest(remoteDir string, localDir string) {
-	var manifest Manifest
-
-	_, err := toml.DecodeFile(localDir+"/manifest.toml", &manifest)
+	err := downloadDir(remoteDir, localDirName)
 	if err != nil {
-		fmt.Println("error decoding manifest:", err)
-		return
+		log.Error("downloadVersion:", err)
+		return nil
 	}
-
-	for _, fileName := range manifest.Download {
-		err := downloadFile(fileName, remoteDir, localDir)
-		if err != nil {
-			fmt.Println("error downloading file:", fileName)
-			return
-		}
-	}
-
-	for _, fileName := range manifest.Execute {
-		err := downloadFile(fileName, remoteDir, localDir)
-		if err != nil {
-			fmt.Println("error downloading file:", fileName)
-			return
-		}
-	}
-
-	for _, fileName := range manifest.Execute {
-		exec.Command(fileName)
-	}
+	return nil
 }
-*/

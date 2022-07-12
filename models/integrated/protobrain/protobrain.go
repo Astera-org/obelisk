@@ -10,7 +10,7 @@ import (
 	"time"
 
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/obelisk/infra"
+	commonInfra "github.com/Astera-org/obelisk/infra"
 	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
@@ -92,7 +92,6 @@ type Sim struct {
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
-
 	net := &deep.Network{}
 	DefineNetworkStructure(&ss.NetDeets, net)
 	return net
@@ -164,7 +163,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-		infra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
+		commonInfra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
