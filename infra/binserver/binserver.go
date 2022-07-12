@@ -108,12 +108,16 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 	// FormFile returns the first file for the given key `myFile`
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
-	file, _, err := r.FormFile("binary")
+	file, fileHeader, err := r.FormFile("binary")
 	if err != nil {
 		log.Error("Error Uploading File: ", err)
 		return
 	}
 	defer file.Close()
+
+	log.Info("file header ", fileHeader.Header)
+	log.Info("file size ", fileHeader.Size)
+	log.Info("file name ", fileHeader.Filename)
 
 	// ensure temp dir exists, otherwise tempFile fails
 	dir, err := ioutil.TempDir("", gConfig.TEMP_DIR)
