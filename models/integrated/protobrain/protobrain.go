@@ -167,8 +167,6 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
 
-		log.Info("F1 score: " + fmt.Sprintf("%f", f1))
-		log.Info("KL score: " + fmt.Sprintf("%f", kl))
 		commonInfra.WriteResults(f1, sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
