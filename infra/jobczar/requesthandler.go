@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
@@ -26,11 +30,11 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 
 	err := row.Scan(&job.JobID, &job.AgentID, &job.WorldID, &job.AgentCfg, &job.WorldCfg)
 	if err == sql.ErrNoRows {
-		fmt.Println(err)
+		log.Error(err)
 		return &job, errors.New("empty")
 	}
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return &job, errors.New("db error")
 	}
 
@@ -38,27 +42,44 @@ func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, 
 		workerName, instanceName, job.JobID)
 	_, err = gDatabase.db.Exec(sql)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 	}
 
 	return &job, nil
 }
 
-func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultWork) (bool, error) {
+// tell anyone that was waiting for this job to complete
+func resultCallback(result *infra.ResultJob) {
+	url := gDatabase.GetCallback(result.JobID)
+	if url != "" {
+		// post json of results to callback
+		json, _ := json.MarshalIndent(result, "", " ")
+
+		_, err := http.Post(url, "application/json", bytes.NewBuffer(json))
+		if err != nil {
+			log.Error(err)
+		}
+	}
+}
+
+func (handler RequestHandler) SubmitResult_(ctx context.Context, result *infra.ResultJob) (bool, error) {
 	if result.Status == goodJob {
 
-		sql := fmt.Sprintf("UPDATE jobs set status=2, cycles=%d,seconds=%d,score=%f where job_id=%d",
-			result.Cycles, result.Seconds, result.Score, result.JobID)
+		sql := fmt.Sprintf("UPDATE jobs set status=2, seconds=%d, steps=%d,cycles=%d,score=%f where job_id=%d",
+			result.Seconds, result.Steps, result.Cycles, result.Score, result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			return false, err
 		}
+
+		go resultCallback(result)
+
 	} else { // this worker wasn't up to the task. return the job to the pool
 		sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name='' where job_id=%d", result.JobID)
 		_, err := gDatabase.db.Exec(sql)
 		if err != nil {
-			fmt.Println(err)
+			log.Error(err)
 			return false, err
 		}
 	}
@@ -72,12 +93,12 @@ func (handler RequestHandler) AddJob(ctx context.Context, agentID int32, worldID
 		userID, priority, agentID, worldID, agentCfg, worldCfg, note)
 	result, err := gDatabase.db.Exec(sql)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return -1, err
 	}
 	insertID, err := result.LastInsertId()
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return -1, err
 	}
 	// javascript doesn't support int64
@@ -98,7 +119,7 @@ func (handler RequestHandler) QueryJobs(ctx context.Context) ([]map[string]strin
 	sql := fmt.Sprintf("SELECT * from jobs order by job_id desc LIMIT 1000")
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return nil, err
 	}
 
@@ -123,7 +144,7 @@ func (handler RequestHandler) GetBinInfo(ctx context.Context, binID int32) (*inf
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return "error", errors.New("db error")
 	}
 	return printDBResult(rows), nil
@@ -178,7 +199,7 @@ func printDBResult(rows *sql.Rows) string {
 }
 
 // convert a single row to a map
-// TODO: create a type for job row once the api is more stable
+// LATER: create a type for job row once the api is more stable
 // but for now just map to strings, which is fine because we want to display them
 func rowToMap(row *sql.Rows) (map[string]string, error) {
 	columns, _ := row.Columns()
@@ -192,7 +213,7 @@ func rowToMap(row *sql.Rows) (map[string]string, error) {
 
 	err := row.Scan(scanArgs...)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return nil, err
 	}
 
