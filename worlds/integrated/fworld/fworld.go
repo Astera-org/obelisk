@@ -1373,7 +1373,7 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 
 // addMetrics adds various results and passes back to Protobrain
 func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
-	window := 100 //len(ev.predictedActions)
+	window := 100 //todo if have actual epoch, make window based on this
 	if len(ev.predictedActions) < window {
 		window = 0
 	} else {
