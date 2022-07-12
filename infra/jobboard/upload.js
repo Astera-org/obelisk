@@ -18,7 +18,7 @@ async function addBinary(file) {
 $(function() {
     console.log("document ready");
 
-    // setup add job form
+    // setup file upload form
     $("#upload_form").submit(function(event) {
         event.preventDefault();
 
