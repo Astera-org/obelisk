@@ -93,7 +93,6 @@ function cancelJob(job_id) {
 
 // TODO: pagination, fetch by user id, etc.
 function queryJobs() {
-    console.log("queryJobs");
     const client = getClient();
 
     client.queryJobs(function (result) {
@@ -102,10 +101,21 @@ function queryJobs() {
     });
 }
 
+function getBinInfos() {
+    const client = getClient();
+
+    client.getBinInfos(function (result) {
+        console.log("getBinInfos result", result);
+
+    });
+}
+
 $(function() {
     console.log("document ready");
 
     queryJobs();
+
+    getBinInfos();
 
     // setup add job form
     $("#add_job_form").submit(function(event) {

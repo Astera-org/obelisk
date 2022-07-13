@@ -30,7 +30,10 @@ struct BinInfo {
     1: i32 binID,
     2: string name,
     3: string version,
-    4: string packageHash
+    4: string packageHash,
+    5: string timeAdded,
+    6: i32 type,
+    7: i32 status
 }
 
 service JobCzar {
@@ -50,6 +53,8 @@ service JobCzar {
     void appendNote(1:i32 jobID, 2:string note);
 
     BinInfo getBinInfo(1:i32 binID);
+
+    list<BinInfo> getBinInfos();
 
     string runSQL(1:string query);
 

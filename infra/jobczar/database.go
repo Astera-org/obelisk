@@ -43,6 +43,29 @@ func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	return &binInfo
 }
 
+func (db *Database) GetBinInfos() ([]*infra.BinInfo, error) {
+	sql := fmt.Sprintf(
+		`SELECT bin_id, name, version, package_hash, time_added, type, status
+                FROM binaries order by time_added desc`)
+	rows, err := gDatabase.db.Query(sql)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	res := make([]*infra.BinInfo, 0)
+	for rows.Next() {
+		bi := infra.BinInfo{}
+		err := rows.Scan(&bi.BinID, &bi.Name, &bi.Version, &bi.PackageHash, &bi.TimeAdded, &bi.Type, &bi.Status)
+		if err == nil {
+			res = append(res, &bi)
+		} else {
+			log.Error(err)
+		}
+	}
+	return res, nil
+}
+
 func (db *Database) GetCallback(jobID int32) string {
 	var callback string = ""
 	sql := fmt.Sprint("SELECT callback from jobs where job_id =", jobID)
