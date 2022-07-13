@@ -128,7 +128,7 @@ JobCzar_submitResult_args = function(args) {
   this.result = null;
   if (args) {
     if (args.result !== undefined && args.result !== null) {
-      this.result = new ResultWork(args.result);
+      this.result = new ResultJob(args.result);
     }
   }
 };
@@ -145,7 +145,7 @@ JobCzar_submitResult_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.STRUCT) {
-        this.result = new ResultWork();
+        this.result = new ResultJob();
         this.result.read(input);
       } else {
         input.skip(ftype);
@@ -418,6 +418,81 @@ JobCzar_addJob_result.prototype.write = function(output) {
   return;
 };
 
+JobCzar_fetchRunResults_args = function(args) {
+  this.jobID = null;
+  if (args) {
+    if (args.jobID !== undefined && args.jobID !== null) {
+      this.jobID = args.jobID;
+    }
+  }
+};
+JobCzar_fetchRunResults_args.prototype = {};
+JobCzar_fetchRunResults_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.jobID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_fetchRunResults_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_fetchRunResults_args');
+  if (this.jobID !== null && this.jobID !== undefined) {
+    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
+    output.writeI32(this.jobID);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_fetchRunResults_result = function(args) {
+};
+JobCzar_fetchRunResults_result.prototype = {};
+JobCzar_fetchRunResults_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_fetchRunResults_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_fetchRunResults_result');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 JobCzar_appendNote_args = function(args) {
   this.jobID = null;
   this.note = null;
@@ -600,6 +675,97 @@ JobCzar_getBinInfo_result.prototype.write = function(output) {
   if (this.success !== null && this.success !== undefined) {
     output.writeFieldBegin('success', Thrift.Type.STRUCT, 0);
     this.success.write(output);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_getBinInfos_args = function(args) {
+};
+JobCzar_getBinInfos_args.prototype = {};
+JobCzar_getBinInfos_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_getBinInfos_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_getBinInfos_args');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_getBinInfos_result = function(args) {
+  this.success = null;
+  if (args) {
+    if (args.success !== undefined && args.success !== null) {
+      this.success = Thrift.copyList(args.success, [BinInfo]);
+    }
+  }
+};
+JobCzar_getBinInfos_result.prototype = {};
+JobCzar_getBinInfos_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 0:
+      if (ftype == Thrift.Type.LIST) {
+        this.success = [];
+        var _rtmp31 = input.readListBegin();
+        var _size0 = _rtmp31.size || 0;
+        for (var _i2 = 0; _i2 < _size0; ++_i2) {
+          var elem3 = null;
+          elem3 = new BinInfo();
+          elem3.read(input);
+          this.success.push(elem3);
+        }
+        input.readListEnd();
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_getBinInfos_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_getBinInfos_result');
+  if (this.success !== null && this.success !== undefined) {
+    output.writeFieldBegin('success', Thrift.Type.LIST, 0);
+    output.writeListBegin(Thrift.Type.STRUCT, this.success.length);
+    for (var iter4 in this.success) {
+      if (this.success.hasOwnProperty(iter4)) {
+        iter4 = this.success[iter4];
+        iter4.write(output);
+      }
+    }
+    output.writeListEnd();
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -854,27 +1020,27 @@ JobCzar_queryJobs_result.prototype.read = function(input) {
       case 0:
       if (ftype == Thrift.Type.LIST) {
         this.success = [];
-        var _rtmp31 = input.readListBegin();
-        var _size0 = _rtmp31.size || 0;
-        for (var _i2 = 0; _i2 < _size0; ++_i2) {
-          var elem3 = null;
-          elem3 = {};
-          var _rtmp35 = input.readMapBegin();
-          var _size4 = _rtmp35.size || 0;
-          for (var _i6 = 0; _i6 < _size4; ++_i6) {
-            if (_i6 > 0 ) {
+        var _rtmp36 = input.readListBegin();
+        var _size5 = _rtmp36.size || 0;
+        for (var _i7 = 0; _i7 < _size5; ++_i7) {
+          var elem8 = null;
+          elem8 = {};
+          var _rtmp310 = input.readMapBegin();
+          var _size9 = _rtmp310.size || 0;
+          for (var _i11 = 0; _i11 < _size9; ++_i11) {
+            if (_i11 > 0 ) {
               if (input.rstack.length > input.rpos[input.rpos.length -1] + 1) {
                 input.rstack.pop();
               }
             }
-            var key7 = null;
-            var val8 = null;
-            key7 = input.readString().value;
-            val8 = input.readString().value;
-            elem3[key7] = val8;
+            var key12 = null;
+            var val13 = null;
+            key12 = input.readString().value;
+            val13 = input.readString().value;
+            elem8[key12] = val13;
           }
           input.readMapEnd();
-          this.success.push(elem3);
+          this.success.push(elem8);
         }
         input.readListEnd();
       } else {
@@ -898,15 +1064,15 @@ JobCzar_queryJobs_result.prototype.write = function(output) {
   if (this.success !== null && this.success !== undefined) {
     output.writeFieldBegin('success', Thrift.Type.LIST, 0);
     output.writeListBegin(Thrift.Type.MAP, this.success.length);
-    for (var iter9 in this.success) {
-      if (this.success.hasOwnProperty(iter9)) {
-        iter9 = this.success[iter9];
-        output.writeMapBegin(Thrift.Type.STRING, Thrift.Type.STRING, Thrift.objectLength(iter9));
-        for (var kiter10 in iter9) {
-          if (iter9.hasOwnProperty(kiter10)) {
-            var viter11 = iter9[kiter10];
-            output.writeString(kiter10);
-            output.writeString(viter11);
+    for (var iter14 in this.success) {
+      if (this.success.hasOwnProperty(iter14)) {
+        iter14 = this.success[iter14];
+        output.writeMapBegin(Thrift.Type.STRING, Thrift.Type.STRING, Thrift.objectLength(iter14));
+        for (var kiter15 in iter14) {
+          if (iter14.hasOwnProperty(kiter15)) {
+            var viter16 = iter14[kiter15];
+            output.writeString(kiter15);
+            output.writeString(viter16);
           }
         }
         output.writeMapEnd();
@@ -1108,6 +1274,61 @@ JobCzarClient.prototype.recv_addJob = function() {
   throw 'addJob failed: unknown result';
 };
 
+JobCzarClient.prototype.fetchRunResults = function(jobID, callback) {
+  this.send_fetchRunResults(jobID, callback); 
+  if (!callback) {
+  this.recv_fetchRunResults();
+  }
+};
+
+JobCzarClient.prototype.send_fetchRunResults = function(jobID, callback) {
+  var params = {
+    jobID: jobID
+  };
+  var args = new JobCzar_fetchRunResults_args(params);
+  try {
+    this.output.writeMessageBegin('fetchRunResults', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_fetchRunResults();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_fetchRunResults = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_fetchRunResults_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  return;
+};
+
 JobCzarClient.prototype.appendNote = function(jobID, note, callback) {
   this.send_appendNote(jobID, note, callback); 
   if (!callback) {
@@ -1220,6 +1441,61 @@ JobCzarClient.prototype.recv_getBinInfo = function() {
     return result.success;
   }
   throw 'getBinInfo failed: unknown result';
+};
+
+JobCzarClient.prototype.getBinInfos = function(callback) {
+  this.send_getBinInfos(callback); 
+  if (!callback) {
+    return this.recv_getBinInfos();
+  }
+};
+
+JobCzarClient.prototype.send_getBinInfos = function(callback) {
+  var args = new JobCzar_getBinInfos_args();
+  try {
+    this.output.writeMessageBegin('getBinInfos', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_getBinInfos();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_getBinInfos = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_getBinInfos_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  if (null !== result.success) {
+    return result.success;
+  }
+  throw 'getBinInfos failed: unknown result';
 };
 
 JobCzarClient.prototype.runSQL = function(query, callback) {
