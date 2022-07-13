@@ -31,7 +31,7 @@ func main() {
 
 	gApp.Init()
 
-	log.Info("listening on", gConfig.SERVER_PORT)
+	log.Info("listening on ", gConfig.SERVER_PORT)
 
 	fileServer := http.FileServer(http.Dir("./" + gConfig.BINARY_ROOT + "/"))
 	mux := http.NewServeMux()
@@ -108,16 +108,26 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 	// FormFile returns the first file for the given key `myFile`
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
-	file, _, err := r.FormFile("binary")
+	file, fileHeader, err := r.FormFile("binary")
 	if err != nil {
 		log.Error("Error Uploading File: ", err)
 		return
 	}
 	defer file.Close()
 
-	// Create a temporary file within our temp-images directory that follows
+	log.Info("file header ", fileHeader.Header)
+	log.Info("file size ", fileHeader.Size)
+	log.Info("file name ", fileHeader.Filename)
+
+	// ensure temp dir exists, otherwise tempFile fails
+	dir, err := ioutil.TempDir("", gConfig.TEMP_DIR)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create a temporary file within our temp directory that follows
 	// a particular naming pattern
-	tempFile, err := ioutil.TempFile(gConfig.TEMP_DIR, "upload-*")
+	tempFile, err := ioutil.TempFile(dir, "upload-*")
 	if err != nil {
 		log.Error(err)
 		return
@@ -131,11 +141,30 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 		log.Error(err)
 		return
 	}
+
 	// write this byte array to our temporary file
-	tempFile.Write(fileBytes)
+	n, err := tempFile.Write(fileBytes)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Info("Temp file: ", tempFile.Name(), " bytes written ", n)
+
 	// return that we have successfully uploaded our file!
+
+	if gConfig.IS_LOCALHOST {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
+
 	fmt.Fprintf(w, "Successfully Uploaded File\n")
-	w.WriteHeader(http.StatusOK)
+
+	// TODO:
+	// file name
+	// hash the binary
+	// make sure it isn't a duplicate
+	// create new row for binary
+	// move the temp binary to the right place in the fs
+	// return the binary id
 }
 
 func getBinary(w http.ResponseWriter, r *http.Request) {

@@ -13,6 +13,7 @@ type Config struct {
 	COMPLETED_ROOT string
 	DB_CONNECT     string
 	SERVER_PORT    string
+	IS_LOCALHOST   bool
 }
 
 func (config *Config) Load() {
@@ -34,6 +35,7 @@ func (config *Config) setDefaults() {
 	config.DB_CONNECT = ""
 	config.TEMP_DIR = "temp"
 	config.SERVER_PORT = "8080"
+	config.IS_LOCALHOST = false
 }
 
 func (config *Config) ensureRequired() {
