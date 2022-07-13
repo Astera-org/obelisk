@@ -3,7 +3,8 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os/exec"
+
+	commonInfra "github.com/Astera-org/obelisk/infra"
 )
 
 type BinServerApp struct {
@@ -35,7 +36,7 @@ func (app *BinServerApp) fetchRunResult(jobID int) error {
 	// TODO: add this threadID or something so other people can wait on this
 	// TODO: fix the cmd
 	cmdStr := fmt.Sprint("ansible fetch ", workerName, " ", jobID)
-	exec.Command(cmdStr).Run()
+	commonInfra.RunCommand(cmdStr)
 
 	return nil
 }

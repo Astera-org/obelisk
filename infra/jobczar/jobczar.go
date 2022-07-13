@@ -48,7 +48,7 @@ func main() {
 
 	gDatabase.Connect()
 
-	log.Info("listening on", gConfig.SERVER_ADDR)
+	log.Info("listening on ", gConfig.SERVER_ADDR)
 
 	// this is just a hack for localhost testing
 	c := cors.New(cors.Options{

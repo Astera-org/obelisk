@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
@@ -28,15 +28,20 @@ func (bin *Binary) build(tempDir string) error {
 	gApp.mutex.Lock()
 	defer gApp.mutex.Unlock()
 
-	packageRoot := tempDir + "/" + bin.project.path
-
-	os.Chdir(packageRoot)
-	cmd := exec.Command(bin.project.buildOperation)
-	err := cmd.Run()
+	packageRoot := tempDir + "/" + gConfig.REPO_NAME + "/" + bin.project.Path
+	log.Info("Building binary: ", packageRoot)
+	err := os.Chdir(packageRoot)
 	if err != nil {
+		log.Error("Could not change directory: ", err)
 		return err
 	}
-	binaryName := bin.project.name
+
+	err = commonInfra.RunCommand(bin.project.BuildOperation)
+	if err != nil {
+		log.Error("Error building binary: ", err)
+		return err
+	}
+	binaryName := bin.project.Name
 
 	if gConfig.WINDOWS {
 		binaryName += ".exe"
@@ -48,11 +53,13 @@ func (bin *Binary) build(tempDir string) error {
 	var fileList []string = make([]string, len(list)+1)
 	fileList[0] = binaryName
 	for n, dirItem := range list {
-		fileList[n+1] = "/package/" + dirItem.Name()
+		fileList[n+1] = "package/" + dirItem.Name()
 	}
 
 	bin.packageHash, err = commonInfra.HashFileList(packageRoot, fileList)
 	if err != nil {
+		log.Error("Error hashing binary: ", err)
+		log.Error("File list: ", fileList)
 		return err
 	}
 
@@ -60,29 +67,42 @@ func (bin *Binary) build(tempDir string) error {
 }
 
 // upload binary and the package dir to the binserver
-func (bin *Binary) uploadFiles(tempDir string) {
-	localDir := tempDir + "/" + bin.project.path
+func (bin *Binary) uploadFiles(tempDir string) error {
+	localDir := tempDir + "/" + gConfig.REPO_NAME + "/" + bin.project.Path
+
+	remotePath := gConfig.BINSERVER_LOC + "/" + bin.project.Name + "/" + bin.version
+	// LATER: don't asssume binserver is local
+	err := commonInfra.RunCommand("mkdir -p " + remotePath)
+	if err != nil {
+		return err
+	}
 
 	// copy the binary
-	scp := fmt.Sprintf("scp %s/%s %s/%s/%s/%s",
-		localDir, bin.project.name, gConfig.BINSERVER_LOC, bin.project.name, bin.version, bin.project.name)
-	exec.Command(scp).Run()
+	scp := fmt.Sprintf("scp %s/%s %s/%s",
+		localDir, bin.project.Name, remotePath, bin.project.Name)
+	log.Info("Uploading binary: ", scp)
+	err = commonInfra.RunCommand(scp)
+	if err != nil {
+		return err
+	}
 
 	// check to see if the package dir exists
-	_, err := os.Stat(localDir + "/package")
+	_, err = os.Stat(localDir + "/package")
 	if err == nil {
 		// copy all of the package dir
 		scp = fmt.Sprintf("scp -r %s/package %s/%s/%s",
-			localDir, gConfig.BINSERVER_LOC, bin.project.name, bin.version)
-
-		exec.Command(scp).Run()
+			localDir, gConfig.BINSERVER_LOC, bin.project.Name, bin.version)
+		log.Info("Uploading binary: ", scp)
+		err = commonInfra.RunCommand(scp)
+		return err
 	}
+	return nil
 }
 
 func (bin *Binary) addToDB() error {
 	// create new entry in the DB
 	var err error
-	bin.binaryID, err = gApp.database.AddBinary(bin.project.name, bin.version, bin.packageHash, bin.project.binType)
+	bin.binaryID, err = gApp.database.AddBinary(bin.project.Name, bin.version, bin.packageHash, bin.project.BinType)
 	if err != nil {
 		return err
 	}
@@ -90,13 +110,13 @@ func (bin *Binary) addToDB() error {
 }
 
 func (bin *Binary) addTestJob() error {
-	otherID, err := gApp.database.GetLatestID(bin.project.regressionBinName)
+	otherID, err := gApp.database.GetLatestID(bin.project.RegressionBinName)
 	if err != nil {
 		return err
 	}
 	var agentID int
 	var worldID int
-	if bin.project.binType == 0 {
+	if bin.project.BinType == 0 {
 		agentID = bin.binaryID
 		worldID = otherID
 	} else {
@@ -108,15 +128,14 @@ func (bin *Binary) addTestJob() error {
 }
 
 func (bin *Binary) gotJobResult(result *infra.ResultJob) {
-
 	var newStatus int = 0
-	if bin.project.targetScore*bin.project.scoreTolerance > result.Score {
+	if bin.project.TargetScore*bin.project.ScoreTolerance > result.Score {
 		errorStr := fmt.Sprint("Score too low: ", result.Score)
 		gApp.notifyAutorities(result, errorStr)
 		newStatus = 3
 	}
 
-	if int32(bin.project.targetCycles*bin.project.cycleTolerance) < result.Cycles {
+	if int32(bin.project.TargetCycles*bin.project.CycleTolerance) < result.Cycles {
 		errorStr := fmt.Sprint("Compute too high: ", result.Cycles)
 		gApp.notifyAutorities(result, errorStr)
 		newStatus = 3

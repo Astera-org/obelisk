@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	log "github.com/Astera-org/easylog"
 )
@@ -35,6 +36,8 @@ type Push struct {
 }
 
 func (push *Push) startPush(pushName string) {
+	log.Info("Starting push: ", pushName)
+
 	push.tempDir = gApp.rootDir + "/" + gConfig.TEMP_ROOT + "/" + pushName
 	// if this dir already exists there is a problem
 	_, err := os.Stat(push.tempDir)
@@ -44,23 +47,19 @@ func (push *Push) startPush(pushName string) {
 	}
 
 	os.MkdirAll(push.tempDir, 0755)
-
-	gApp.mutex.Lock()
-	os.Chdir(push.tempDir)
-	err = push.checkoutRepo(gConfig.REPO_NAME)
-	gApp.mutex.Unlock()
-
-	if pushName != push.shortHash {
-		gApp.notifyAutorities(nil, "Repo hashes don't match: "+pushName+" != "+push.shortHash)
-		return
-	}
-
+	err = push.checkoutRepo(push.tempDir)
 	if err != nil {
 		log.Error("checkoutRepo: ", err)
 		return
 	}
 
+	if !(pushName == push.shortHash) {
+		gApp.notifyAutorities(nil, "Repo hashes don't match: "+pushName+" != "+push.shortHash)
+		return
+	}
+
 	for _, project := range gConfig.PROJECTS {
+		log.Info("Building project: ", project.Name)
 		bin := &Binary{}
 		bin.Init(&project, push.shortHash)
 
@@ -73,23 +72,63 @@ func (push *Push) startPush(pushName string) {
 
 		// see if exists in the DB
 		if gApp.database.DoesExist(bin.packageHash) {
-			log.Info("hash exists for: ", bin.project.name)
+			log.Info("hash exists for: ", bin.project.Name, " ", bin.packageHash)
 			continue
 		} else {
-			bin.uploadFiles(push.tempDir)
-			bin.addToDB()
-			bin.addTestJob()
+			log.Info("Uploading new binary: ", bin.project.Name, " ", bin.version)
+			err = bin.uploadFiles(push.tempDir)
+			if err != nil {
+				log.Error("uploadFiles: ", err)
+				continue
+			}
+			err = bin.addToDB()
+			if err != nil {
+				log.Error("addToDB: ", err)
+				continue
+			}
+			err = bin.addTestJob()
+			if err != nil {
+				log.Error("addTestJob: ", err)
+				continue
+			}
 		}
 	}
 }
 
-func (push *Push) checkoutRepo(repo string) error {
-	exec.Command("git clone ", repo)
-
-	out, err := exec.Command("git rev-parse --short HEAD").Output()
+func (push *Push) checkoutRepo(tempDir string) error {
+	log.Info("Checking out repo: ", tempDir)
+	gApp.mutex.Lock()
+	defer gApp.mutex.Unlock()
+	err := os.Chdir(tempDir)
 	if err != nil {
+		log.Error("checkout: ", err)
 		return err
 	}
-	push.shortHash = string(out)
+
+	err = exec.Command("git", "clone", gConfig.REPO_PATH).Run()
+	if err != nil {
+		log.Error("coRepo: ", err)
+		return err
+	}
+
+	os.Chdir(gConfig.REPO_NAME)
+	if gConfig.BRANCH_NAME != "master" {
+		exec.Command("git", "checkout", gConfig.BRANCH_NAME).Run()
+	}
+
+	// TODO: make sure there is a setup.sh file
+	// Repos should add this script if there is setup to be done besides just pulling the repo
+	err = exec.Command("./setup.sh").Run()
+	if err != nil {
+		log.Error("setup: ", err)
+		return err
+	}
+
+	out, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output()
+	if err != nil {
+		log.Error("coRepo: ", out)
+		return err
+	}
+	push.shortHash = strings.TrimSpace(string(out))
 	return nil
 }

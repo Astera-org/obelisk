@@ -31,7 +31,7 @@ func main() {
 
 	gApp.Init()
 
-	log.Info("listening on", gConfig.SERVER_PORT)
+	log.Info("listening on ", gConfig.SERVER_PORT)
 
 	fileServer := http.FileServer(http.Dir("./" + gConfig.BINARY_ROOT + "/"))
 	mux := http.NewServeMux()
@@ -43,7 +43,7 @@ func main() {
 	mux.HandleFunc("/completed/:id", handleCompleted)
 	//mux.HandleFunc("/binaries/", getFile)
 
-	go http.ListenAndServe(":"+gConfig.SERVER_PORT, mux)
+	go http.ListenAndServe(fmt.Sprint(":", gConfig.SERVER_PORT), mux)
 
 	for true {
 		var command string

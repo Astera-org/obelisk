@@ -62,7 +62,8 @@ func (bc *BinCache) EnsureBinary(binID int32) *infra.BinInfo {
 }
 
 func downloadBinary(binID int32) (*infra.BinInfo, error) {
-	// fectch bininfo from jobczar
+	log.Info("downloadBinary: ", binID)
+	// fetch bininfo from jobczar
 	binInfo, err := gApp.jobCzar.GetBinInfo(gApp.context, binID)
 	if err != nil {
 		log.Error("error getting bin info:", err)
@@ -96,11 +97,11 @@ func downloadBinary(binID int32) (*infra.BinInfo, error) {
 			os.RemoveAll(dirName + "/" + binInfo.Version)
 			return nil, err
 		}
-		err = checkPackageHash(binInfo, dirName)
+		err = checkPackageHash(binInfo, dirName+"/"+binInfo.Version)
 		if err != nil {
 			log.Error("hash mismatch:", err)
 			// clean up dir
-			os.RemoveAll(dirName + "/" + binInfo.Version)
+			//TODO os.RemoveAll(dirName + "/" + binInfo.Version)
 			return nil, err
 		}
 		writeOK(dirName)
@@ -113,13 +114,19 @@ func writeOK(dirName string) {
 	_ = ioutil.WriteFile("ok", file, 0644)
 }
 
+// TODO: move this to commonInfra function
 func checkPackageHash(binInfo *infra.BinInfo, dirName string) error {
+	log.Info("checkPackageHash: ", dirName)
+	list, err := os.ReadDir(dirName + "/package")
+	if err != nil {
+		log.Error("checkPackageHash:", err)
+		return nil
+	}
 
-	list, err := os.ReadDir(dirName)
-
-	var fileList []string = make([]string, len(list))
+	var fileList []string = make([]string, len(list)+1)
+	fileList[0] = binInfo.Name
 	for n, dirItem := range list {
-		fileList[n] = dirItem.Name()
+		fileList[n+1] = "package/" + dirItem.Name()
 	}
 
 	localHash, err := commonInfra.HashFileList(dirName, fileList)
@@ -138,7 +145,7 @@ func isBinaryLocal(binInfo *infra.BinInfo) bool {
 	// check for "ok" file so we know the package was actually downloaded completely previously
 	_, err := os.Stat(binaryPath + "/ok")
 	if err != nil {
-		log.Error("not ok:", err)
+		log.Info("binary not local: ", err)
 		// clean up dir
 		os.RemoveAll(binaryPath)
 		return false
@@ -149,6 +156,7 @@ func isBinaryLocal(binInfo *infra.BinInfo) bool {
 
 // we don't have this binary locally, so download it
 func startNewName(binName string) error {
+	log.Info("startNewName: ", binName)
 
 	localDirName := gApp.rootDir + "/" + gConfig.BINDIR + "/" + binName
 
@@ -165,6 +173,7 @@ func startNewName(binName string) error {
 	// run setup.sh if it is there
 	_, err = os.Stat("setup.sh")
 	if err == nil {
+		// TODO: make this executable
 		exec.Command("setup.sh").Run()
 	}
 
@@ -172,14 +181,15 @@ func startNewName(binName string) error {
 }
 
 func downloadDir(remoteDir string, localDirName string) error {
-
-	err := os.MkdirAll(localDirName, 0755)
+	log.Info("DD: ", remoteDir, " to: |", localDirName+"|")
+	err := os.MkdirAll(localDirName, 0777)
 	if err != nil {
 		log.Error("downloadDir:", localDirName, err)
 		return err
 	}
 
 	url := "http://" + gConfig.BINSERVER_URL + "/" + remoteDir
+	log.Info("URL: ", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Error("error dl dir:", url)
@@ -193,16 +203,27 @@ func downloadDir(remoteDir string, localDirName string) error {
 
 	b, err := io.ReadAll(resp.Body)
 	dirList := strip.StripTags(string(b))
+	//log.Info("dirList: ", dirList)
 
 	scanner := bufio.NewScanner(strings.NewReader(dirList))
 	for scanner.Scan() {
-		downloadFile(scanner.Text(), remoteDir, localDirName)
+		// if scanner.Text() ends with /, then it is a dir
+		if strings.HasSuffix(scanner.Text(), "/") {
+			dirName := scanner.Text()[0 : len(scanner.Text())-1]
+			err = downloadDir(remoteDir+"/"+dirName, localDirName+"/"+dirName)
+		} else {
+			downloadFile(scanner.Text(), remoteDir, localDirName)
+		}
 	}
 
 	return nil
 }
 
 func downloadFile(fileName string, remoteDir string, destDir string) error {
+	if fileName == "" {
+		//log.Info("downloadFile: empty file name")
+		return nil
+	}
 	log.Info("Download:" + fileName + " from " + remoteDir + " to " + destDir)
 	destPath := remoteDir + "/" + fileName
 	url := "http://" + gConfig.BINSERVER_URL + "/" + destPath
@@ -223,7 +244,7 @@ func downloadFile(fileName string, remoteDir string, destDir string) error {
 	// Create the file
 	out, err := os.Create(localPath)
 	if err != nil {
-		log.Error("downloadFile1:", err)
+		log.Error("downloadFile2:", err)
 		return err
 	}
 	defer out.Close()
@@ -240,8 +261,10 @@ func downloadVersion(binInfo *infra.BinInfo) error {
 
 	err := downloadDir(remoteDir, localDirName)
 	if err != nil {
-		log.Error("downloadVersion:", err)
-		return nil
+		return err
+	}
+	if err := os.Chmod(localDirName+"/"+binInfo.Name, 0777); err != nil {
+		return err
 	}
 	return nil
 }

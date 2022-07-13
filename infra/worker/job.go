@@ -44,7 +44,7 @@ func (job *Job) fetchWork() error {
 	agentBinInfo := gApp.binCache.EnsureBinary(infraJob.AgentID)
 	if agentBinInfo == nil {
 		job.result.Status = jobFailed
-		return errors.New(fmt.Sprint("agent not found", infraJob.AgentID))
+		return errors.New(fmt.Sprint("agent not found ", infraJob.AgentID))
 	}
 	job.agentBinPath = getLocalPath(agentBinInfo)
 	worldBinInfo := gApp.binCache.EnsureBinary(infraJob.WorldID)
@@ -67,10 +67,10 @@ func (job *Job) fetchWork() error {
 
 func getLocalPath(binInfo *infra.BinInfo) string {
 	if gConfig.WINDOWS {
-		return gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version + "/binary.exe"
+		return gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version + "/" + binInfo.Name + ".exe"
 	}
 
-	return gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version + "/binary"
+	return gApp.rootDir + "/" + gConfig.BINDIR + "/" + binInfo.Name + "/" + binInfo.Version + "/" + binInfo.Name
 
 }
 

@@ -12,14 +12,13 @@ type Config struct {
 	TEMP_DIR       string
 	COMPLETED_ROOT string
 	DB_CONNECT     string
-	SERVER_PORT    string
+	SERVER_PORT    int
 }
 
 func (config *Config) Load() {
 
 	config.setDefaults()
 	_, err := toml.DecodeFile("binserver.cfg", &config)
-	fmt.Println(config.DB_CONNECT)
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -33,7 +32,7 @@ func (config *Config) setDefaults() {
 	config.COMPLETED_ROOT = "completed"
 	config.DB_CONNECT = ""
 	config.TEMP_DIR = "temp"
-	config.SERVER_PORT = "8080"
+	config.SERVER_PORT = 8080
 }
 
 func (config *Config) ensureRequired() {
