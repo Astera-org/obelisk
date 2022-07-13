@@ -105,17 +105,17 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	}
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		// Check the action at the beginning of the Plus phase, before the teaching signal is introduced.
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	// Trial Stats and Apply Input
 	stack := manager.Stacks[etime.Train]
 	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
+		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
 			return ss.WorldEnv.Observe("Input")
 		})
 		// Although ground truth output is applied here, it won't actually be clamped until PlusPhase is called, because it's a layer of type Target.
-		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Output", func(spec agent.SpaceSpec) etensor.Tensor {
+		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Output", func(spec agent.SpaceSpec) etensor.Tensor {
 			return ss.WorldEnv.Observe("Output")
 		})
 	})
