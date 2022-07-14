@@ -1,7 +1,8 @@
 // Copyright (c) 2022, The Emergent Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-
+//todo update to latest style see models\integrated\protobrain
+//todo add simple passing of fake data
 package main
 
 import (
@@ -17,7 +18,6 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/prjn"
-	"github.com/emer/etable/etensor"
 )
 
 // This file demonstrates how to do supervised learning with a simple axon network and a simple task. It creates an "RA 25 Env", which stands for "Random Associator 25 (5x5)", which provides random 5x5 patterns for the network to learn.
@@ -90,6 +90,10 @@ func (ss *Sim) NewRun() {
 	ss.Net.InitWts()
 }
 
+func (ss *Sim) OnObserve() {
+	agent.OnObserveDefault(ss.Net.AsAxon(), ss.WorldEnv)
+}
+
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
@@ -105,20 +109,12 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	}
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		// Check the action at the beginning of the Plus phase, before the teaching signal is introduced.
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	// Trial Stats and Apply Input
 	stack := manager.Stacks[etime.Train]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
-			return ss.WorldEnv.Observe("Input")
-		})
-		// Although ground truth output is applied here, it won't actually be clamped until PlusPhase is called, because it's a layer of type Target.
-		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Output", func(spec agent.SpaceSpec) etensor.Tensor {
-			return ss.WorldEnv.Observe("Output")
-		})
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })
