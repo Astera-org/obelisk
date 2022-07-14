@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"time"
+
+	log "github.com/Astera-org/easylog"
 )
 
 /*
@@ -21,6 +23,15 @@ var VERSION string = "v0.1.0"
 
 func main() {
 	gConfig.Load()
+
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("worker.log"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
 	gApp.Init()
 
 	go mainLoop()
@@ -53,14 +64,14 @@ func mainLoop() {
 		var job Job
 		fetchJob(&job)
 
-		err := job.createJobDir()
+		err := job.createJobDirs()
 		if err != nil {
-			fmt.Println("Creating job dir err: ", err)
+			log.Error("Creating job dir err: ", err)
 			still = false
 		} else {
 			err = job.setCfgs()
 			if err != nil {
-				fmt.Println("Setting cfgs err: ", err)
+				log.Error("Setting cfgs err: ", err)
 				still = false
 			} else {
 				job.doJob()
@@ -69,7 +80,7 @@ func mainLoop() {
 		}
 
 		returnResults(&job)
-		fmt.Println("job completed")
+		log.Info("job completed")
 	}
 
 	os.Exit(-1)
@@ -78,12 +89,12 @@ func mainLoop() {
 func fetchJob(job *Job) {
 	var waitSeconds int = 1
 	for true {
-		fmt.Println("Fetching job: ", job.jobID)
+		log.Info("Fetching job: ", job.jobID)
 
 		err := job.fetchWork()
-		fmt.Println("Job Fetched: ", job.jobID) // TEMP
+		log.Info("Job Fetched: ", job.jobID) // TEMP
 		if err != nil {
-			fmt.Println("Fetching err: ", err)
+			log.Error("Fetching err: ", err)
 			wait(&waitSeconds)
 		} else {
 			return
@@ -96,7 +107,7 @@ func returnResults(job *Job) {
 	for true {
 		err := job.returnResults()
 		if err != nil {
-			fmt.Println("Results err: ", err)
+			log.Error("Results err: ", err)
 			wait(&waitSeconds)
 		} else {
 			return

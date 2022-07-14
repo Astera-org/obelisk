@@ -8,20 +8,24 @@ import (
 	"os/exec"
 	"time"
 
+	log "github.com/Astera-org/easylog"
+
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
 type Job struct {
-	jobID        int32
-	agentName    string
-	worldName    string
-	agentVersion string
-	worldVersion string
-	agentCfg     string
-	worldCfg     string
-	agentPath    string
-	worldPath    string
-	result       infra.ResultWork
+	jobID           int32
+	agentName       string
+	worldName       string
+	agentVersion    string
+	worldVersion    string
+	agentCfg        string
+	worldCfg        string
+	agentBinPath    string // path to the actual binary
+	worldBinPath    string
+	agentWorkingDir string
+	worldWorkingDir string
+	result          infra.ResultJob
 }
 
 const (
@@ -42,7 +46,7 @@ func (job *Job) fetchWork() error {
 		job.result.Status = jobFailed
 		return errors.New(fmt.Sprint("agent not found", infraJob.AgentID))
 	}
-	job.agentPath = getLocalPath(agentBinInfo)
+	job.agentBinPath = getLocalPath(agentBinInfo)
 	worldBinInfo := gApp.binCache.EnsureBinary(infraJob.WorldID)
 
 	job.jobID = infraJob.JobID
@@ -51,7 +55,7 @@ func (job *Job) fetchWork() error {
 	if worldBinInfo != nil {
 		job.worldName = worldBinInfo.Name
 		job.worldVersion = worldBinInfo.Version
-		job.worldPath = getLocalPath(worldBinInfo)
+		job.worldBinPath = getLocalPath(worldBinInfo)
 	}
 	job.agentCfg = infraJob.AgentCfg
 	job.worldCfg = infraJob.WorldCfg
@@ -71,28 +75,37 @@ func getLocalPath(binInfo *infra.BinInfo) string {
 }
 
 // This is the dir that the process will run out of and that we will save all the Job specific files to
-func (job *Job) createJobDir() error {
-	dirName := fmt.Sprint(gApp.rootDir+"/"+gConfig.JOBDIR+"/"+gConfig.JOBDIRPREFIX, job.jobID)
+func (job *Job) createJobDirs() error {
+	jobRootDir := fmt.Sprint(gApp.rootDir+"/"+gConfig.JOBDIR+"/"+gConfig.JOBDIRPREFIX, job.jobID)
 
-	err := os.Mkdir(dirName, 0755)
+	job.agentWorkingDir = jobRootDir + "/agent"
+	job.worldWorkingDir = jobRootDir + "/world"
+
+	err := os.MkdirAll(job.agentWorkingDir, 0755)
 	if err != nil {
 		job.result.Status = jobFailed
-		fmt.Println("createJobDir1:", err)
+		log.Error("createJobDir1:", err)
 		return err
 	}
+	os.Symlink(gApp.rootDir+"/"+gConfig.BINDIR+"/"+job.agentName+"/data", job.agentWorkingDir+"/data")
+	os.Symlink(gApp.rootDir+"/"+gConfig.BINDIR+"/"+job.agentName+"/"+job.agentVersion, job.agentWorkingDir+"/package")
 
-	err = os.Chdir(dirName)
+	err = os.MkdirAll(job.worldWorkingDir, 0755)
 	if err != nil {
 		job.result.Status = jobFailed
-		fmt.Println("createJobDir2:", err)
+		log.Error("createJobDir1:", err)
 		return err
 	}
+	os.Symlink(gApp.rootDir+"/"+gConfig.BINDIR+"/"+job.worldName+"/data", job.worldWorkingDir+"/data")
+	os.Symlink(gApp.rootDir+"/"+gConfig.BINDIR+"/"+job.worldName+"/"+job.worldVersion, job.worldWorkingDir+"/package")
+
 	return nil
 }
 
 func (job *Job) setCfgs() error {
 	// write the cfgs to file
-	agentFile, err := os.Create("agent.cfg")
+	os.Chdir(job.agentWorkingDir)
+	agentFile, err := os.Create(job.agentName + ".cfg")
 	if err != nil {
 		job.result.Status = jobFailed
 		return err
@@ -105,10 +118,10 @@ func (job *Job) setCfgs() error {
 	agentFile.WriteString("WORKER=true\n")
 	agentFile.WriteString("##### end manifest ####\n\n")
 	agentFile.WriteString(job.agentCfg)
-	agentFile.Close()
 
 	if job.worldName != "" {
-		worldFile, err := os.Create("world.cfg")
+		os.Chdir(job.worldWorkingDir)
+		worldFile, err := os.Create(job.worldName + ".cfg")
 		if err != nil {
 			job.result.Status = jobFailed
 			return err
@@ -119,7 +132,6 @@ func (job *Job) setCfgs() error {
 		worldFile.WriteString("WORKER=true\n")
 		worldFile.WriteString("##### end manifest ####\n\n")
 		worldFile.WriteString(job.worldCfg)
-		worldFile.Close()
 	}
 	return nil
 }
@@ -140,18 +152,19 @@ func (job *Job) returnResults() error {
 
 // need to bail from one process if the other dies
 func (job *Job) doJob() {
-
 	agentCtx, agentCancel := context.WithCancel(context.Background())
 	defer agentCancel()
-	agentCmd := exec.CommandContext(agentCtx, job.agentPath)
+	os.Chdir(job.agentWorkingDir)
+	agentCmd := exec.CommandContext(agentCtx, job.agentBinPath)
 
 	if job.worldName != "" {
 		worldCtx, worldCancel := context.WithCancel(agentCtx)
 		defer worldCancel()
-		worldCmd := exec.CommandContext(worldCtx, job.worldPath)
+		os.Chdir(job.worldWorkingDir)
+		worldCmd := exec.CommandContext(worldCtx, job.worldBinPath)
 		err := worldCmd.Start()
 		if err != nil {
-			fmt.Println("world:", err)
+			log.Error("world:", err)
 			job.result.Status = jobFailed
 			return
 		}
@@ -161,14 +174,14 @@ func (job *Job) doJob() {
 
 	err := agentCmd.Start()
 	if err != nil {
-		fmt.Println("agent:", err)
+		log.Error("agent:", err)
 		job.result.Status = jobFailed
 		return
 	}
 
 	err = agentCmd.Wait()
 	if err != nil {
-		fmt.Println("agent:", err)
+		log.Error("agent:", err)
 		job.result.Status = jobFailed
 		return
 	}

@@ -17,7 +17,6 @@ import (
 	"github.com/emer/emergent/looper"
 	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/prjn"
-	"github.com/emer/etable/etensor"
 )
 
 // This file demonstrates how to do supervised learning with a simple axon network and a simple task. It creates an "RA 25 Env", which stands for "Random Associator 25 (5x5)", which provides random 5x5 patterns for the network to learn.
@@ -110,15 +109,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	// Trial Stats and Apply Input
 	stack := manager.Stacks[etime.Train]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
-			return ss.WorldEnv.Observe("Input")
-		})
-		// Although ground truth output is applied here, it won't actually be clamped until PlusPhase is called, because it's a layer of type Target.
-		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Output", func(spec agent.SpaceSpec) etensor.Tensor {
-			return ss.WorldEnv.Observe("Output")
-		})
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {agent.OnObserveDefault(ss.Net.AsAxon(), ss.WorldEnv)})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })

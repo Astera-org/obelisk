@@ -6,6 +6,9 @@
 // associated with each input, there are multiple. The Correl
 // metric that's reported is computed based on correlation with
 // the closest found pattern.
+
+//todo update to latest style see models\integrated\protobrain
+//todo add simple passing of fake data
 package main
 
 import (

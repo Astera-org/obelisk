@@ -6,10 +6,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/Astera-org/obelisk/models/library/autoui"
+	"github.com/Astera-org/obelisk/models/agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
+	"github.com/emer/emergent/egui"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
@@ -29,14 +29,14 @@ func main() {
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
 
-	userInterface := autoui.AutoUI{
+	userInterface := egui.UserInterface{
 		StructForView:             &sim,
 		Looper:                    sim.Loops,
 		Network:                   sim.Net.EmerNet,
 		AppName:                   "Simple Supervised",
 		AppTitle:                  "Random Associator for Supervised Task",
 		AppAbout:                  `Learn to memorize random pattern pairs presented as input/output.`,
-		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
+		AddNetworkLoggingCallback: axon.AddCommonLogItemsForOutputLayers,
 	}
 	userInterface.AddDefaultLogging()
 	userInterface.CreateAndRunGui() // CreateAndRunGui blocks, so don't put any code after this.

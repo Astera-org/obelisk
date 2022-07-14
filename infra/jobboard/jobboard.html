@@ -28,28 +28,31 @@
         <!-- Add job -->
         <form id="add_job_form">
             <div class="form-group">
-                <label for="agent">Agent ID</label>
-                <input class="form-control" id="agent" type="number" required>
+                <label for="agent">Select agent</label>
+                <select class="form-control" id="agent" required>
+                    <!-- options get populated dynamically (see getBinInfos)-->
+                </select>
             </div>
             <div class="form-group">
                 <label for="agent-config">Agent Config</label>
                 <input class="form-control" id="agent-config">
             </div>
+
             <div class="form-group">
-                <label for="world">World ID</label>
-                <input class="form-control" id="world" type="number" required>
+                <label for="world">Select world</label>
+                <select class="form-control" id="world" required>
+                    <!-- options get populated dynamically (see getBinInfos)-->
+                </select>
             </div>
             <div class="form-group">
                 <label for="world-config">World Config</label>
                 <input class="form-control" id="world-config">
             </div>
+
             <div class="form-group">
                 <label for="note">Note</label>
                 <input class="form-control" id="note">
             </div>
-            <!-- TODO: model config and world config-->
-            <!-- TODO: priority, user id-->
-            <!-- TODO: Autofill dropdowns for model and world selection -->
 
             <button type="submit" class="btn btn-primary">Add Job</button>
         </form>
