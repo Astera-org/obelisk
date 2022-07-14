@@ -3,9 +3,9 @@
 # used by ODPW
 
 git submodule update --init --recursive
-cd worlds/network
-thrift -r --gen go:package_prefix=github.com/Astera-org/obelisk/worlds/network/gengo/ -out gengo/ env.thrift
-cd ..
+#cd worlds/network
+#thrift -r --gen go:package_prefix=github.com/Astera-org/obelisk/worlds/network/gengo/ -out gengo/ env.thrift
+cd worlds
 go mod tidy
 cd ../models
 go mod tidy
