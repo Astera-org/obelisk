@@ -7,7 +7,8 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 
 # TODO: fix the bit rot and remove the filtered out packages below
-DIRS=`go list ./...`
+DIRS=`go list ./... | \
+	  grep -v integrated/integrated_example`
 
 all: build
 
