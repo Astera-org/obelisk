@@ -1,8 +1,7 @@
 // Copyright (c) 2022, The Emergent Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
-//todo update to latest style see models\integrated\protobrain
-//todo add simple passing of fake data
+
 package main
 
 import (
@@ -90,10 +89,6 @@ func (ss *Sim) NewRun() {
 	ss.Net.InitWts()
 }
 
-func (ss *Sim) OnObserve() {
-	agent.OnObserveDefault(ss.Net.AsAxon(), ss.WorldEnv)
-}
-
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
@@ -114,7 +109,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	// Trial Stats and Apply Input
 	stack := manager.Stacks[etime.Train]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
+	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {agent.OnObserveDefault(ss.Net.AsAxon(), ss.WorldEnv)})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })

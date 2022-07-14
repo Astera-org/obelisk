@@ -167,7 +167,9 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 		os.Exit(0)
 	}
 
-	sim.WorldEnv.SetObservations(obs)
+
+	sim.WorldEnv.(*agent.NetworkWorld).SetObservations(obs)
+
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
 	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values

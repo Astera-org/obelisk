@@ -21,6 +21,4 @@ type WorldInterface interface {
 
 	// Observe returns a cached tensor for the named modality. E.g. “x” or “vision” or “reward”. This just returns a cached entry into the map gotten the last time Step was called.
 	Observe(name string) etensor.Tensor
-
-	SetObservations(obs map[string]etensor.Tensor)
 }
