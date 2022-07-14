@@ -40,6 +40,7 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
+
 )
 
 // FWorld is a flat-world grid-based environment
@@ -338,6 +339,7 @@ func (ev *FWorld) Init(run int) {
 	ev.Scene.Init()
 	ev.Episode.Init()
 
+	ev.PctCortexMax = .95 //todo should match emery2 max
 	ev.Run.Cur = run
 	ev.Trial.Cur = -1 // init state -- key so that first Step() = 0
 	ev.Tick.Cur = -1
@@ -1054,6 +1056,21 @@ func (ev *FWorld) WorldRect(st, ed evec.Vec2i, mat int) {
 	ev.WorldLineVert(evec.Vec2i{ed.X, st.Y}, evec.Vec2i{ed.X, ed.Y}, mat)
 }
 
+// calculatePctCortex
+func (ev *FWorld) calculatePctCortex(currentEpoch, maxEpochs float64) float64 {
+	//ev.PctCortexMax = 1.0 //todo this should be head to head the same as Randy's
+	//slight modification that half way through you should largely use the agent instead of 'instinct'
+	if currentEpoch > 1 && (int(currentEpoch)%5 == 0) {
+		current := (currentEpoch) / (maxEpochs / 2.0)
+		if current > ev.PctCortexMax {
+			return ev.PctCortexMax
+		} else {
+			return current
+		}
+	}
+	return ev.PctCortex
+}
+
 // GenWorld generates a world -- edit to create in way desired
 func (ev *FWorld) GenWorld() {
 	wall := ev.MatMap["Wall"]
@@ -1358,7 +1375,7 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 
 // addMetrics adds various results and passes back to Protobrain
 func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
-	window := 100 //len(ev.predictedActions)
+	window := 100 //todo if have actual epoch, make window based on this
 	if len(ev.predictedActions) < window {
 		window = 0
 	} else {
@@ -1371,6 +1388,7 @@ func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
 	obs["Hydra"] = ev.floatToETensor(float64(ev.InterStates["Hydra"]), "Hydra")
 	obs["EatF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3}), "EatF1")
 	obs["DrinkF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{4}), "DrinkF1")
+	obs["PctCortex"] = ev.floatToETensor(ev.PctCortex, "PctCortex")
 
 }
 
@@ -1646,7 +1664,7 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 		// We've received a discrete action and can use it directly to StepWorld
 		useFWorldRules := actions["use_heuristic"].DiscreteOption //if you want to use heuristic instead
 		chosenAction := int(move.DiscreteOption)
-		if useFWorldRules == 1 { //if use hueristic instead of agent predictions
+		if useFWorldRules == 1 { //if use heuristic instead of agent predictions
 			chosenAction, _ = ev.ActGen()
 		}
 		ev.StepWorld(int(chosenAction), false)
@@ -1655,6 +1673,7 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 		// Assume VL is in actions and treat it continuously and also apply the teaching function.
 		modelGeneratedAction := ev.GetActionIdFromVL(transformActions(actions))
 		recordPerformance(ev, int(modelGeneratedAction))
+		ev.PctCortex = ev.calculatePctCortex(actions["Epoch"].Vector.Values[0], actions["MaxEpoch"].Vector.Values[0])
 		ev.logActionChoices(int(modelGeneratedAction))
 		ev.LastActionPredicted = modelGeneratedAction //action suggested for the previous time step
 		ev.StepWorld(ev.ApplyTeachingFunction(modelGeneratedAction), false)

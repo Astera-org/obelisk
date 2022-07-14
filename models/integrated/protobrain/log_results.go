@@ -14,7 +14,7 @@ import (
 // AddExtraFWorldItems to capture range of values and behavior as well as internal values
 func (ss *Sim) AddExtraFWorldItems(ui *autoui.AutoUI) {
 	autoui.AddCommonLogItemsForOutputLayers(ui)
-	names := []string{"KL", "F1Resources", "Energy", "Hydra", "EatF1", "DrinkF1"}
+	names := []string{"KL", "F1Resources", "Energy", "Hydra", "EatF1", "DrinkF1", "PctCortex"}
 	for _, name := range names {
 		currentName := name
 		nameMap := elog.WriteMap{}

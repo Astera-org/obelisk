@@ -93,7 +93,6 @@ function cancelJob(job_id) {
 
 // TODO: pagination, fetch by user id, etc.
 function queryJobs() {
-    console.log("queryJobs");
     const client = getClient();
 
     client.queryJobs(function (result) {
@@ -102,17 +101,42 @@ function queryJobs() {
     });
 }
 
+function populateOptions(selectElem, binInfos) {
+    binInfos.forEach(function (bi) {
+        selectElem.append('<option value="' + bi.binID + '">' + bi.name + '</option>');
+    });
+}
+
+function getBinInfos() {
+    const client = getClient();
+
+    client.getBinInfos(function (binInfos) {
+        console.log("getBinInfos result", binInfos);
+        // type 0 means agent, type 1 means world
+        const agents = binInfos.filter(bi => bi.type === 0);
+        const worlds = binInfos.filter(bi => bi.type === 1);
+        const agentSelect = $("#agent");
+        const worldSelect = $("#world");
+        populateOptions(agentSelect, agents);
+        populateOptions(worldSelect, worlds);
+    });
+}
+
 $(function() {
     console.log("document ready");
 
     queryJobs();
 
+    getBinInfos();
+
     // setup add job form
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
-        const agentID = $("#agent").val();
+        const agentSelect = $("#agent");
+        const agentID = agentSelect.val();
         const agentCfg = $("#agent-config").val();
-        const worldID = $("#world").val();
+        const worldSelect = $("#world");
+        const worldID = worldSelect.val();
         const worldCfg = $("#world-config").val();
         const note = $("#note").val();
 

@@ -42,7 +42,7 @@ create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHA
 
 
 #####################
-INSERT INTO binaries (name, version, hash, type, status) VALUES ("protobrain", "1.0", "12345", 0, 0);
-INSERT INTO binaries (name, version, hash, type, status) VALUES ("fworld", "1.0", "12345", 1, 0);
+INSERT INTO binaries (name, version, package_hash, type, status) VALUES ("protobrain", "1.0", "12345", 0, 0);
+INSERT INTO binaries (name, version, package_hash, type, status) VALUES ("fworld", "1.0", "12345", 1, 0);
 INSERT INTO jobs (agent_id,world_id,agent_param,world_param) values (1,2,"GUI=false","GUI=false");
 

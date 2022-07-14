@@ -141,6 +141,10 @@ func (handler RequestHandler) GetBinInfo(ctx context.Context, binID int32) (*inf
 	return binInfo, nil
 }
 
+func (handler RequestHandler) GetBinInfos(ctx context.Context) ([]*infra.BinInfo, error) {
+	return gDatabase.GetBinInfos()
+}
+
 func (handler RequestHandler) RunSQL(ctx context.Context, sql string) (string, error) {
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {
