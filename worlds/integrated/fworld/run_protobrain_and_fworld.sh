@@ -4,6 +4,6 @@
 
 go run $(ls models/integrated/protobrain/*.go | grep -v _test) &
 
-sleep 5
+sleep 10
 
 go run $(ls worlds/integrated/fworld/*.go | grep -v _test) &
