@@ -43,7 +43,7 @@ func main() {
 	mux.HandleFunc("/completed/:id", handleCompleted)
 	//mux.HandleFunc("/binaries/", getFile)
 
-	go http.ListenAndServe(":"+gConfig.SERVER_PORT, mux)
+	go http.ListenAndServe(fmt.Sprint(":", gConfig.SERVER_PORT), mux)
 
 	for true {
 		var command string
