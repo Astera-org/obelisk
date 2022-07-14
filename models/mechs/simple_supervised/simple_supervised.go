@@ -109,11 +109,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 	// Trial Stats and Apply Input
 	stack := manager.Stacks[etime.Train]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input")
-		// Although ground truth output is applied here, it won't actually be clamped until PlusPhase is called, because it's a layer of type Target.
-		agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Output")
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {agent.OnObserveDefault(ss.Net.AsAxon(), ss.WorldEnv)})
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewPatterns", func() { ss.WorldEnv.InitWorld(nil) })

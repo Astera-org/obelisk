@@ -106,3 +106,14 @@ func AgentApplyInputs(net *axon.Network, world WorldInterface, layerName string)
 		ly.ApplyExt(pats)
 	}
 }
+
+func OnObserveDefault(net *axon.Network, world WorldInterface) {
+	//set inputs to all layers of type input
+	for _, name := range net.LayersByClass(emer.Input.String()) {
+		AgentApplyInputs(net.AsAxon(), world, name)
+	}
+	//set expected output/groundtruth to layers of type target
+	for _, name := range net.LayersByClass(emer.Target.String()) {
+		AgentApplyInputs(net.AsAxon(), world, name)
+	}
+}

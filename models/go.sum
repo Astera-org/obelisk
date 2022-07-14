@@ -123,6 +123,8 @@ github.com/emer/emergent v1.1.26/go.mod h1:XhFMJgoZeOYplTDMDUcmGPuthfTqJPbBLmXEP
 github.com/emer/emergent v1.1.39/go.mod h1:0pGqRv7IO7aar56qK2ZmuYOQaz1v+HWG+TxEbuVhCyc=
 github.com/emer/emergent v1.3.17 h1:JfhZBnA3s25ckaf5kNP4wcJPewy1aSyf3k1A6hzvNkg=
 github.com/emer/emergent v1.3.17/go.mod h1:463S5oqhJKwehVTC0E4H4v5Y85UjEqBSw4k/zjBR0O8=
+github.com/emer/emergent v1.3.18 h1:2ojU+ARebZ2bhwo3tnzObwNH5btE7MOPqs7uxAwExwQ=
+github.com/emer/emergent v1.3.18/go.mod h1:ZcgDdPZC+foV+uQPG65sgvxei068NCHtHQX9TG9dShY=
 github.com/emer/empi v1.0.12/go.mod h1:QJRkECkqMO3/UeuknKEzqH+oEf6MWogBeu5LPi+Y9mU=
 github.com/emer/empi v1.0.13 h1:DVKu3zvqPL4vvw/XtijBnOIC3YcVcVpUTohGXhQnZyU=
 github.com/emer/empi v1.0.13/go.mod h1:2VX+8DvFQBYPCZB31C0sjkKPj2IVF/Ea5T44utZpHpU=
