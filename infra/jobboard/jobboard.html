@@ -16,31 +16,43 @@
 
         <div class="container">Match idle workers with rewarding work.</div>
 
+        <form id="submit_sql_form">
+            <div class="form-group">
+                <label for="sqlString">Sql string</label>
+                <input class="form-control" id="sqlString" required>
+            </div>
+            <button type="submit" class="btn">Send Query</button>
+            <div id="result"></div>
+        </form>
+
         <!-- Add job -->
         <form id="add_job_form">
             <div class="form-group">
-                <label for="model">Model</label>
-                <input class="form-control" id="model" placeholder="protobrain" required>
+                <label for="agent">Select agent</label>
+                <select class="form-control" id="agent" required>
+                    <!-- options get populated dynamically (see getBinInfos)-->
+                </select>
             </div>
             <div class="form-group">
-                <label for="model-config">Model Config</label>
-                <input class="form-control" id="model-config">
+                <label for="agent-config">Agent Config</label>
+                <input class="form-control" id="agent-config">
             </div>
+
             <div class="form-group">
-                <label for="world">World</label>
-                <input class="form-control" id="world" placeholder="fworld" required>
+                <label for="world">Select world</label>
+                <select class="form-control" id="world" required>
+                    <!-- options get populated dynamically (see getBinInfos)-->
+                </select>
             </div>
             <div class="form-group">
                 <label for="world-config">World Config</label>
                 <input class="form-control" id="world-config">
             </div>
+
             <div class="form-group">
                 <label for="note">Note</label>
                 <input class="form-control" id="note">
             </div>
-            <!-- TODO: model config and world config-->
-            <!-- TODO: priority, user id-->
-            <!-- TODO: Autofill dropdowns for model and world selection -->
 
             <button type="submit" class="btn btn-primary">Add Job</button>
         </form>

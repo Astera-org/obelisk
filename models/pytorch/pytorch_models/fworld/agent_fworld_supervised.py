@@ -1,6 +1,3 @@
-# TODO(michael): Move this into models/ and fix the Python import issues
-
-
 from typing import Dict, List, AnyStr
 import math
 import numpy as np
@@ -153,26 +150,26 @@ class FWorldHandler:
             i_episode = int(debug.split(":")[-1])
 
         # Do learning for the previous timestep
-        if (i_episode > 1):
-            reward = observations["Reward"].values[0]
-            self.model.rewards.append(reward)
-            self.ep_reward += reward
-            self.model.best_action.append(observations["Heuristic"].values[0])
-            self.model.best_action_history.append(self.model.best_action[-1])
-            #finish_episode()
-            if self.do_learning:
-                supervised_finish_episode(self.model,self.optimizer)
-            self.model.delete_history()
-        # select action from policy
         world_state = self.model.get_worldstate(observations)
+        reward = observations["Reward"].values[0]
+        self.model.rewards.append(reward)
+        self.ep_reward += reward
+        self.model.best_action.append(observations["Heuristic"].values[0])
+        self.model.best_action_history.append(self.model.best_action[-1])
+        action = select_action(self.model,world_state)
+        #finish_episode()
+        if self.do_learning:
+            supervised_finish_episode(self.model,self.optimizer)
+        self.model.delete_history()
+        # select action from policy
+
 
         # TODO Handle n-dimensional shapes
-        action = select_action(self.model,world_state)
 
         self.stored_observations.append({"observations":observations,"chosen_action":action})
-        if (i_episode>1):
-            self.model.chosen_action_history.append(action)
-            self.model.store_history.append(world_state)
+
+        self.model.chosen_action_history.append(action)
+        self.model.store_history.append(world_state)
 
         if (i_episode>=self._train_runs): #quick hack so doesn't reset, should be cleaned up
             if self._infer_offpolicy:
@@ -192,14 +189,14 @@ class FWorldHandler:
             self.model.rewards = []
 
             #store a small log of results
-            file = open('fworld_{}.pkl'.format(wandb.run.ablation_feature), 'wb')
+            file = open('fworld_{}.pkl'.format(wandb.config.ablation_feature), 'wb')
             pickle.dump(self.stored_observations, file)
             file.close()
 
 
 
         if i_episode==self._max_runs:
-                    self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
+            self.log_results("offpolicy-inference",self.model.chosen_action_history,self.model.best_action_history,self.model.store_history,self.model.rewards)
 
         return {"move":Action(discreteOption=action),"use_heuristic":Action(discreteOption=int(self._use_heuristic))}
 
@@ -212,6 +209,7 @@ class FWorldHandler:
             actions["predicted"] = predicted_actions
             actions["rewards"] = rewards
             bins = pd.cut(actions.index,bins = 10)
+            #todo this crashse if actions are not evenly distributed, this should also be logged online
             actions["bins"]=[bin.left for bin in bins ]
 
             step =0
@@ -220,7 +218,7 @@ class FWorldHandler:
                 predicted = group["predicted"].values
                 reward = group["rewards"].mean()
                 kl_divergence:float = fworld_metrics.calc_kl(predicted, ground_truth)
-                f1_score:float = fworld_metrics.calc_precision(predicted, ground_truth)
+                f1_score:float = fworld_metrics.calc_f1(predicted, ground_truth)
 
                 wandb.log({"{}_kl_divergence".format(title):kl_divergence},step=step)
                 wandb.log({"{}_f1".format(title):f1_score},step=step)
@@ -229,7 +227,7 @@ class FWorldHandler:
 
             wandb.log({"{}_conf_mat".format(title) : wandb.plot.confusion_matrix(class_names=["Forward","Left","Right","Eat","Drink"],y_true=heuristic_actions, preds= predicted_actions)})
 
-            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_precision(actions.predicted, actions.ground_truth)
+            wandb.run.summary["{}_f1".format(title)] = fworld_metrics.calc_f1(actions.predicted, actions.ground_truth)
             wandb.run.summary["{}_kl".format(title)] = fworld_metrics.calc_kl(actions.predicted, actions.ground_truth)
 
             sample_amount = len(input_space) if len(input_space) < 1000 else 1000
@@ -246,11 +244,10 @@ if __name__ == '__main__':
     config_fworld: ConfigFWorldVariables = file_to_fworldconfig(os.path.join("config", "config_inputs.yaml"))
     config_run: ConfigRuns = ConfigRuns.file_to_configrun(os.path.join("config", "run_config.yaml"))
 
-    wandb.init(project="fworld-evaluations2")
+    wandb.init(project="fworld-online")
     wandb.config.update(config_run.asdict()) #given conftext information
 
-    wandb.run.ablation_feature = "{}-{}".format(config_run.name, str(wandb.run.id))
-
+    wandb.config.update({"ablation_feature": "{}-{}".format(config_run.name, str(wandb.run.id))})
     all_input_information:List[ConfigETensorVariable] = [config_fworld.object_seen,config_fworld.visionwide,
                               config_fworld.visionlocal,config_fworld.internal_state,
                               config_fworld.sensory_local2,config_fworld.sensory_local]

@@ -17,33 +17,23 @@ function getClient() {
     return gClient;
 }
 
-// TODO: remove if unused
-function sendQuery(sqlString) {
-    console.log("sendQuery query", sqlString);
+function runSql(sqlString) {
+    console.log("submitSql:", sqlString);
     const client = getClient();
-
-    try {
-        const result = client.runSQL(sqlString, function (result) {
-            console.log("sendQuery", result)
-            $('#result').text(result);
-            $('#result').css('color', 'black');
-        });
-    } catch (error) {
-        console.log("ERROR")
-        console.log(error)
-        $('#result').text(error.why);
-        $('#result').css('color', 'red');
-    }
+    client.runSQL(sqlString, function (result) {
+        console.log("runSQL result", result);
+        $('#result').text(result);
+    });
 }
 
-function addJob(model, modelConfig, world, worldConfig, note) {
-    console.log("addJob model:", model, "model config:", modelConfig, "world:",
-        world, "world config:", worldConfig, "note:", note);
+function addJob(agentID, agentCfg, worldID, worldCfg, note) {
+    console.log("addJob agent:", agentID, "agent config:", agentCfg, "world:",
+        worldID, "world config:", worldCfg, "note:", note);
     const client = getClient();
-    client.addJob(model, world, modelConfig, worldConfig, -1, -1, note,function (result) {
+    client.addJob(agentID, worldID, agentCfg, worldCfg, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
-    })
+    });
 }
 
 // convert a json object to a table row
@@ -53,8 +43,8 @@ function toHtml(row) {
     return `
       <tr>
         <td>${row.job_id}</td>
-        <td>${row.agent_name}</td>
-        <td>${row.world_name}</td>
+        <td>${row.agent_id}</td>
+        <td>${row.world_id}</td>
         <td>${row.score}</td>
         <td>${toStatus(row.status)}</td>
         <td><button type="button" class="btn" id="${row.job_id}">cancel</button></td>
@@ -103,11 +93,32 @@ function cancelJob(job_id) {
 
 // TODO: pagination, fetch by user id, etc.
 function queryJobs() {
-    console.log("queryJobs");
     const client = getClient();
 
     client.queryJobs(function (result) {
+        console.log("queryJobs result", result);
         generateJobsTable(result);
+    });
+}
+
+function populateOptions(selectElem, binInfos) {
+    binInfos.forEach(function (bi) {
+        selectElem.append('<option value="' + bi.binID + '">' + bi.name + '</option>');
+    });
+}
+
+function getBinInfos() {
+    const client = getClient();
+
+    client.getBinInfos(function (binInfos) {
+        console.log("getBinInfos result", binInfos);
+        // type 0 means agent, type 1 means world
+        const agents = binInfos.filter(bi => bi.type === 0);
+        const worlds = binInfos.filter(bi => bi.type === 1);
+        const agentSelect = $("#agent");
+        const worldSelect = $("#world");
+        populateOptions(agentSelect, agents);
+        populateOptions(worldSelect, worlds);
     });
 }
 
@@ -116,15 +127,27 @@ $(function() {
 
     queryJobs();
 
+    getBinInfos();
+
+    // setup add job form
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
-        const model = $("#model").val();
-        const modelConfig = $("#model-config").val();
-        const world = $("#world").val();
-        const worldConfig = $("#world-config").val();
+        const agentSelect = $("#agent");
+        const agentID = agentSelect.val();
+        const agentCfg = $("#agent-config").val();
+        const worldSelect = $("#world");
+        const worldID = worldSelect.val();
+        const worldCfg = $("#world-config").val();
         const note = $("#note").val();
 
-        addJob(model, modelConfig, world, worldConfig, note);
+        addJob(agentID, agentCfg, worldID, worldCfg, note);
+    });
+
+    // setup raw sql form
+    $("#submit_sql_form").submit(function(event) {
+        event.preventDefault();
+        const sqlString = $("#sqlString").val();
+        runSql(sqlString);
     });
 
 });

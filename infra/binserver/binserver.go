@@ -8,19 +8,30 @@ import (
 	"os"
 	"strconv"
 
+	log "github.com/Astera-org/easylog"
+
 	"goji.io/pat"
 )
 
 var gConfig Config
 var defaultCtx = context.Background()
-var gDatabase Database
+var gApp BinServerApp
 var VERSION string = "v0.1.0"
 
 func main() {
 	gConfig.Load()
-	gDatabase.Connect()
 
-	fmt.Println("listening on", gConfig.SERVER_PORT)
+	err := log.Init(
+		log.SetLevel(log.INFO),
+		log.SetFileName("binserver.log"),
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	gApp.Init()
+
+	log.Info("listening on ", gConfig.SERVER_PORT)
 
 	fileServer := http.FileServer(http.Dir("./" + gConfig.BINARY_ROOT + "/"))
 	mux := http.NewServeMux()
@@ -29,6 +40,7 @@ func main() {
 	//mux := goji.NewMux()
 	//mux.HandleFunc(pat.Get("/getBinary/:id"), getBinary)
 	mux.HandleFunc("/addBinary", addBinary)
+	mux.HandleFunc("/completed/:id", handleCompleted)
 	//mux.HandleFunc("/binaries/", getFile)
 
 	go http.ListenAndServe(":"+gConfig.SERVER_PORT, mux)
@@ -54,10 +66,34 @@ func printHelp() {
 }
 
 func getFile(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("getFile: " + r.URL.Path)
+	log.Info("getFile: " + r.URL.Path)
 	http.ServeFile(w, r, r.URL.Path)
 }
 
+func handleCompleted(w http.ResponseWriter, r *http.Request) {
+	idStr := pat.Param(r, "id")
+	jobID, err := strconv.Atoi(idStr)
+	if err != nil {
+		log.Info("invalid ID: ", idStr)
+		http.Error(w, "invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	// see if <jobID>.zip already exists
+	r.URL.Path = gConfig.COMPLETED_ROOT + "/" + idStr + ".zip"
+	_, err = os.Stat(r.URL.Path)
+	if err != nil {
+		err = gApp.fetchRunResult(jobID)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
+
+	http.ServeFile(w, r, r.URL.Path)
+}
+
+// TODO: how does this put this in the right place?
 func addBinary(w http.ResponseWriter, r *http.Request) {
 	// put the binary in a temp dir
 	// hash the binary
@@ -72,22 +108,28 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 	// FormFile returns the first file for the given key `myFile`
 	// it also returns the FileHeader so we can get the Filename,
 	// the Header and the size of the file
-	file, handler, err := r.FormFile("binary")
+	file, fileHeader, err := r.FormFile("binary")
 	if err != nil {
-		fmt.Println("Error Retrieving the File")
-		fmt.Println(err)
+		log.Error("Error Uploading File: ", err)
 		return
 	}
 	defer file.Close()
-	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	fmt.Printf("File Size: %+v\n", handler.Size)
-	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
-	// Create a temporary file within our temp-images directory that follows
-	// a particular naming pattern
-	tempFile, err := ioutil.TempFile(gConfig.TEMP_DIR, "upload-*")
+	log.Info("file header ", fileHeader.Header)
+	log.Info("file size ", fileHeader.Size)
+	log.Info("file name ", fileHeader.Filename)
+
+	// ensure temp dir exists, otherwise tempFile fails
+	dir, err := ioutil.TempDir("", gConfig.TEMP_DIR)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err)
+	}
+
+	// Create a temporary file within our temp directory that follows
+	// a particular naming pattern
+	tempFile, err := ioutil.TempFile(dir, "upload-*")
+	if err != nil {
+		log.Error(err)
 		return
 	}
 	defer tempFile.Close()
@@ -96,14 +138,33 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 	// byte array
 	fileBytes, err := ioutil.ReadAll(file)
 	if err != nil {
-		fmt.Println(err)
+		log.Error(err)
 		return
 	}
+
 	// write this byte array to our temporary file
-	tempFile.Write(fileBytes)
+	n, err := tempFile.Write(fileBytes)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	log.Info("Temp file: ", tempFile.Name(), " bytes written ", n)
+
 	// return that we have successfully uploaded our file!
+
+	if gConfig.IS_LOCALHOST {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+	}
+
 	fmt.Fprintf(w, "Successfully Uploaded File\n")
-	w.WriteHeader(http.StatusOK)
+
+	// TODO:
+	// file name
+	// hash the binary
+	// make sure it isn't a duplicate
+	// create new row for binary
+	// move the temp binary to the right place in the fs
+	// return the binary id
 }
 
 func getBinary(w http.ResponseWriter, r *http.Request) {
@@ -111,7 +172,7 @@ func getBinary(w http.ResponseWriter, r *http.Request) {
 
 	id, _ := strconv.Atoi(binID)
 
-	name, version := gDatabase.getNameVersion(id)
+	name, version := gApp.db.getNameVersion(id)
 	if name == "" {
 		w.WriteHeader(http.StatusNotFound)
 		return

@@ -17,8 +17,8 @@ sudo pip3 install optuna
 sudo pip3 install wandb
 
 cd ~
-git clone https://github.com/Astera-org/models.git
-cd models
+git clone https://github.com/Astera-org/obelisk.git
+cd obelisk/models
 mkdir logs
 sudo chmod -R +777 .
 sudo go test mechs/ra25/ra25_test.go

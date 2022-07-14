@@ -1,23 +1,23 @@
-package infra
+package commonInfra
 
 // Utility functions to work with the infra system
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
+	"io"
 	"io/ioutil"
+	"os"
+
+	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
-type Result struct {
-	Seconds int32   `json:"seconds"`
-	Cycles  int32   `json:"cycles"`
-	Score   float64 `json:"score"`
-}
+func WriteResults(score float64, steps int32, seconds int32) {
 
-func WriteResults(score float64, cycles int32, seconds int32) {
-
-	result := Result{
+	result := infra.ResultJob{
 		Seconds: seconds,
-		Cycles:  cycles,
+		Steps:   steps,
 		Score:   score,
 	}
 
@@ -26,8 +26,21 @@ func WriteResults(score float64, cycles int32, seconds int32) {
 	_ = ioutil.WriteFile("result.json", file, 0644)
 }
 
-// calculates the hash of the given directory
-func HashDir(path string) string {
-	// TODO
-	return ""
+// calculates the hash of the given list of files. All should be relative to the root path
+func HashFileList(rootPath string, fileList []string) (string, error) {
+
+	hasher := sha1.New()
+	for _, fileName := range fileList {
+		file, err := os.Open(rootPath + fileName)
+		if err != nil {
+			return "", err
+		}
+		defer file.Close()
+
+		if _, err := io.Copy(hasher, file); err != nil {
+			return "", err
+		}
+	}
+
+	return hex.EncodeToString(hasher.Sum(nil)), nil
 }

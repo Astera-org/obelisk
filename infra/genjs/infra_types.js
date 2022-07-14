@@ -10,19 +10,19 @@ if (typeof Int64 === 'undefined' && typeof require === 'function') {
 
 Job = function(args) {
   this.jobID = null;
-  this.agentName = null;
-  this.worldName = null;
+  this.agentID = null;
+  this.worldID = null;
   this.agentCfg = null;
   this.worldCfg = null;
   if (args) {
     if (args.jobID !== undefined && args.jobID !== null) {
       this.jobID = args.jobID;
     }
-    if (args.agentName !== undefined && args.agentName !== null) {
-      this.agentName = args.agentName;
+    if (args.agentID !== undefined && args.agentID !== null) {
+      this.agentID = args.agentID;
     }
-    if (args.worldName !== undefined && args.worldName !== null) {
-      this.worldName = args.worldName;
+    if (args.worldID !== undefined && args.worldID !== null) {
+      this.worldID = args.worldID;
     }
     if (args.agentCfg !== undefined && args.agentCfg !== null) {
       this.agentCfg = args.agentCfg;
@@ -51,15 +51,15 @@ Job.prototype.read = function(input) {
       }
       break;
       case 2:
-      if (ftype == Thrift.Type.STRING) {
-        this.agentName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.agentID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
-      if (ftype == Thrift.Type.STRING) {
-        this.worldName = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.worldID = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -94,14 +94,14 @@ Job.prototype.write = function(output) {
     output.writeI32(this.jobID);
     output.writeFieldEnd();
   }
-  if (this.agentName !== null && this.agentName !== undefined) {
-    output.writeFieldBegin('agentName', Thrift.Type.STRING, 2);
-    output.writeString(this.agentName);
+  if (this.agentID !== null && this.agentID !== undefined) {
+    output.writeFieldBegin('agentID', Thrift.Type.I32, 2);
+    output.writeI32(this.agentID);
     output.writeFieldEnd();
   }
-  if (this.worldName !== null && this.worldName !== undefined) {
-    output.writeFieldBegin('worldName', Thrift.Type.STRING, 3);
-    output.writeString(this.worldName);
+  if (this.worldID !== null && this.worldID !== undefined) {
+    output.writeFieldBegin('worldID', Thrift.Type.I32, 3);
+    output.writeI32(this.worldID);
     output.writeFieldEnd();
   }
   if (this.agentCfg !== null && this.agentCfg !== undefined) {
@@ -119,11 +119,12 @@ Job.prototype.write = function(output) {
   return;
 };
 
-ResultWork = function(args) {
+ResultJob = function(args) {
   this.jobID = null;
   this.status = null;
-  this.cycles = null;
   this.seconds = null;
+  this.steps = null;
+  this.cycles = null;
   this.score = null;
   this.workerName = null;
   this.instanceName = null;
@@ -134,11 +135,14 @@ ResultWork = function(args) {
     if (args.status !== undefined && args.status !== null) {
       this.status = args.status;
     }
-    if (args.cycles !== undefined && args.cycles !== null) {
-      this.cycles = args.cycles;
-    }
     if (args.seconds !== undefined && args.seconds !== null) {
       this.seconds = args.seconds;
+    }
+    if (args.steps !== undefined && args.steps !== null) {
+      this.steps = args.steps;
+    }
+    if (args.cycles !== undefined && args.cycles !== null) {
+      this.cycles = args.cycles;
     }
     if (args.score !== undefined && args.score !== null) {
       this.score = args.score;
@@ -151,8 +155,8 @@ ResultWork = function(args) {
     }
   }
 };
-ResultWork.prototype = {};
-ResultWork.prototype.read = function(input) {
+ResultJob.prototype = {};
+ResultJob.prototype.read = function(input) {
   input.readStructBegin();
   while (true) {
     var ret = input.readFieldBegin();
@@ -178,14 +182,21 @@ ResultWork.prototype.read = function(input) {
       break;
       case 3:
       if (ftype == Thrift.Type.I32) {
-        this.cycles = input.readI32().value;
+        this.seconds = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.I32) {
-        this.seconds = input.readI32().value;
+        this.steps = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 5:
+      if (ftype == Thrift.Type.I32) {
+        this.cycles = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -220,8 +231,8 @@ ResultWork.prototype.read = function(input) {
   return;
 };
 
-ResultWork.prototype.write = function(output) {
-  output.writeStructBegin('ResultWork');
+ResultJob.prototype.write = function(output) {
+  output.writeStructBegin('ResultJob');
   if (this.jobID !== null && this.jobID !== undefined) {
     output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
     output.writeI32(this.jobID);
@@ -232,14 +243,19 @@ ResultWork.prototype.write = function(output) {
     output.writeI32(this.status);
     output.writeFieldEnd();
   }
-  if (this.cycles !== null && this.cycles !== undefined) {
-    output.writeFieldBegin('cycles', Thrift.Type.I32, 3);
-    output.writeI32(this.cycles);
+  if (this.seconds !== null && this.seconds !== undefined) {
+    output.writeFieldBegin('seconds', Thrift.Type.I32, 3);
+    output.writeI32(this.seconds);
     output.writeFieldEnd();
   }
-  if (this.seconds !== null && this.seconds !== undefined) {
-    output.writeFieldBegin('seconds', Thrift.Type.I32, 4);
-    output.writeI32(this.seconds);
+  if (this.steps !== null && this.steps !== undefined) {
+    output.writeFieldBegin('steps', Thrift.Type.I32, 4);
+    output.writeI32(this.steps);
+    output.writeFieldEnd();
+  }
+  if (this.cycles !== null && this.cycles !== undefined) {
+    output.writeFieldBegin('cycles', Thrift.Type.I32, 5);
+    output.writeI32(this.cycles);
     output.writeFieldEnd();
   }
   if (this.score !== null && this.score !== undefined) {
@@ -255,6 +271,149 @@ ResultWork.prototype.write = function(output) {
   if (this.instanceName !== null && this.instanceName !== undefined) {
     output.writeFieldBegin('instanceName', Thrift.Type.STRING, 8);
     output.writeString(this.instanceName);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+BinInfo = function(args) {
+  this.binID = null;
+  this.name = null;
+  this.version = null;
+  this.packageHash = null;
+  this.timeAdded = null;
+  this.type = null;
+  this.status = null;
+  if (args) {
+    if (args.binID !== undefined && args.binID !== null) {
+      this.binID = args.binID;
+    }
+    if (args.name !== undefined && args.name !== null) {
+      this.name = args.name;
+    }
+    if (args.version !== undefined && args.version !== null) {
+      this.version = args.version;
+    }
+    if (args.packageHash !== undefined && args.packageHash !== null) {
+      this.packageHash = args.packageHash;
+    }
+    if (args.timeAdded !== undefined && args.timeAdded !== null) {
+      this.timeAdded = args.timeAdded;
+    }
+    if (args.type !== undefined && args.type !== null) {
+      this.type = args.type;
+    }
+    if (args.status !== undefined && args.status !== null) {
+      this.status = args.status;
+    }
+  }
+};
+BinInfo.prototype = {};
+BinInfo.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.binID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.STRING) {
+        this.name = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 3:
+      if (ftype == Thrift.Type.STRING) {
+        this.version = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 4:
+      if (ftype == Thrift.Type.STRING) {
+        this.packageHash = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 5:
+      if (ftype == Thrift.Type.STRING) {
+        this.timeAdded = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 6:
+      if (ftype == Thrift.Type.I32) {
+        this.type = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 7:
+      if (ftype == Thrift.Type.I32) {
+        this.status = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+BinInfo.prototype.write = function(output) {
+  output.writeStructBegin('BinInfo');
+  if (this.binID !== null && this.binID !== undefined) {
+    output.writeFieldBegin('binID', Thrift.Type.I32, 1);
+    output.writeI32(this.binID);
+    output.writeFieldEnd();
+  }
+  if (this.name !== null && this.name !== undefined) {
+    output.writeFieldBegin('name', Thrift.Type.STRING, 2);
+    output.writeString(this.name);
+    output.writeFieldEnd();
+  }
+  if (this.version !== null && this.version !== undefined) {
+    output.writeFieldBegin('version', Thrift.Type.STRING, 3);
+    output.writeString(this.version);
+    output.writeFieldEnd();
+  }
+  if (this.packageHash !== null && this.packageHash !== undefined) {
+    output.writeFieldBegin('packageHash', Thrift.Type.STRING, 4);
+    output.writeString(this.packageHash);
+    output.writeFieldEnd();
+  }
+  if (this.timeAdded !== null && this.timeAdded !== undefined) {
+    output.writeFieldBegin('timeAdded', Thrift.Type.STRING, 5);
+    output.writeString(this.timeAdded);
+    output.writeFieldEnd();
+  }
+  if (this.type !== null && this.type !== undefined) {
+    output.writeFieldBegin('type', Thrift.Type.I32, 6);
+    output.writeI32(this.type);
+    output.writeFieldEnd();
+  }
+  if (this.status !== null && this.status !== undefined) {
+    output.writeFieldBegin('status', Thrift.Type.I32, 7);
+    output.writeI32(this.status);
     output.writeFieldEnd();
   }
   output.writeFieldStop();

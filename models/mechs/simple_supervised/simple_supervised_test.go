@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Astera-org/models/library/autoui"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/emergent/etime"
 	"testing"
 )

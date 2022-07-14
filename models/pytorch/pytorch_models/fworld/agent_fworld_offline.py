@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     for hidden_size in config_run.hidden_size:
         for feature_index in range(len(all_input_information)+1):
-                wandb.init(project="fworldsupervised-clean")
+                wandb.init(project="fworldsupervised-updated")
                 config_variables = config_run.asdict()
                 config_variables["hidden_size"] = hidden_size
                 ##give logging context
@@ -115,7 +115,7 @@ if __name__ == '__main__':
                         np_chosen = np.concatenate(chosen_action_history)
                         np_best = np.concatenate(best_action_history)
                         kl_divergence:float = fworld_metrics.calc_kl(np_chosen, np_best)
-                        f1_score:float = fworld_metrics.calc_precision(np_chosen, np_best)
+                        f1_score:float = fworld_metrics.calc_f1(np_chosen, np_best)
                         wandb.log({"kl":kl_divergence},step=j)
                         wandb.log({"f1":f1_score},step=j)
                 #final confusion matrix

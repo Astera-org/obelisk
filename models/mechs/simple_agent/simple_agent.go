@@ -8,21 +8,21 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Astera-org/models/library/autoui"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
 	"github.com/emer/emergent/netview"
 	"github.com/emer/emergent/prjn"
-	"github.com/emer/etable/etensor"
 )
 
 // This file demonstrates the creation of a simple axon network connected to a simple world in a different file and potentially a different process. Although it is intended as a framework for creating an intelligent agent and embedding it in a challenging world, it does not actually implement any meaningful sort of intelligence, as the network receives no teaching signal of any kind. In addition to creating a simple environment and a simple network, it creates a looper.Manager to control the flow of time across Runs, Epochs, and Trials. It creates a GUI to control it.
 // Although this model does not learn or use a real environment, you may find it useful as a template for creating something more.
-
+//todo update to latest style see models\integrated\protobrain
+//todo add simple passing of fake data
 func main() {
 	var sim Sim
 	sim.WorldEnv = sim.ConfigEnv()
@@ -40,7 +40,7 @@ func main() {
 		AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
 		DoLogging:                 true,
 		HaveGui:                   true,
-		StartAsServer:             false, // For an example with running as a server, look in https://github.com/Astera-org/models/blob/master/examples/simple_network_agent/simple_agent.go
+		StartAsServer:             false, // For an example with running as a server, look in https://github.com/Astera-org/obelisk/models/blob/master/examples/simple_network_agent/simple_agent.go
 	}
 	userInterface.Start() // Start blocks, so don't put any code after this.
 }
@@ -91,6 +91,17 @@ func (ss *Sim) NewRun() {
 	ss.Net.InitWts()
 }
 
+func (sim *Sim) OnObserve() {
+	//set inputs to all layers of type input
+	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
+		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
+	}
+	//set expected output/groundtruth to layers of type target
+	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
+		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
+	}
+}
+
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
@@ -106,18 +117,13 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	}
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
 		// Check the action at the beginning of the Plus phase, before the teaching signal is introduced.
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	// Trial Stats and Apply Input
 	mode := etime.Train // For closures
 	stack := manager.Stacks[mode]
-	stack.Loops[etime.Trial].OnStart.Add("Observe", func() {
-		axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, "Input", func(spec agent.SpaceSpec) etensor.Tensor {
-			// Use ObserveWithShape on the AgentProxyWithWorldCache which just returns a random vector of the correct size.
-			return ss.WorldEnv.Observe("Input")
-		})
-	})
+	stack.Loops[etime.Trial].OnStart.Add("Observe", ss.OnObserve)
 
 	manager.GetLoop(etime.Train, etime.Run).OnStart.Add("NewRun", ss.NewRun)
 

@@ -12,11 +12,18 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"math"
+	"math/rand"
+	"os"
+	"strconv"
+
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/agent"
-	"github.com/Astera-org/worlds/network"
-	net_env "github.com/Astera-org/worlds/network/gengo/env"
-	"github.com/Astera-org/worlds/network_agent"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/models/library/metrics"
+	"github.com/Astera-org/obelisk/worlds/network"
+	net_env "github.com/Astera-org/obelisk/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/emergent/env"
 	"github.com/emer/emergent/erand"
 	"github.com/emer/emergent/evec"
@@ -33,11 +40,7 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
-	"io/ioutil"
-	"math"
-	"math/rand"
-	"os"
-	"strconv"
+
 )
 
 // FWorld is a flat-world grid-based environment
@@ -120,8 +123,10 @@ type FWorld struct {
 	paused  bool
 	stepOne bool
 
-	LastActionPredicted int  `view:"-" desc:"last action suggested by model over network"`
-	UseGUI              bool `view:"determines if gui is going to be used or not"`
+	LastActionPredicted int     `view:"-" desc:"last action suggested by model over network"`
+	UseGUI              bool    `view:"determines if gui is going to be used or not"`
+	predictedActions    []int32 `view:"-" desc:"for scoring counts what action was taken on a particular trial"`
+	bestActions         []int32 `view:"-" desc:"for scoring, counts what action was taken on a particular trial"`
 }
 
 var KiT_FWorld = kit.Types.AddType(&FWorld{}, FWorldProps)
@@ -131,6 +136,8 @@ func (ev *FWorld) Desc() string { return ev.Dsc }
 
 // Config configures the world
 func (ev *FWorld) Config(ntrls int) {
+	ev.predictedActions = make([]int32, 1)
+	ev.bestActions = make([]int32, 1)
 	ev.Nm = "Demo"
 	ev.Dsc = "Example world with basic food / water / eat / drink actions"
 	ev.Disp = true
@@ -332,6 +339,7 @@ func (ev *FWorld) Init(run int) {
 	ev.Scene.Init()
 	ev.Episode.Init()
 
+	ev.PctCortexMax = .95 //todo should match emery2 max
 	ev.Run.Cur = run
 	ev.Trial.Cur = -1 // init state -- key so that first Step() = 0
 	ev.Tick.Cur = -1
@@ -1048,6 +1056,21 @@ func (ev *FWorld) WorldRect(st, ed evec.Vec2i, mat int) {
 	ev.WorldLineVert(evec.Vec2i{ed.X, st.Y}, evec.Vec2i{ed.X, ed.Y}, mat)
 }
 
+// calculatePctCortex
+func (ev *FWorld) calculatePctCortex(currentEpoch, maxEpochs float64) float64 {
+	//ev.PctCortexMax = 1.0 //todo this should be head to head the same as Randy's
+	//slight modification that half way through you should largely use the agent instead of 'instinct'
+	if currentEpoch > 1 && (int(currentEpoch)%5 == 0) {
+		current := (currentEpoch) / (maxEpochs / 2.0)
+		if current > ev.PctCortexMax {
+			return ev.PctCortexMax
+		} else {
+			return current
+		}
+	}
+	return ev.PctCortex
+}
+
 // GenWorld generates a world -- edit to create in way desired
 func (ev *FWorld) GenWorld() {
 	wall := ev.MatMap["Wall"]
@@ -1279,16 +1302,24 @@ func (ev FWorld) GetActionIdFromVL(actions map[string]agent.Action) (actionId in
 // ApplyTeachingFunction gets the teaching signal.
 func (ev FWorld) ApplyTeachingFunction(agentActionId int) int {
 	chosenAction := ev.PossiblyGetTeachingSignal(agentActionId)
-	agentAction := ev.Acts[agentActionId]
-	chosenActionStr := ev.Acts[chosenAction]
-	log.Info("Action from Agent: " + agentAction + ", but Heuristic Advises: " + chosenActionStr)
 	return chosenAction
+}
+
+func recordPerformance(ev *FWorld, chosenAction int) {
+	bestAction, _ := ev.ActGen()
+	ev.bestActions = append(ev.bestActions, int32(bestAction))
+	ev.predictedActions = append(ev.predictedActions, int32(chosenAction))
+}
+
+func (ev *FWorld) logActionChoices(chosenAction int) {
+	chosenActionStr := ev.Acts[chosenAction]
+	heuristicAction, _ := ev.ActGen()
+	log.Info("Action taken: ", chosenActionStr, " ", chosenAction, ", but Heuristic Advises: ", ev.Acts[heuristicAction], " ", heuristicAction)
 }
 
 // StepWorld looks at the action vector and converts it into an actual action that it takes in the world.
 func (ev *FWorld) StepWorld(chosenAction int, agentDone bool) (done bool, debug string) {
 	chosenActionStr := ev.Acts[chosenAction]
-	log.Info("Taking action: " + chosenActionStr)
 	ev.Action(chosenActionStr, nil)
 	ev.Step()
 	if ev.UseGUI {
@@ -1309,11 +1340,14 @@ func (ev FWorld) calculateAndRecordReward(obs *map[string]*net_env.ETensor) {
 }
 
 func (ev FWorld) intToETensor(action int, name string) *net_env.ETensor {
-	// TODO Maybe treat Hydra and Energy differently since they're temporally discounted or something.
+	return ev.floatToETensor(float64(action), name)
+}
+
+func (ev FWorld) floatToETensor(action float64, name string) *net_env.ETensor {
 	return &net_env.ETensor{Shape: &net_env.Shape{
 		Shape:  []int32{1},
 		Stride: []int32{1},
-		Names:  []string{"name"},
+		Names:  []string{name},
 	}, Values: []float64{float64(action)}}
 }
 
@@ -1330,12 +1364,32 @@ func (ev *FWorld) getAllObservations() map[string]*net_env.ETensor {
 	expectedAction, _ := ev.ActGen()
 	genAction := ev.Acts[expectedAction]
 	actionTensor := ev.Pats[genAction]
-	obs["VL"] = network_agent.FromTensor(actionTensor)                                                            //Heuristic is a distributed rep of best
-	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction)                                                 //This is a a discrete action of best action
-	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, ev.Acts[ev.LastActionPredicted]) //This is a discrete action of last action
-	ev.calculateAndRecordReward(&obs)                                                                             // Add reward.
-
+	obs["VL"] = network_agent.FromTensor(actionTensor)            //Heuristic is a distributed rep of best
+	obs["Heuristic"] = ev.intToETensor(expectedAction, genAction) //This is a a discrete action of best action
+	obs["PredictedActionLastTimeStep"] = ev.intToETensor(ev.LastActionPredicted, "PredictedActionLastTimeStep")
+	ev.calculateAndRecordReward(&obs) // Add reward.
+	ev.addMetrics(obs)
+	//todo these shouldn't be called every step, perhaps ever %ticks, still minor but will be basically M(steps) N (size) operation
 	return obs
+}
+
+// addMetrics adds various results and passes back to Protobrain
+func (ev *FWorld) addMetrics(obs map[string]*net_env.ETensor) {
+	window := 100 //todo if have actual epoch, make window based on this
+	if len(ev.predictedActions) < window {
+		window = 0
+	} else {
+		window = len(ev.predictedActions) - window //so only look at last N
+	}
+	obs["F1Resources"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3, 4}), "F1DrinkFood")
+	obs["F1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{0, 1, 2, 3, 4}), "F1Score") // Add F1Score.
+	obs["KL"] = ev.floatToETensor(metrics.KLDivergence(ev.predictedActions[window:], ev.bestActions[window:]), "KL")                              // Add KL.
+	obs["Energy"] = ev.floatToETensor(float64(ev.InterStates["Energy"]), "Energy")
+	obs["Hydra"] = ev.floatToETensor(float64(ev.InterStates["Hydra"]), "Hydra")
+	obs["EatF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{3}), "EatF1")
+	obs["DrinkF1"] = ev.floatToETensor(metrics.F1ScoreMacro(ev.predictedActions[window:], ev.bestActions[window:], []int32{4}), "DrinkF1")
+	obs["PctCortex"] = ev.floatToETensor(ev.PctCortex, "PctCortex")
+
 }
 
 // TODO(Erdal) These helper methods are being moved to a central location. WIP by Erdal.
@@ -1598,18 +1652,29 @@ func stepWorldAndAgentOnce(ev *FWorld, agent *net_env.AgentClient, defaultCtx co
 	// Step the agent
 	actions, _ := agent.Step(defaultCtx, observations, "episode:"+strconv.Itoa(ev.Tick.Cur))
 	if actions == nil {
-		log.Error("disconnected from agent, exiting")
+		log.Error("failed to get actions from agent, should exit")
 		return false
 	}
 
 	move, ok := actions["move"] // This contains a discrete option.
 
+	//todo this shouldn't be a switch, we need a parsimonious way of handling model <-> env input out shapes
 	if ok {
-		// We've received a discrete action and can use it directly to StepWorld.
-		ev.StepWorld(int(move.DiscreteOption), false)
+		ev.logActionChoices(int(move.DiscreteOption))
+		// We've received a discrete action and can use it directly to StepWorld
+		useFWorldRules := actions["use_heuristic"].DiscreteOption //if you want to use heuristic instead
+		chosenAction := int(move.DiscreteOption)
+		if useFWorldRules == 1 { //if use heuristic instead of agent predictions
+			chosenAction, _ = ev.ActGen()
+		}
+		ev.StepWorld(int(chosenAction), false)
+		recordPerformance(ev, int(move.DiscreteOption))
 	} else {
 		// Assume VL is in actions and treat it continuously and also apply the teaching function.
 		modelGeneratedAction := ev.GetActionIdFromVL(transformActions(actions))
+		recordPerformance(ev, int(modelGeneratedAction))
+		ev.PctCortex = ev.calculatePctCortex(actions["Epoch"].Vector.Values[0], actions["MaxEpoch"].Vector.Values[0])
+		ev.logActionChoices(int(modelGeneratedAction))
 		ev.LastActionPredicted = modelGeneratedAction //action suggested for the previous time step
 		ev.StepWorld(ev.ApplyTeachingFunction(modelGeneratedAction), false)
 	}
@@ -1630,8 +1695,13 @@ func connectAndQueryAgent(ev *FWorld) {
 			if ev.paused {
 				continue
 			}
-			if !stepWorldAndAgentOnce(ev, agent, defaultCtx) {
-				break
+			if stepWorldAndAgentOnce(ev, agent, defaultCtx) != true {
+				if ev.UseGUI == true {
+					os.Exit(0)
+				} else {
+					break
+				}
+
 			}
 			if ev.stepOne {
 				ev.paused = true

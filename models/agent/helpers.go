@@ -2,8 +2,11 @@ package agent
 
 import (
 	log "github.com/Astera-org/easylog"
+	"github.com/Astera-org/obelisk/models/library/helpers"
 	"github.com/emer/axon/axon"
 	"github.com/emer/emergent/emer"
+	"github.com/emer/emergent/etime"
+	"github.com/emer/emergent/looper"
 	"github.com/emer/etable/etensor"
 )
 
@@ -24,6 +27,43 @@ func GetAction(net *axon.Network) map[string]Action {
 		}}
 	}
 	return actions
+}
+
+// GetRunInfo formats the run info to send over network about num runs, steps, epochs
+func GetRunInfo(manager *looper.Manager, mode etime.Modes, times ...etime.Times) map[string]Action {
+	nameHash := make(map[etime.Times]string)
+	nameHash[etime.Trial] = "Trial"
+	nameHash[etime.Run] = "Run"
+	nameHash[etime.Epoch] = "Epoch"
+
+	infoMap := make(map[string]Action)
+
+	for _, time := range times {
+		loop := manager.GetLoop(mode, time)
+		amount := loop.Counter.Cur
+		max := loop.Counter.Max
+		amountTensor := helpers.WrapperTensorFloat(float64(amount))
+		maxTensor := helpers.WrapperTensorFloat(float64(max))
+		name := nameHash[time]
+		nameMax := "Max" + name
+
+		amountAction := Action{Vector: amountTensor, ActionShape: &SpaceSpec{
+			ContinuousShape: []int{1},
+			Stride:          nil,
+			Min:             0,
+			Max:             1,
+		}}
+
+		maxAction := Action{Vector: maxTensor, ActionShape: &SpaceSpec{
+			ContinuousShape: []int{1},
+			Stride:          nil,
+			Min:             0,
+			Max:             1,
+		}}
+		infoMap[name] = amountAction
+		infoMap[nameMax] = maxAction
+	}
+	return infoMap
 }
 
 // AgentSendActionAndStep takes action for this step, using either decoded cortical
@@ -64,5 +104,16 @@ func AgentApplyInputs(net *axon.Network, world WorldInterface, layerName string)
 	pats := world.Observe(layerName)
 	if pats != nil {
 		ly.ApplyExt(pats)
+	}
+}
+
+func OnObserveDefault(net *axon.Network, world WorldInterface) {
+	//set inputs to all layers of type input
+	for _, name := range net.LayersByClass(emer.Input.String()) {
+		AgentApplyInputs(net.AsAxon(), world, name)
+	}
+	//set expected output/groundtruth to layers of type target
+	for _, name := range net.LayersByClass(emer.Target.String()) {
+		AgentApplyInputs(net.AsAxon(), world, name)
 	}
 }

@@ -6,15 +6,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/emer/etable/etensor"
-
-	"github.com/Astera-org/models/library/autoui"
-	"github.com/Astera-org/worlds/network_agent"
+	log "github.com/Astera-org/easylog"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/models/library/autoui"
+	"github.com/Astera-org/obelisk/worlds/network_agent"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
-	"github.com/emer/emergent/agent"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
 
@@ -79,9 +79,12 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
-	plusPhase := &manager.GetLoop(etime.Train, etime.Cycle).Events[1]
+	plusPhase, ok := manager.GetLoop(etime.Train, etime.Cycle).EventByName("PlusPhase")
+	if !ok {
+		log.Fatal("PlusPhase not found")
+	}
 	plusPhase.OnEvent.Add("Sim:PlusPhase:SendActionsThenStep", func() {
-		axon.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
 	})
 
 	mode := etime.Train // For closures
@@ -101,11 +104,9 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 
 		obs := w.GetAllObservations()
 
-		for name, t := range obs {
+		for name, _ := range obs {
 			fmt.Println("ApplyInputs name: ", name)
-			axon.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name, func(spec agent.SpaceSpec) etensor.Tensor {
-				return t
-			})
+			agent.AgentApplyInputs(ss.Net.AsAxon(), ss.WorldEnv, name)
 		}
 	})
 
@@ -118,7 +119,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager.GetLoop(etime.Train, etime.Trial).OnEnd.Add("Sim:Trial:QuickScore", func() {
 		loss := ss.Net.LayerByName("VL").(axon.AxonLayer).AsAxon().PctUnitErr()
 		s := fmt.Sprintf("%f", loss)
-		fmt.Println("the pctuniterror is " + s)
+		log.Info("error is", s)
 	})
 
 	// TODO: add cos similatiry here

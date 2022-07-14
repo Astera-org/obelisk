@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/hidez8891/shm"
 
-	"github.com/Astera-org/worlds/network"
-	"github.com/Astera-org/worlds/network/gengo/env"
+	"github.com/Astera-org/obelisk/worlds/network"
+	"github.com/Astera-org/obelisk/worlds/network/gengo/env"
 )
 
 const _ADDR = "localhost:9090"
@@ -65,7 +65,8 @@ func MakeShmem(name string, size int32) *shm.Memory {
    Some open questions: which side should create the shared mem block?
    How do we ensure the memory is not accessed at the same time?
 */
-func main() {
+
+func StartServer() {
 	handler := _AgentHandler{}
 	server := network.MakeServer(handler)
 	fmt.Println("listening on", _ADDR)

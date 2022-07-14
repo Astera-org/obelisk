@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/emer/emergent/agent"
+	"github.com/Astera-org/obelisk/models/agent"
 	"math/rand"
 )
 

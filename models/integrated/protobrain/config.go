@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/BurntSushi/toml"
 )
@@ -15,15 +14,21 @@ type Config struct {
 	WORKER        bool
 	LIFETIME      int32 // how many times the world will call step before we exit
 	INTERNAL_PORT int32
+	TESTFILE      string // location of sample data to test the neural network, and performance characteristics
 }
 
 func (config *Config) Load() {
 
 	config.setDefaults()
-	_, err := toml.DecodeFile("brain.cfg", &config)
+	_, err := toml.DecodeFile("package/default.cfg", &config)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		fmt.Fprintln(os.Stderr, "Using defaults")
+		fmt.Println(err)
+		fmt.Println("default.cfg not found")
+	}
+	_, err = toml.DecodeFile("protobrain.cfg", &config)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println("protobrain.cfg not found")
 	}
 }
 
@@ -33,4 +38,5 @@ func (config *Config) setDefaults() {
 	config.WORKER = false
 	config.LIFETIME = 100
 	config.INTERNAL_PORT = 9090
+	config.TESTFILE = "testdata.csv"
 }

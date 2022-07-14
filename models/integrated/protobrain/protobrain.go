@@ -10,14 +10,15 @@ import (
 	"time"
 
 	log "github.com/Astera-org/easylog"
-	"github.com/Astera-org/models/agent"
-	"github.com/Astera-org/models/library/autoui"
-	"github.com/Astera-org/obelisk/infra"
+	commonInfra "github.com/Astera-org/obelisk/infra"
+	"github.com/Astera-org/obelisk/models/agent"
+	"github.com/Astera-org/obelisk/models/library/autoui"
 	"github.com/emer/axon/axon"
 	"github.com/emer/axon/deep"
 	"github.com/emer/emergent/emer"
 	"github.com/emer/emergent/etime"
 	"github.com/emer/emergent/looper"
+	"github.com/emer/etable/etable"
 	"github.com/emer/etable/etensor"
 	"github.com/pkg/profile"
 )
@@ -52,6 +53,7 @@ func main() {
 	sim.Net = sim.ConfigNet()
 	sim.Loops = sim.ConfigLoops()
 	sim.WorldEnv = &agent.NetworkWorld{}
+	sim.ActionHistory = &etable.Table{} //A recording of actions taken and actions predicted
 
 	if gConfig.WORKER {
 		sim.startWorkerLoop()
@@ -64,7 +66,7 @@ func main() {
 			AppName:                   "Protobrain solves FWorld",
 			AppTitle:                  "Protobrain",
 			AppAbout:                  `Learn to mimic patterns coming from a teacher signal in a flat grid world.`,
-			AddNetworkLoggingCallback: autoui.AddCommonLogItemsForOutputLayers,
+			AddNetworkLoggingCallback: sim.AddExtraFWorldItems,
 			DoLogging:                 true,
 			HaveGui:                   gConfig.GUI,
 			StartAsServer:             true,
@@ -77,14 +79,16 @@ func main() {
 
 // Sim encapsulates working data for the simulation model, keeping all relevant state information organized and available without having to pass everything around.
 type Sim struct {
-	Net       *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
-	NetDeets  NetworkDeets         `desc:"Contains details about the network."`
-	Loops     *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
-	WorldEnv  agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
-	Time      axon.Time            `desc:"axon timing parameters and state"`
-	LoopTime  string               `desc:"Printout of the current time."`
-	NumSteps  int32
-	StartTime time.Time
+	Net           *deep.Network        `view:"no-inline" desc:"the network -- click to view / edit parameters for layers, prjns, etc"`
+	NetDeets      NetworkDeets         `desc:"Contains details about the network."`
+	Loops         *looper.Manager      `view:"no-inline" desc:"contains looper control loops for running sim"`
+	WorldEnv      agent.WorldInterface `desc:"Training environment -- contains everything about iterating over input / output patterns over training"`
+	Time          axon.Time            `desc:"axon timing parameters and state"`
+	LoopTime      string               `desc:"Printout of the current time."`
+	NumSteps      int32
+	ActionHistory *etable.Table `desc:"A recording of actions taken and actions predicted"` //optional recording for debugging purposes
+	StartTime     time.Time
+	Score         float32 `desc:"current score being used."`
 }
 
 func (ss *Sim) ConfigNet() *deep.Network {
@@ -96,7 +100,7 @@ func (ss *Sim) ConfigNet() *deep.Network {
 // ConfigLoops configures the control loops
 func (ss *Sim) ConfigLoops() *looper.Manager {
 	manager := looper.NewManager()
-	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 100).AddTime(etime.Trial, 1).AddTime(etime.Cycle, 200)
+	manager.AddStack(etime.Train).AddTime(etime.Run, 1).AddTime(etime.Epoch, 20).AddTime(etime.Trial, 200).AddTime(etime.Cycle, 200)
 
 	axon.LooperStdPhases(manager, &ss.Time, ss.Net.AsAxon(), 150, 199) // plus phase timing
 
@@ -104,9 +108,8 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 	if !ok {
 		log.Fatal("PlusPhase not found")
 	}
-	// TODO this doesn't make sense. we should wait for the next Step call to come in from the world
 	plusPhase.OnEvent.Add("SendActionsThenStep", func() {
-		agent.AgentSendActionAndStep(ss.Net.AsAxon(), ss.WorldEnv)
+		//todo this function is no longer doing anything, need to discuss with Andrew about original implementation
 	})
 
 	mode := etime.Train // For closures
@@ -132,7 +135,7 @@ func (ss *Sim) ConfigLoops() *looper.Manager {
 func (ss *Sim) NewRun() {
 	run := ss.Loops.GetLoop(etime.Train, etime.Run).Counter.Cur
 	ss.NetDeets.RndSeeds.Set(run)
-	ss.NetDeets.PctCortex = 0
+	ss.NetDeets.PctCortex = 0 //todo this should be removed
 	ss.WorldEnv.InitWorld(nil)
 	ss.Time.Reset()
 	ss.Net.InitWts()
@@ -144,7 +147,6 @@ func (sim *Sim) OnObserve() {
 	for _, name := range sim.Net.LayersByClass(emer.Input.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
 	}
-
 	//set expected output/groundtruth to layers of type target
 	for _, name := range sim.Net.LayersByClass(emer.Target.String()) {
 		agent.AgentApplyInputs(sim.Net.AsAxon(), sim.WorldEnv, name)
@@ -153,21 +155,29 @@ func (sim *Sim) OnObserve() {
 
 func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	sim.NumSteps++
+
+	f1 := obs["F1"].FloatVal1D(0) //probs should be food
+	sim.Score += float32(f1)
+
+	log.Info("score ", f1)
 	if sim.NumSteps >= gConfig.LIFETIME {
-		// TODO figure score
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-		infra.WriteResults(.5, sim.NumSteps, int32(seconds))
+		commonInfra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
 		os.Exit(0)
 	}
 
 	sim.WorldEnv.SetObservations(obs)
-
 	log.Info("OnStep: ", sim.NumSteps)
 	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
-	actions := agent.GetAction(sim.Net.AsAxon())
+	sim.AddActionHistory(obs, etime.Trial.String()) //record history as discrete values
 
-	return actions
+	agentActions := agent.GetAction(sim.Net.AsAxon())                                              //what action did the agent take
+	infoAsActions := agent.GetRunInfo(sim.Loops, etime.Train, etime.Run, etime.Epoch, etime.Trial) //what is the current run, epoch, trial
+	for name, val := range infoAsActions {
+		agentActions[name] = val
+	}
+	return agentActions
 }
 
 func (sim *Sim) startWorkerLoop() {
