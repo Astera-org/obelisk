@@ -52,7 +52,7 @@ func main() {
 	if gConfig.IS_LOCALHOST {
 		// this is just a hack for localhost testing
 		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"http://test.com", "127.0.0.1", "localhost", "localhost:8000", "localhost:9009", "null"},
+			AllowedOrigins: []string{"*"},
 		})
 		goji.Use(c.Handler)
 	}
