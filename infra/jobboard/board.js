@@ -96,8 +96,12 @@ function queryJobs() {
     const client = getClient();
 
     client.queryJobs(function (result) {
-        console.log("queryJobs result", result);
-        generateJobsTable(result);
+        if (result instanceof Error) {
+            console.error("queryJobs server error: ", result);
+        } else {
+            console.log("queryJobs result", result);
+            generateJobsTable(result);
+        }
     });
 }
 
@@ -111,14 +115,18 @@ function getBinInfos() {
     const client = getClient();
 
     client.getBinInfos(function (binInfos) {
-        console.log("getBinInfos result", binInfos);
-        // type 0 means agent, type 1 means world
-        const agents = binInfos.filter(bi => bi.type === 0);
-        const worlds = binInfos.filter(bi => bi.type === 1);
-        const agentSelect = $("#agent");
-        const worldSelect = $("#world");
-        populateOptions(agentSelect, agents);
-        populateOptions(worldSelect, worlds);
+        if (binInfos instanceof Error) {
+            console.error("getBinInfos server error: ", binInfos);
+        } else {
+            console.log("getBinInfos result", binInfos);
+            // type 0 means agent, type 1 means world
+            const agents = binInfos.filter(bi => bi.type === 0);
+            const worlds = binInfos.filter(bi => bi.type === 1);
+            const agentSelect = $("#agent");
+            const worldSelect = $("#world");
+            populateOptions(agentSelect, agents);
+            populateOptions(worldSelect, worlds);
+        }
     });
 }
 
