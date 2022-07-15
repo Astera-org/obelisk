@@ -9,6 +9,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
@@ -31,7 +33,7 @@ func HashFileList(rootPath string, fileList []string) (string, error) {
 
 	hasher := sha1.New()
 	for _, fileName := range fileList {
-		file, err := os.Open(rootPath + fileName)
+		file, err := os.Open(rootPath + "/" + fileName)
 		if err != nil {
 			return "", err
 		}
@@ -43,4 +45,9 @@ func HashFileList(rootPath string, fileList []string) (string, error) {
 	}
 
 	return hex.EncodeToString(hasher.Sum(nil)), nil
+}
+
+func RunCommand(command string) error {
+	args := strings.Fields(command)
+	return exec.Command(args[0], args[1:]...).Run()
 }

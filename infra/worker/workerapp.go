@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
 )
@@ -17,10 +18,13 @@ type WorkerApp struct {
 }
 
 func (app *WorkerApp) Init() {
+	jobCzarAddr := fmt.Sprint(gConfig.JOBCZAR_IP, ":", gConfig.JOBCZAR_PORT)
+	log.Info("Connecting to JobCzar: ", jobCzarAddr)
 	app.binCache.Init()
 	app.context = context.Background()
-	app.jobCzar = MakeClient(fmt.Sprint(gConfig.JOBCZAR_IP, ":", gConfig.JOBCZAR_PORT))
+	app.jobCzar = MakeClient(jobCzarAddr)
 	app.rootDir, _ = os.Getwd()
+	log.Info("Root dir: ", app.rootDir)
 
 	os.Mkdir(gConfig.BINDIR, 0755)
 	os.Mkdir(gConfig.JOBDIR, 0755)

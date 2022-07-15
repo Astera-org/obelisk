@@ -16,6 +16,7 @@ import (
 5) Read the spawn result report
 6) Reports the result of the process to the jobCzar
 7) delete the spawn result report
+
 */
 var gConfig Config
 var gApp WorkerApp
@@ -89,7 +90,7 @@ func mainLoop() {
 func fetchJob(job *Job) {
 	var waitSeconds int = 1
 	for true {
-		log.Info("Fetching job: ", job.jobID)
+		log.Info("Fetching new job")
 
 		err := job.fetchWork()
 		log.Info("Job Fetched: ", job.jobID) // TEMP

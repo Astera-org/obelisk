@@ -73,6 +73,7 @@ func (db *Database) GetLatestID(binName string) (int, error) {
 	sql := fmt.Sprintf("SELECT bin_id FROM binaries WHERE name = '%s' and status=0 ORDER BY time_added DESC LIMIT 1", binName)
 	err := db.db.QueryRow(sql).Scan(&id)
 	if err != nil {
+		log.Error(sql)
 		log.Error(err)
 		return 0, err
 	}
