@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 	thrift "github.com/apache/thrift/lib/go/thrift"
-	"github.com/Astera-org/obelisk/models/optimize/gengo/optimize"
+	"github.com/Astera-org/obelisk/infra/optimizer/gengo/optimize"
 )
 
 var _ = optimize.GoUnusedProtection__
