@@ -47,19 +47,9 @@ func (bin *Binary) build(tempDir string) error {
 		binaryName += ".exe"
 	}
 
-	// add all the files in the package dir to fileList
-	list, err := os.ReadDir(packageRoot + "/package")
-
-	var fileList []string = make([]string, len(list)+1)
-	fileList[0] = binaryName
-	for n, dirItem := range list {
-		fileList[n+1] = "package/" + dirItem.Name()
-	}
-
-	bin.packageHash, err = commonInfra.HashFileList(packageRoot, fileList)
+	bin.packageHash, err = commonInfra.CalculatePackageHash(binaryName, packageRoot)
 	if err != nil {
 		log.Error("Error hashing binary: ", err)
-		log.Error("File list: ", fileList)
 		return err
 	}
 

@@ -40,7 +40,6 @@ import (
 	"github.com/goki/ki/ki"
 	"github.com/goki/ki/kit"
 	"github.com/goki/mat32"
-
 )
 
 // FWorld is a flat-world grid-based environment
@@ -210,7 +209,7 @@ func (ev *FWorld) ConfigPats() {
 		ev.Pats[a] = t
 	}
 
-	ev.OpenPats("pats.json") // TODO add to the .cfg
+	ev.OpenPats("package/pats.json") // TODO add to the .cfg
 
 	for _, a := range ev.Acts {
 		ev.ActPats[a] = ev.Pats[a]

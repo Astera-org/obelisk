@@ -116,12 +116,15 @@ func (push *Push) checkoutRepo(tempDir string) error {
 		exec.Command("git", "checkout", gConfig.BRANCH_NAME).Run()
 	}
 
-	// TODO: make sure there is a setup.sh file
-	// Repos should add this script if there is setup to be done besides just pulling the repo
-	err = exec.Command("./setup.sh").Run()
-	if err != nil {
-		log.Error("setup: ", err)
-		return err
+	// run the setup.sh file if it exists
+	_, err = os.Stat("setup.sh")
+	if err == nil {
+		// Repos should add this script if there is setup to be done besides just pulling the repo
+		err = exec.Command("./setup.sh").Run()
+		if err != nil {
+			log.Error("setup: ", err)
+			return err
+		}
 	}
 
 	out, err := exec.Command("git", "rev-parse", "--short", "HEAD").Output()
