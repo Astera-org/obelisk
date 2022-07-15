@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"strings"
 
+	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
@@ -26,6 +27,25 @@ func WriteResults(score float64, steps int32, seconds int32) {
 	file, _ := json.MarshalIndent(result, "", " ")
 
 	_ = ioutil.WriteFile("result.json", file, 0644)
+}
+
+func CalculatePackageHash(binName string, dirName string) (string, error) {
+	log.Info("calculatePackageHash: ", binName, " ", dirName)
+	list, _ := os.ReadDir(dirName + "/package")
+	// ok if package doesn't exist
+
+	var fileList []string = make([]string, len(list)+1)
+	fileList[0] = binName
+	for n, dirItem := range list {
+		fileList[n+1] = "package/" + dirItem.Name()
+	}
+
+	hash, err := HashFileList(dirName, fileList)
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }
 
 // calculates the hash of the given list of files. All should be relative to the root path

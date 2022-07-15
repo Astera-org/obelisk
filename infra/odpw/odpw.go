@@ -76,7 +76,6 @@ type GitBranchPaylod struct {
 }
 
 func forceStart() {
-	// TODO: get latest commit from github
 	// get from url https://api.github.com/repos/Astera-org/obelisk/branches/master
 	url := "https://api.github.com/repos/Astera-org/obelisk/branches/" + gConfig.BRANCH_NAME
 	resp, err := http.Get(url)

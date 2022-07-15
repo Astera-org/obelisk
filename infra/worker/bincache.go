@@ -114,22 +114,8 @@ func writeOK(dirName string) {
 	_ = ioutil.WriteFile("ok", file, 0644)
 }
 
-// TODO: move this to commonInfra function
 func checkPackageHash(binInfo *infra.BinInfo, dirName string) error {
-	log.Info("checkPackageHash: ", dirName)
-	list, err := os.ReadDir(dirName + "/package")
-	if err != nil {
-		log.Error("checkPackageHash:", err)
-		return nil
-	}
-
-	var fileList []string = make([]string, len(list)+1)
-	fileList[0] = binInfo.Name
-	for n, dirItem := range list {
-		fileList[n+1] = "package/" + dirItem.Name()
-	}
-
-	localHash, err := commonInfra.HashFileList(dirName, fileList)
+	localHash, err := commonInfra.CalculatePackageHash(binInfo.Name, dirName)
 	if err != nil {
 		return err
 	}
