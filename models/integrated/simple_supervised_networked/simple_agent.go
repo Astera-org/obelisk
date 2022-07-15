@@ -127,8 +127,12 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if (isLastTrial == true) && (isLastEpoch == true) && (isLastRun == true) {
 		//os.Exit(0)
 	}
-	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+	//todo, need ot check if th esame thing is happening in protobrain
+	//WorldEnv needs to add observations and then step, otherwise, the information used
+	//for training is coming from the previous example
 	sim.WorldEnv.(*agent.NetworkWorld).SetObservations(obs)
+	sim.Loops.Step(sim.Loops.Mode, 1, etime.Trial)
+
 	agentActions := agent.GetAction(sim.Net.AsAxon()) //what action did the agent take
 	for name, val := range infoAsActions {
 		agentActions[name] = val
