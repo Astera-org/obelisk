@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 
@@ -48,19 +49,22 @@ func main() {
 
 	gDatabase.Connect()
 
-	log.Info("listening on ", gConfig.SERVER_ADDR)
-
-	// this is just a hack for localhost testing
-	c := cors.New(cors.Options{
-		AllowedOrigins: []string{"http://test.com", "127.0.0.1", "localhost", "localhost:8000", "localhost:9009", "null"},
-	})
-	goji.Use(c.Handler)
+	if gConfig.IS_LOCALHOST {
+		// this is just a hack for localhost testing
+		c := cors.New(cors.Options{
+			AllowedOrigins: []string{"*"},
+		})
+		goji.Use(c.Handler)
+	}
 
 	handler := RequestHandler{}
 	server := MakeServer(handler)
 
 	go httpServer(&handler)
 	go server.Serve()
+
+	log.Info("thrift server listening on ", gConfig.THRIFT_SERVER_ADDR)
+	log.Info("http server listening on ", gConfig.HTTP_SERVER_ADDR)
 
 	for true {
 		var command string
@@ -97,12 +101,16 @@ func httpServer(handler *RequestHandler) {
 
 	goji.Post("/jobczar", NewThriftHandlerFunc(processor, factory, factory))
 
-	goji.Serve()
+	listener, err := net.Listen("tcp", gConfig.HTTP_SERVER_ADDR)
+	if err != nil {
+		log.Fatal(err)
+	}
+	goji.ServeListener(listener)
 }
 
 func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
 	transportFactory := thrift.NewTBufferedTransportFactory(8192)
-	transport, _ := thrift.NewTServerSocket(gConfig.SERVER_ADDR)
+	transport, _ := thrift.NewTServerSocket(gConfig.THRIFT_SERVER_ADDR)
 	processor := infra.NewJobCzarProcessor(handler)
 	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
 	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)

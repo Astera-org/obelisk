@@ -10,8 +10,10 @@ import (
 // LATER move parts of this to a separate package
 
 type Config struct {
-	DB_CONNECT  string
-	SERVER_ADDR string
+	DB_CONNECT         string
+	THRIFT_SERVER_ADDR string
+	HTTP_SERVER_ADDR   string
+	IS_LOCALHOST       bool
 }
 
 func (config *Config) Load() {
@@ -27,7 +29,9 @@ func (config *Config) Load() {
 
 func (config *Config) setDefaults() {
 	config.DB_CONNECT = ""
-	config.SERVER_ADDR = "localhost:9009"
+	config.THRIFT_SERVER_ADDR = "localhost:9009"
+	config.HTTP_SERVER_ADDR = "localhost:8000"
+	config.IS_LOCALHOST = false
 }
 
 func (config *Config) ensureRequired() {
