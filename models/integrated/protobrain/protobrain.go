@@ -167,7 +167,6 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 		os.Exit(0)
 	}
 
-
 	sim.WorldEnv.(*agent.NetworkWorld).SetObservations(obs)
 
 	log.Info("OnStep: ", sim.NumSteps)
