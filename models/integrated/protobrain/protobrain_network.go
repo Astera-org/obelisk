@@ -110,7 +110,7 @@ func (deets *NetworkDeets) InitStats() { // TODO(refactor): use Stats
 
 // DefineSimVariables creates new blank elements and initializes defaults
 func (deets *NetworkDeets) DefineSimVariables() { // TODO(refactor): Remove a lot
-	deets.Params.Params = ParamSets
+	deets.Params.Params = createParams(gConfig)
 
 	deets.Time.Defaults()
 	deets.MinusCycles = 150

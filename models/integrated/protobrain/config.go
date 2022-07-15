@@ -15,6 +15,15 @@ type Config struct {
 	LIFETIME      int32 // how many times the world will call step before we exit
 	INTERNAL_PORT int32
 	TESTFILE      string // location of sample data to test the neural network, and performance characteristics
+
+	//network hyperparameters
+	ACTAVG_INIT float64 //
+	LRATE       float64 //scales the amount of weight change
+	//
+	//LearningRate
+	//ActAvg
+	//
+
 }
 
 func (config *Config) Load() {
@@ -39,4 +48,7 @@ func (config *Config) setDefaults() {
 	config.LIFETIME = 100
 	config.INTERNAL_PORT = 9090
 	config.TESTFILE = "testdata.csv"
+
+	config.LRATE = .1
+	config.ACTAVG_INIT = 0.06
 }
