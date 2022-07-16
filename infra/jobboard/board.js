@@ -1,4 +1,7 @@
 
+import { SERVER_URL } from "./config.js";
+console.log("server url is", SERVER_URL)
+
 const gServerURL = "http://localhost:8000/jobczar"; // /JobCzar
 
 // thrift client that talks to the server
