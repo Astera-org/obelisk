@@ -1,5 +1,9 @@
 
-const gServerURL = "http://localhost:8000/jobczar"; // /JobCzar
+const gServerURLLocal = "http://localhost:8000/jobczar"; // localhost jobczar
+const gServerURLProd = "http://FILL.THIS.IN/jobczar"; // production JobCzar
+
+// toggle between localhost and prod
+let local = true;
 
 // thrift client that talks to the server
 let gClient = null;
@@ -10,7 +14,9 @@ let gClient = null;
 
 function getClient() {
     if (gClient == null) {
-        const transport = new Thrift.TXHRTransport(gServerURL, {useCORS: true});
+        console.log("getClient local,", local);
+        const address = local ? gServerURLLocal : gServerURLProd;
+        const transport = new Thrift.TXHRTransport(address, {useCORS: true});
         const protocol = new Thrift.Protocol(transport);
         gClient = new JobCzarClient(protocol);
     }
@@ -130,12 +136,35 @@ function getBinInfos() {
     });
 }
 
+function fetchData() {
+    queryJobs();
+    getBinInfos();
+}
+
+function setServerText() {
+    const serverText = $("#serverText");
+    serverText.text(local ? "Localhost" : "Production");
+}
+
 $(function() {
     console.log("document ready");
 
-    queryJobs();
+    // setup server toggle
+    const serverToggleCb = $("#serverToggleCheckbox");
+    const isChecked = serverToggleCb.is(':checked');
+    // the browser saves the last state of the checkbox so set it based on it
+    local = !isChecked;
+    setServerText(isChecked);
 
-    getBinInfos();
+    fetchData();
+
+    $("#serverToggle").click(function (event) {
+        local = !local;
+        // reset the client to point to the new address
+        gClient = null;
+        setServerText();
+        fetchData();
+    });
 
     // setup add job form
     $("#add_job_form").submit(function(event) {
