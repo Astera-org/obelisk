@@ -1002,7 +1002,7 @@ JobCzar_queryJobs_result = function(args) {
   this.success = null;
   if (args) {
     if (args.success !== undefined && args.success !== null) {
-      this.success = Thrift.copyList(args.success, [Thrift.copyMap, null]);
+      this.success = Thrift.copyList(args.success, [JobInfo]);
     }
   }
 };
@@ -1024,22 +1024,8 @@ JobCzar_queryJobs_result.prototype.read = function(input) {
         var _size5 = _rtmp36.size || 0;
         for (var _i7 = 0; _i7 < _size5; ++_i7) {
           var elem8 = null;
-          elem8 = {};
-          var _rtmp310 = input.readMapBegin();
-          var _size9 = _rtmp310.size || 0;
-          for (var _i11 = 0; _i11 < _size9; ++_i11) {
-            if (_i11 > 0 ) {
-              if (input.rstack.length > input.rpos[input.rpos.length -1] + 1) {
-                input.rstack.pop();
-              }
-            }
-            var key12 = null;
-            var val13 = null;
-            key12 = input.readString().value;
-            val13 = input.readString().value;
-            elem8[key12] = val13;
-          }
-          input.readMapEnd();
+          elem8 = new JobInfo();
+          elem8.read(input);
           this.success.push(elem8);
         }
         input.readListEnd();
@@ -1063,19 +1049,11 @@ JobCzar_queryJobs_result.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_queryJobs_result');
   if (this.success !== null && this.success !== undefined) {
     output.writeFieldBegin('success', Thrift.Type.LIST, 0);
-    output.writeListBegin(Thrift.Type.MAP, this.success.length);
-    for (var iter14 in this.success) {
-      if (this.success.hasOwnProperty(iter14)) {
-        iter14 = this.success[iter14];
-        output.writeMapBegin(Thrift.Type.STRING, Thrift.Type.STRING, Thrift.objectLength(iter14));
-        for (var kiter15 in iter14) {
-          if (iter14.hasOwnProperty(kiter15)) {
-            var viter16 = iter14[kiter15];
-            output.writeString(kiter15);
-            output.writeString(viter16);
-          }
-        }
-        output.writeMapEnd();
+    output.writeListBegin(Thrift.Type.STRUCT, this.success.length);
+    for (var iter9 in this.success) {
+      if (this.success.hasOwnProperty(iter9)) {
+        iter9 = this.success[iter9];
+        iter9.write(output);
       }
     }
     output.writeListEnd();

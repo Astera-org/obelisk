@@ -43,6 +43,30 @@ func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	return &binInfo
 }
 
+func (db *Database) QueryJobs() ([]*infra.JobInfo, error) {
+	sql := fmt.Sprintf("SELECT * from jobs order by job_id desc LIMIT 1000")
+	rows, err := gDatabase.db.Query(sql)
+	if err != nil {
+		log.Error(err)
+		return nil, err
+	}
+
+	res := make([]*infra.JobInfo, 0)
+	for rows.Next() {
+		ji := infra.JobInfo{}
+		err := rows.Scan(&ji.JobID, &ji.UserID, &ji.SearchID, &ji.Status, &ji.Priority,
+			&ji.Callback, &ji.TimeAdded, &ji.AgentID, &ji.WorldID, &ji.AgentParam, &ji.WorldParam,
+			&ji.Note, &ji.BailThreshold, &ji.WorkerName, &ji.InstanceName, &ji.TimeHanded,
+			&ji.Seconds, &ji.Steps, &ji.Cycles, &ji.Bailed, &ji.Score)
+		if err == nil {
+			res = append(res, &ji)
+		} else {
+			log.Error(err)
+		}
+	}
+	return res, nil
+}
+
 func (db *Database) GetBinInfos() ([]*infra.BinInfo, error) {
 	sql := fmt.Sprintf(
 		`SELECT bin_id, name, version, package_hash, time_added, type, status
