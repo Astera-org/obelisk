@@ -1,6 +1,6 @@
 
 const gServerURLLocal = "http://localhost:8000/jobczar"; // localhost jobczar
-const gServerURLProd = "http://FILL.THIS.IN/jobczar"; // production JobCzar
+const gServerURLProd = "http://192.168.1.238/jobczar"; // production JobCzar
 
 // toggle between localhost and prod
 let local = true;
