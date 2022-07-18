@@ -49,13 +49,14 @@ func main() {
 
 	gDatabase.Connect()
 
-	if gConfig.IS_LOCALHOST {
-		// this is just a hack for localhost testing
-		c := cors.New(cors.Options{
-			AllowedOrigins: []string{"*"},
-		})
-		goji.Use(c.Handler)
-	}
+	// TODO: enable this once we run an actual web server for jobboard
+	//if gConfig.IS_LOCALHOST {
+	// this is just a hack for localhost testing
+	c := cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+	})
+	goji.Use(c.Handler)
+	//}
 
 	handler := RequestHandler{}
 	server := MakeServer(handler)
