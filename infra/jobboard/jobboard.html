@@ -14,6 +14,15 @@
         <script src="../genjs/JobCzar.js"></script>
         <script src="board.js"></script>
 
+        <!-- Alerts -->
+        <div class="alert alert-success" style="display: none" role="alert">
+            This is a success alert—check it out!
+        </div>
+        <div class="alert alert-danger" style="display:none" role="alert">
+            This is a danger alert—check it out!
+        </div>
+
+        <!-- Server toggle -->
         <label class="switch">
             <input type="checkbox" id="serverToggleCheckbox">
             <span class="slider round" id="serverToggle"></span>
@@ -22,6 +31,7 @@
 
         <div class="container">Match idle workers with rewarding work.</div>
 
+        <!-- Raw sql -->
         <form id="submit_sql_form">
             <div class="form-group">
                 <label for="sqlString">Sql string</label>
