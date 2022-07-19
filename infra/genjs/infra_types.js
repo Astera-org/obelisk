@@ -279,36 +279,36 @@ ResultJob.prototype.write = function(output) {
 };
 
 JobInfo = function(args) {
-  this.jobID = null;
-  this.userID = null;
-  this.searchID = null;
+  this.job_id = null;
+  this.user_id = null;
+  this.search_id = null;
   this.status = null;
   this.priority = null;
   this.callback = null;
-  this.timeAdded = null;
-  this.agentID = null;
-  this.worldID = null;
-  this.agentParam = null;
-  this.worldParam = null;
+  this.time_added = null;
+  this.agent_id = null;
+  this.world_id = null;
+  this.agent_param = null;
+  this.world_param = null;
   this.note = null;
-  this.bailThreshold = null;
-  this.workerName = null;
-  this.instanceName = null;
-  this.timeHanded = null;
+  this.bail_threshold = null;
+  this.worker_name = null;
+  this.instance_name = null;
+  this.time_handed = null;
   this.seconds = null;
   this.steps = null;
   this.cycles = null;
   this.bailed = null;
   this.score = null;
   if (args) {
-    if (args.jobID !== undefined && args.jobID !== null) {
-      this.jobID = args.jobID;
+    if (args.job_id !== undefined && args.job_id !== null) {
+      this.job_id = args.job_id;
     }
-    if (args.userID !== undefined && args.userID !== null) {
-      this.userID = args.userID;
+    if (args.user_id !== undefined && args.user_id !== null) {
+      this.user_id = args.user_id;
     }
-    if (args.searchID !== undefined && args.searchID !== null) {
-      this.searchID = args.searchID;
+    if (args.search_id !== undefined && args.search_id !== null) {
+      this.search_id = args.search_id;
     }
     if (args.status !== undefined && args.status !== null) {
       this.status = args.status;
@@ -319,35 +319,35 @@ JobInfo = function(args) {
     if (args.callback !== undefined && args.callback !== null) {
       this.callback = args.callback;
     }
-    if (args.timeAdded !== undefined && args.timeAdded !== null) {
-      this.timeAdded = args.timeAdded;
+    if (args.time_added !== undefined && args.time_added !== null) {
+      this.time_added = args.time_added;
     }
-    if (args.agentID !== undefined && args.agentID !== null) {
-      this.agentID = args.agentID;
+    if (args.agent_id !== undefined && args.agent_id !== null) {
+      this.agent_id = args.agent_id;
     }
-    if (args.worldID !== undefined && args.worldID !== null) {
-      this.worldID = args.worldID;
+    if (args.world_id !== undefined && args.world_id !== null) {
+      this.world_id = args.world_id;
     }
-    if (args.agentParam !== undefined && args.agentParam !== null) {
-      this.agentParam = args.agentParam;
+    if (args.agent_param !== undefined && args.agent_param !== null) {
+      this.agent_param = args.agent_param;
     }
-    if (args.worldParam !== undefined && args.worldParam !== null) {
-      this.worldParam = args.worldParam;
+    if (args.world_param !== undefined && args.world_param !== null) {
+      this.world_param = args.world_param;
     }
     if (args.note !== undefined && args.note !== null) {
       this.note = args.note;
     }
-    if (args.bailThreshold !== undefined && args.bailThreshold !== null) {
-      this.bailThreshold = args.bailThreshold;
+    if (args.bail_threshold !== undefined && args.bail_threshold !== null) {
+      this.bail_threshold = args.bail_threshold;
     }
-    if (args.workerName !== undefined && args.workerName !== null) {
-      this.workerName = args.workerName;
+    if (args.worker_name !== undefined && args.worker_name !== null) {
+      this.worker_name = args.worker_name;
     }
-    if (args.instanceName !== undefined && args.instanceName !== null) {
-      this.instanceName = args.instanceName;
+    if (args.instance_name !== undefined && args.instance_name !== null) {
+      this.instance_name = args.instance_name;
     }
-    if (args.timeHanded !== undefined && args.timeHanded !== null) {
-      this.timeHanded = args.timeHanded;
+    if (args.time_handed !== undefined && args.time_handed !== null) {
+      this.time_handed = args.time_handed;
     }
     if (args.seconds !== undefined && args.seconds !== null) {
       this.seconds = args.seconds;
@@ -379,21 +379,21 @@ JobInfo.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.jobID = input.readI32().value;
+        this.job_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.I32) {
-        this.userID = input.readI32().value;
+        this.user_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.I32) {
-        this.searchID = input.readI32().value;
+        this.search_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -421,35 +421,35 @@ JobInfo.prototype.read = function(input) {
       break;
       case 7:
       if (ftype == Thrift.Type.STRING) {
-        this.timeAdded = input.readString().value;
+        this.time_added = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 8:
       if (ftype == Thrift.Type.I32) {
-        this.agentID = input.readI32().value;
+        this.agent_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 9:
       if (ftype == Thrift.Type.I32) {
-        this.worldID = input.readI32().value;
+        this.world_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 10:
       if (ftype == Thrift.Type.STRING) {
-        this.agentParam = input.readString().value;
+        this.agent_param = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 11:
       if (ftype == Thrift.Type.STRING) {
-        this.worldParam = input.readString().value;
+        this.world_param = input.readString().value;
       } else {
         input.skip(ftype);
       }
@@ -463,28 +463,28 @@ JobInfo.prototype.read = function(input) {
       break;
       case 13:
       if (ftype == Thrift.Type.DOUBLE) {
-        this.bailThreshold = input.readDouble().value;
+        this.bail_threshold = input.readDouble().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 14:
       if (ftype == Thrift.Type.STRING) {
-        this.workerName = input.readString().value;
+        this.worker_name = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 15:
       if (ftype == Thrift.Type.STRING) {
-        this.instanceName = input.readString().value;
+        this.instance_name = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 16:
       if (ftype == Thrift.Type.STRING) {
-        this.timeHanded = input.readString().value;
+        this.time_handed = input.readString().value;
       } else {
         input.skip(ftype);
       }
@@ -535,19 +535,19 @@ JobInfo.prototype.read = function(input) {
 
 JobInfo.prototype.write = function(output) {
   output.writeStructBegin('JobInfo');
-  if (this.jobID !== null && this.jobID !== undefined) {
-    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
-    output.writeI32(this.jobID);
+  if (this.job_id !== null && this.job_id !== undefined) {
+    output.writeFieldBegin('job_id', Thrift.Type.I32, 1);
+    output.writeI32(this.job_id);
     output.writeFieldEnd();
   }
-  if (this.userID !== null && this.userID !== undefined) {
-    output.writeFieldBegin('userID', Thrift.Type.I32, 2);
-    output.writeI32(this.userID);
+  if (this.user_id !== null && this.user_id !== undefined) {
+    output.writeFieldBegin('user_id', Thrift.Type.I32, 2);
+    output.writeI32(this.user_id);
     output.writeFieldEnd();
   }
-  if (this.searchID !== null && this.searchID !== undefined) {
-    output.writeFieldBegin('searchID', Thrift.Type.I32, 3);
-    output.writeI32(this.searchID);
+  if (this.search_id !== null && this.search_id !== undefined) {
+    output.writeFieldBegin('search_id', Thrift.Type.I32, 3);
+    output.writeI32(this.search_id);
     output.writeFieldEnd();
   }
   if (this.status !== null && this.status !== undefined) {
@@ -565,29 +565,29 @@ JobInfo.prototype.write = function(output) {
     output.writeString(this.callback);
     output.writeFieldEnd();
   }
-  if (this.timeAdded !== null && this.timeAdded !== undefined) {
-    output.writeFieldBegin('timeAdded', Thrift.Type.STRING, 7);
-    output.writeString(this.timeAdded);
+  if (this.time_added !== null && this.time_added !== undefined) {
+    output.writeFieldBegin('time_added', Thrift.Type.STRING, 7);
+    output.writeString(this.time_added);
     output.writeFieldEnd();
   }
-  if (this.agentID !== null && this.agentID !== undefined) {
-    output.writeFieldBegin('agentID', Thrift.Type.I32, 8);
-    output.writeI32(this.agentID);
+  if (this.agent_id !== null && this.agent_id !== undefined) {
+    output.writeFieldBegin('agent_id', Thrift.Type.I32, 8);
+    output.writeI32(this.agent_id);
     output.writeFieldEnd();
   }
-  if (this.worldID !== null && this.worldID !== undefined) {
-    output.writeFieldBegin('worldID', Thrift.Type.I32, 9);
-    output.writeI32(this.worldID);
+  if (this.world_id !== null && this.world_id !== undefined) {
+    output.writeFieldBegin('world_id', Thrift.Type.I32, 9);
+    output.writeI32(this.world_id);
     output.writeFieldEnd();
   }
-  if (this.agentParam !== null && this.agentParam !== undefined) {
-    output.writeFieldBegin('agentParam', Thrift.Type.STRING, 10);
-    output.writeString(this.agentParam);
+  if (this.agent_param !== null && this.agent_param !== undefined) {
+    output.writeFieldBegin('agent_param', Thrift.Type.STRING, 10);
+    output.writeString(this.agent_param);
     output.writeFieldEnd();
   }
-  if (this.worldParam !== null && this.worldParam !== undefined) {
-    output.writeFieldBegin('worldParam', Thrift.Type.STRING, 11);
-    output.writeString(this.worldParam);
+  if (this.world_param !== null && this.world_param !== undefined) {
+    output.writeFieldBegin('world_param', Thrift.Type.STRING, 11);
+    output.writeString(this.world_param);
     output.writeFieldEnd();
   }
   if (this.note !== null && this.note !== undefined) {
@@ -595,24 +595,24 @@ JobInfo.prototype.write = function(output) {
     output.writeString(this.note);
     output.writeFieldEnd();
   }
-  if (this.bailThreshold !== null && this.bailThreshold !== undefined) {
-    output.writeFieldBegin('bailThreshold', Thrift.Type.DOUBLE, 13);
-    output.writeDouble(this.bailThreshold);
+  if (this.bail_threshold !== null && this.bail_threshold !== undefined) {
+    output.writeFieldBegin('bail_threshold', Thrift.Type.DOUBLE, 13);
+    output.writeDouble(this.bail_threshold);
     output.writeFieldEnd();
   }
-  if (this.workerName !== null && this.workerName !== undefined) {
-    output.writeFieldBegin('workerName', Thrift.Type.STRING, 14);
-    output.writeString(this.workerName);
+  if (this.worker_name !== null && this.worker_name !== undefined) {
+    output.writeFieldBegin('worker_name', Thrift.Type.STRING, 14);
+    output.writeString(this.worker_name);
     output.writeFieldEnd();
   }
-  if (this.instanceName !== null && this.instanceName !== undefined) {
-    output.writeFieldBegin('instanceName', Thrift.Type.STRING, 15);
-    output.writeString(this.instanceName);
+  if (this.instance_name !== null && this.instance_name !== undefined) {
+    output.writeFieldBegin('instance_name', Thrift.Type.STRING, 15);
+    output.writeString(this.instance_name);
     output.writeFieldEnd();
   }
-  if (this.timeHanded !== null && this.timeHanded !== undefined) {
-    output.writeFieldBegin('timeHanded', Thrift.Type.STRING, 16);
-    output.writeString(this.timeHanded);
+  if (this.time_handed !== null && this.time_handed !== undefined) {
+    output.writeFieldBegin('time_handed', Thrift.Type.STRING, 16);
+    output.writeString(this.time_handed);
     output.writeFieldEnd();
   }
   if (this.seconds !== null && this.seconds !== undefined) {

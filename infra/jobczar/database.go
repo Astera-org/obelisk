@@ -40,32 +40,18 @@ func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 }
 
 func (db *Database) QueryJobs() ([]*infra.JobInfo, error) {
-	sql := fmt.Sprintf("SELECT * from jobs order by job_id desc LIMIT 1000")
-	rows, err := gDatabase.db.Query(sql)
+	query := "SELECT * from jobs order by job_id desc LIMIT 1000"
+	res := []*infra.JobInfo{}
+	err := gDatabase.db.Select(&res, query)
 	if err != nil {
 		log.Error(err)
 		return nil, err
-	}
-
-	res := make([]*infra.JobInfo, 0)
-	for rows.Next() {
-		ji := infra.JobInfo{}
-		err := rows.Scan(&ji.JobID, &ji.UserID, &ji.SearchID, &ji.Status, &ji.Priority,
-			&ji.Callback, &ji.TimeAdded, &ji.AgentID, &ji.WorldID, &ji.AgentParam, &ji.WorldParam,
-			&ji.Note, &ji.BailThreshold, &ji.WorkerName, &ji.InstanceName, &ji.TimeHanded,
-			&ji.Seconds, &ji.Steps, &ji.Cycles, &ji.Bailed, &ji.Score)
-		if err == nil {
-			res = append(res, &ji)
-		} else {
-			log.Error(err)
-		}
 	}
 	return res, nil
 }
 
 func (db *Database) GetBinInfos(filterBy string) ([]*infra.BinInfo, error) {
-	query := fmt.Sprintf(
-		`SELECT * FROM binaries order by time_added desc`)
+	query := "SELECT * FROM binaries order by time_added desc"
 
 	if filterBy != "" {
 		query = fmt.Sprintf(

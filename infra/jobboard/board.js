@@ -46,12 +46,12 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
 function toHtml(ji) {
     return `
       <tr>
-        <td>${ji.jobID}</td>
-        <td>${ji.jobID}</td>
-        <td>${ji.worldID}</td>
+        <td>${ji.job_id}</td>
+        <td>${ji.agent_id}</td>
+        <td>${ji.world_id}</td>
         <td>${ji.score}</td>
         <td>${toStatus(ji.status)}</td>
-        <td><button type="button" class="btn" id="${ji.jobID}">cancel</button></td>
+        <td><button type="button" class="btn" id="${ji.job_id}">cancel</button></td>
         <!-- TODO: add more columns, cancel job, etc -->
        </tr>
      `;
