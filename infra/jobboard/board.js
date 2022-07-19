@@ -32,11 +32,11 @@ function runSql(sqlString) {
     });
 }
 
-function addJob(agentID, agentCfg, worldID, worldCfg, note) {
-    console.log("addJob agent:", agentID, "agent config:", agentCfg, "world:",
-        worldID, "world config:", worldCfg, "note:", note);
+function addJob(agent_id, agent_param, world_id, world_param, note) {
+    console.log("addJob agent:", agent_id, "agent config:", agent_param, "world:",
+        world_id, "world config:", world_param, "note:", note);
     const client = getClient();
-    client.addJob(agentID, worldID, agentCfg, worldCfg, -1, -1, note,function (result) {
+    client.addJob(agent_id, world_id, agent_param, world_param, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
     });
@@ -114,16 +114,16 @@ function queryJobs() {
 
 function populateOptions(selectElem, binInfos) {
     binInfos.forEach(function (bi) {
-        selectElem.append('<option value="' + bi.binID + '">' + bi.name + '</option>');
+        selectElem.append('<option value="' + bi.bin_id + '">' + bi.name + '</option>');
     });
 }
 
 function getBinInfos() {
     const client = getClient();
     // status=0 means current
-    const filterBy = "status=0";
+    const filter_by = "status=0";
 
-    client.getBinInfos(filterBy,function (binInfos) {
+    client.getBinInfos(filter_by,function (binInfos) {
         if (binInfos instanceof Error) {
             errorAlert("getBinInfos server error: ", binInfos);
         } else {
@@ -191,14 +191,14 @@ $(function() {
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
         const agentSelect = $("#agent");
-        const agentID = agentSelect.val();
-        const agentCfg = $("#agent-config").val();
+        const agent_id = agentSelect.val();
+        const agent_param = $("#agent-config").val();
         const worldSelect = $("#world");
-        const worldID = worldSelect.val();
-        const worldCfg = $("#world-config").val();
+        const world_id = worldSelect.val();
+        const world_param = $("#world-config").val();
         const note = $("#note").val();
 
-        addJob(agentID, agentCfg, worldID, worldCfg, note);
+        addJob(agent_id, agent_param, world_id, world_param, note);
     });
 
     // setup raw sql form

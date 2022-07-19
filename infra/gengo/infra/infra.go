@@ -21,14 +21,14 @@ var _ = bytes.Equal
 //  - JobID
 //  - AgentID
 //  - WorldID
-//  - AgentCfg
-//  - WorldCfg
+//  - AgentParam
+//  - WorldParam
 type Job struct {
-  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
-  AgentID int32 `thrift:"agentID,2" db:"agentID" json:"agentID"`
-  WorldID int32 `thrift:"worldID,3" db:"worldID" json:"worldID"`
-  AgentCfg string `thrift:"agentCfg,4" db:"agentCfg" json:"agentCfg"`
-  WorldCfg string `thrift:"worldCfg,5" db:"worldCfg" json:"worldCfg"`
+  JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
+  AgentID int32 `thrift:"agent_id,2" db:"agent_id" json:"agent_id"`
+  WorldID int32 `thrift:"world_id,3" db:"world_id" json:"world_id"`
+  AgentParam string `thrift:"agent_param,4" db:"agent_param" json:"agent_param"`
+  WorldParam string `thrift:"world_param,5" db:"world_param" json:"world_param"`
 }
 
 func NewJob() *Job {
@@ -48,12 +48,12 @@ func (p *Job) GetWorldID() int32 {
   return p.WorldID
 }
 
-func (p *Job) GetAgentCfg() string {
-  return p.AgentCfg
+func (p *Job) GetAgentParam() string {
+  return p.AgentParam
 }
 
-func (p *Job) GetWorldCfg() string {
-  return p.WorldCfg
+func (p *Job) GetWorldParam() string {
+  return p.WorldParam
 }
 func (p *Job) Read(ctx context.Context, iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(ctx); err != nil {
@@ -164,7 +164,7 @@ func (p *Job)  ReadField4(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 4: ", err)
 } else {
-  p.AgentCfg = v
+  p.AgentParam = v
 }
   return nil
 }
@@ -173,7 +173,7 @@ func (p *Job)  ReadField5(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 5: ", err)
 } else {
-  p.WorldCfg = v
+  p.WorldParam = v
 }
   return nil
 }
@@ -196,52 +196,52 @@ func (p *Job) Write(ctx context.Context, oprot thrift.TProtocol) error {
 }
 
 func (p *Job) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.job_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:job_id: ", p), err) }
   return err
 }
 
 func (p *Job) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "agentID", thrift.I32, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:agentID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "agent_id", thrift.I32, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:agent_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.AgentID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.agentID (2) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.agent_id (2) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:agentID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:agent_id: ", p), err) }
   return err
 }
 
 func (p *Job) writeField3(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "worldID", thrift.I32, 3); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:worldID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "world_id", thrift.I32, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:world_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.WorldID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.worldID (3) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.world_id (3) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:worldID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:world_id: ", p), err) }
   return err
 }
 
 func (p *Job) writeField4(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "agentCfg", thrift.STRING, 4); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:agentCfg: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.AgentCfg)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.agentCfg (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "agent_param", thrift.STRING, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:agent_param: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.AgentParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.agent_param (4) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:agentCfg: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:agent_param: ", p), err) }
   return err
 }
 
 func (p *Job) writeField5(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "worldCfg", thrift.STRING, 5); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:worldCfg: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.WorldCfg)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.worldCfg (5) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "world_param", thrift.STRING, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:world_param: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.WorldParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.world_param (5) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:worldCfg: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:world_param: ", p), err) }
   return err
 }
 
@@ -254,8 +254,8 @@ func (p *Job) Equals(other *Job) bool {
   if p.JobID != other.JobID { return false }
   if p.AgentID != other.AgentID { return false }
   if p.WorldID != other.WorldID { return false }
-  if p.AgentCfg != other.AgentCfg { return false }
-  if p.WorldCfg != other.WorldCfg { return false }
+  if p.AgentParam != other.AgentParam { return false }
+  if p.WorldParam != other.WorldParam { return false }
   return true
 }
 
@@ -276,14 +276,14 @@ func (p *Job) String() string {
 //  - WorkerName
 //  - InstanceName
 type ResultJob struct {
-  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
+  JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
   Status int32 `thrift:"status,2" db:"status" json:"status"`
   Seconds int32 `thrift:"seconds,3" db:"seconds" json:"seconds"`
   Steps int32 `thrift:"steps,4" db:"steps" json:"steps"`
   Cycles int32 `thrift:"cycles,5" db:"cycles" json:"cycles"`
   Score float64 `thrift:"score,6" db:"score" json:"score"`
-  WorkerName string `thrift:"workerName,7" db:"workerName" json:"workerName"`
-  InstanceName string `thrift:"instanceName,8" db:"instanceName" json:"instanceName"`
+  WorkerName string `thrift:"worker_name,7" db:"worker_name" json:"worker_name"`
+  InstanceName string `thrift:"instance_name,8" db:"instance_name" json:"instance_name"`
 }
 
 func NewResultJob() *ResultJob {
@@ -523,12 +523,12 @@ func (p *ResultJob) Write(ctx context.Context, oprot thrift.TProtocol) error {
 }
 
 func (p *ResultJob) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.job_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:job_id: ", p), err) }
   return err
 }
 
@@ -583,22 +583,22 @@ func (p *ResultJob) writeField6(ctx context.Context, oprot thrift.TProtocol) (er
 }
 
 func (p *ResultJob) writeField7(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "workerName", thrift.STRING, 7); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:workerName: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "worker_name", thrift.STRING, 7); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:worker_name: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.WorkerName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.workerName (7) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.worker_name (7) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:workerName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:worker_name: ", p), err) }
   return err
 }
 
 func (p *ResultJob) writeField8(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "instanceName", thrift.STRING, 8); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 8:instanceName: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "instance_name", thrift.STRING, 8); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 8:instance_name: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.InstanceName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.instanceName (8) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.instance_name (8) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 8:instanceName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 8:instance_name: ", p), err) }
   return err
 }
 
@@ -635,11 +635,11 @@ func (p *ResultJob) String() string {
 //  - Type
 //  - Status
 type BinInfo struct {
-  BinID int32 `thrift:"binID,1" db:"binID" json:"binID"`
+  BinID int32 `thrift:"bin_id,1" db:"bin_id" json:"bin_id"`
   Name string `thrift:"name,2" db:"name" json:"name"`
   Version string `thrift:"version,3" db:"version" json:"version"`
-  PackageHash string `thrift:"packageHash,4" db:"packageHash" json:"packageHash"`
-  TimeAdded string `thrift:"timeAdded,5" db:"timeAdded" json:"timeAdded"`
+  PackageHash string `thrift:"package_hash,4" db:"package_hash" json:"package_hash"`
+  TimeAdded string `thrift:"time_added,5" db:"time_added" json:"time_added"`
   Type int32 `thrift:"type,6" db:"type" json:"type"`
   Status int32 `thrift:"status,7" db:"status" json:"status"`
 }
@@ -857,12 +857,12 @@ func (p *BinInfo) Write(ctx context.Context, oprot thrift.TProtocol) error {
 }
 
 func (p *BinInfo) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "binID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:binID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "bin_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:bin_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.BinID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.binID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.bin_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:binID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:bin_id: ", p), err) }
   return err
 }
 
@@ -887,22 +887,22 @@ func (p *BinInfo) writeField3(ctx context.Context, oprot thrift.TProtocol) (err 
 }
 
 func (p *BinInfo) writeField4(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "packageHash", thrift.STRING, 4); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:packageHash: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "package_hash", thrift.STRING, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:package_hash: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.PackageHash)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.packageHash (4) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.package_hash (4) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:packageHash: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:package_hash: ", p), err) }
   return err
 }
 
 func (p *BinInfo) writeField5(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "timeAdded", thrift.STRING, 5); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:timeAdded: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "time_added", thrift.STRING, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:time_added: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.TimeAdded)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.timeAdded (5) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.time_added (5) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:timeAdded: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:time_added: ", p), err) }
   return err
 }
 
@@ -953,38 +953,38 @@ type JobCzar interface {
   // Parameters:
   //  - WorkerName
   //  - InstanceName
-  FetchWork(ctx context.Context, workerName string, instanceName string) (_r *Job, _err error)
+  FetchWork(ctx context.Context, worker_name string, instance_name string) (_r *Job, _err error)
   // Parameters:
   //  - Result_
   SubmitResult_(ctx context.Context, result *ResultJob) (_r bool, _err error)
   // Parameters:
   //  - AgentID
   //  - WorldID
-  //  - AgentCfg
-  //  - WorldCfg
+  //  - AgentParam
+  //  - WorldParam
   //  - Priority
   //  - UserID
   //  - Note
-  AddJob(ctx context.Context, agentID int32, worldID int32, agentCfg string, worldCfg string, priority int32, userID int32, note string) (_r int32, _err error)
+  AddJob(ctx context.Context, agent_id int32, world_id int32, agent_param string, world_param string, priority int32, user_id int32, note string) (_r int32, _err error)
   // Parameters:
   //  - JobID
-  FetchRunResults(ctx context.Context, jobID int32) (_err error)
+  FetchRunResults(ctx context.Context, job_id int32) (_err error)
   // Parameters:
   //  - JobID
   //  - Note
-  AppendNote(ctx context.Context, jobID int32, note string) (_err error)
+  AppendNote(ctx context.Context, job_id int32, note string) (_err error)
   // Parameters:
   //  - BinID
-  GetBinInfo(ctx context.Context, binID int32) (_r *BinInfo, _err error)
+  GetBinInfo(ctx context.Context, bin_id int32) (_r *BinInfo, _err error)
   // Parameters:
   //  - FilterBy
-  GetBinInfos(ctx context.Context, filterBy string) (_r []*BinInfo, _err error)
+  GetBinInfos(ctx context.Context, filter_by string) (_r []*BinInfo, _err error)
   // Parameters:
   //  - Query
   RunSQL(ctx context.Context, query string) (_r string, _err error)
   // Parameters:
   //  - JobID
-  RemoveJob(ctx context.Context, jobID int32) (_r bool, _err error)
+  RemoveJob(ctx context.Context, job_id int32) (_r bool, _err error)
   QueryJobs(ctx context.Context) (_r []map[string]string, _err error)
 }
 
@@ -1026,10 +1026,10 @@ func (p *JobCzarClient) SetLastResponseMeta_(meta thrift.ResponseMeta) {
 // Parameters:
 //  - WorkerName
 //  - InstanceName
-func (p *JobCzarClient) FetchWork(ctx context.Context, workerName string, instanceName string) (_r *Job, _err error) {
+func (p *JobCzarClient) FetchWork(ctx context.Context, worker_name string, instance_name string) (_r *Job, _err error) {
   var _args0 JobCzarFetchWorkArgs
-  _args0.WorkerName = workerName
-  _args0.InstanceName = instanceName
+  _args0.WorkerName = worker_name
+  _args0.InstanceName = instance_name
   var _result2 JobCzarFetchWorkResult
   var _meta1 thrift.ResponseMeta
   _meta1, _err = p.Client_().Call(ctx, "fetchWork", &_args0, &_result2)
@@ -1061,19 +1061,19 @@ func (p *JobCzarClient) SubmitResult_(ctx context.Context, result *ResultJob) (_
 // Parameters:
 //  - AgentID
 //  - WorldID
-//  - AgentCfg
-//  - WorldCfg
+//  - AgentParam
+//  - WorldParam
 //  - Priority
 //  - UserID
 //  - Note
-func (p *JobCzarClient) AddJob(ctx context.Context, agentID int32, worldID int32, agentCfg string, worldCfg string, priority int32, userID int32, note string) (_r int32, _err error) {
+func (p *JobCzarClient) AddJob(ctx context.Context, agent_id int32, world_id int32, agent_param string, world_param string, priority int32, user_id int32, note string) (_r int32, _err error) {
   var _args7 JobCzarAddJobArgs
-  _args7.AgentID = agentID
-  _args7.WorldID = worldID
-  _args7.AgentCfg = agentCfg
-  _args7.WorldCfg = worldCfg
+  _args7.AgentID = agent_id
+  _args7.WorldID = world_id
+  _args7.AgentParam = agent_param
+  _args7.WorldParam = world_param
   _args7.Priority = priority
-  _args7.UserID = userID
+  _args7.UserID = user_id
   _args7.Note = note
   var _result9 JobCzarAddJobResult
   var _meta8 thrift.ResponseMeta
@@ -1087,9 +1087,9 @@ func (p *JobCzarClient) AddJob(ctx context.Context, agentID int32, worldID int32
 
 // Parameters:
 //  - JobID
-func (p *JobCzarClient) FetchRunResults(ctx context.Context, jobID int32) (_err error) {
+func (p *JobCzarClient) FetchRunResults(ctx context.Context, job_id int32) (_err error) {
   var _args10 JobCzarFetchRunResultsArgs
-  _args10.JobID = jobID
+  _args10.JobID = job_id
   var _result12 JobCzarFetchRunResultsResult
   var _meta11 thrift.ResponseMeta
   _meta11, _err = p.Client_().Call(ctx, "fetchRunResults", &_args10, &_result12)
@@ -1103,9 +1103,9 @@ func (p *JobCzarClient) FetchRunResults(ctx context.Context, jobID int32) (_err 
 // Parameters:
 //  - JobID
 //  - Note
-func (p *JobCzarClient) AppendNote(ctx context.Context, jobID int32, note string) (_err error) {
+func (p *JobCzarClient) AppendNote(ctx context.Context, job_id int32, note string) (_err error) {
   var _args13 JobCzarAppendNoteArgs
-  _args13.JobID = jobID
+  _args13.JobID = job_id
   _args13.Note = note
   var _result15 JobCzarAppendNoteResult
   var _meta14 thrift.ResponseMeta
@@ -1119,9 +1119,9 @@ func (p *JobCzarClient) AppendNote(ctx context.Context, jobID int32, note string
 
 // Parameters:
 //  - BinID
-func (p *JobCzarClient) GetBinInfo(ctx context.Context, binID int32) (_r *BinInfo, _err error) {
+func (p *JobCzarClient) GetBinInfo(ctx context.Context, bin_id int32) (_r *BinInfo, _err error) {
   var _args16 JobCzarGetBinInfoArgs
-  _args16.BinID = binID
+  _args16.BinID = bin_id
   var _result18 JobCzarGetBinInfoResult
   var _meta17 thrift.ResponseMeta
   _meta17, _err = p.Client_().Call(ctx, "getBinInfo", &_args16, &_result18)
@@ -1137,9 +1137,9 @@ func (p *JobCzarClient) GetBinInfo(ctx context.Context, binID int32) (_r *BinInf
 
 // Parameters:
 //  - FilterBy
-func (p *JobCzarClient) GetBinInfos(ctx context.Context, filterBy string) (_r []*BinInfo, _err error) {
+func (p *JobCzarClient) GetBinInfos(ctx context.Context, filter_by string) (_r []*BinInfo, _err error) {
   var _args20 JobCzarGetBinInfosArgs
-  _args20.FilterBy = filterBy
+  _args20.FilterBy = filter_by
   var _result22 JobCzarGetBinInfosResult
   var _meta21 thrift.ResponseMeta
   _meta21, _err = p.Client_().Call(ctx, "getBinInfos", &_args20, &_result22)
@@ -1167,9 +1167,9 @@ func (p *JobCzarClient) RunSQL(ctx context.Context, query string) (_r string, _e
 
 // Parameters:
 //  - JobID
-func (p *JobCzarClient) RemoveJob(ctx context.Context, jobID int32) (_r bool, _err error) {
+func (p *JobCzarClient) RemoveJob(ctx context.Context, job_id int32) (_r bool, _err error) {
   var _args26 JobCzarRemoveJobArgs
-  _args26.JobID = jobID
+  _args26.JobID = job_id
   var _result28 JobCzarRemoveJobResult
   var _meta27 thrift.ResponseMeta
   _meta27, _err = p.Client_().Call(ctx, "removeJob", &_args26, &_result28)
@@ -1447,7 +1447,7 @@ func (p *jobCzarProcessorAddJob) Process(ctx context.Context, seqId int32, iprot
 
   result := JobCzarAddJobResult{}
   var retval int32
-  if retval, err2 = p.handler.AddJob(ctx, args.AgentID, args.WorldID, args.AgentCfg, args.WorldCfg, args.Priority, args.UserID, args.Note); err2 != nil {
+  if retval, err2 = p.handler.AddJob(ctx, args.AgentID, args.WorldID, args.AgentParam, args.WorldParam, args.Priority, args.UserID, args.Note); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
       return false, thrift.WrapTException(err2)
@@ -2034,8 +2034,8 @@ func (p *jobCzarProcessorQueryJobs) Process(ctx context.Context, seqId int32, ip
 //  - WorkerName
 //  - InstanceName
 type JobCzarFetchWorkArgs struct {
-  WorkerName string `thrift:"workerName,1" db:"workerName" json:"workerName"`
-  InstanceName string `thrift:"instanceName,2" db:"instanceName" json:"instanceName"`
+  WorkerName string `thrift:"worker_name,1" db:"worker_name" json:"worker_name"`
+  InstanceName string `thrift:"instance_name,2" db:"instance_name" json:"instance_name"`
 }
 
 func NewJobCzarFetchWorkArgs() *JobCzarFetchWorkArgs {
@@ -2131,22 +2131,22 @@ func (p *JobCzarFetchWorkArgs) Write(ctx context.Context, oprot thrift.TProtocol
 }
 
 func (p *JobCzarFetchWorkArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "workerName", thrift.STRING, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:workerName: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "worker_name", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:worker_name: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.WorkerName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.workerName (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.worker_name (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:workerName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:worker_name: ", p), err) }
   return err
 }
 
 func (p *JobCzarFetchWorkArgs) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "instanceName", thrift.STRING, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:instanceName: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "instance_name", thrift.STRING, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:instance_name: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.InstanceName)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.instanceName (2) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.instance_name (2) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:instanceName: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:instance_name: ", p), err) }
   return err
 }
 
@@ -2458,18 +2458,18 @@ func (p *JobCzarSubmitResultResult) String() string {
 // Attributes:
 //  - AgentID
 //  - WorldID
-//  - AgentCfg
-//  - WorldCfg
+//  - AgentParam
+//  - WorldParam
 //  - Priority
 //  - UserID
 //  - Note
 type JobCzarAddJobArgs struct {
-  AgentID int32 `thrift:"agentID,1" db:"agentID" json:"agentID"`
-  WorldID int32 `thrift:"worldID,2" db:"worldID" json:"worldID"`
-  AgentCfg string `thrift:"agentCfg,3" db:"agentCfg" json:"agentCfg"`
-  WorldCfg string `thrift:"worldCfg,4" db:"worldCfg" json:"worldCfg"`
+  AgentID int32 `thrift:"agent_id,1" db:"agent_id" json:"agent_id"`
+  WorldID int32 `thrift:"world_id,2" db:"world_id" json:"world_id"`
+  AgentParam string `thrift:"agent_param,3" db:"agent_param" json:"agent_param"`
+  WorldParam string `thrift:"world_param,4" db:"world_param" json:"world_param"`
   Priority int32 `thrift:"priority,5" db:"priority" json:"priority"`
-  UserID int32 `thrift:"userID,6" db:"userID" json:"userID"`
+  UserID int32 `thrift:"user_id,6" db:"user_id" json:"user_id"`
   Note string `thrift:"note,7" db:"note" json:"note"`
 }
 
@@ -2486,12 +2486,12 @@ func (p *JobCzarAddJobArgs) GetWorldID() int32 {
   return p.WorldID
 }
 
-func (p *JobCzarAddJobArgs) GetAgentCfg() string {
-  return p.AgentCfg
+func (p *JobCzarAddJobArgs) GetAgentParam() string {
+  return p.AgentParam
 }
 
-func (p *JobCzarAddJobArgs) GetWorldCfg() string {
-  return p.WorldCfg
+func (p *JobCzarAddJobArgs) GetWorldParam() string {
+  return p.WorldParam
 }
 
 func (p *JobCzarAddJobArgs) GetPriority() int32 {
@@ -2625,7 +2625,7 @@ func (p *JobCzarAddJobArgs)  ReadField3(ctx context.Context, iprot thrift.TProto
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 3: ", err)
 } else {
-  p.AgentCfg = v
+  p.AgentParam = v
 }
   return nil
 }
@@ -2634,7 +2634,7 @@ func (p *JobCzarAddJobArgs)  ReadField4(ctx context.Context, iprot thrift.TProto
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 4: ", err)
 } else {
-  p.WorldCfg = v
+  p.WorldParam = v
 }
   return nil
 }
@@ -2686,42 +2686,42 @@ func (p *JobCzarAddJobArgs) Write(ctx context.Context, oprot thrift.TProtocol) e
 }
 
 func (p *JobCzarAddJobArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "agentID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:agentID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "agent_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:agent_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.AgentID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.agentID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.agent_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:agentID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:agent_id: ", p), err) }
   return err
 }
 
 func (p *JobCzarAddJobArgs) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "worldID", thrift.I32, 2); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:worldID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "world_id", thrift.I32, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:world_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.WorldID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.worldID (2) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.world_id (2) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:worldID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:world_id: ", p), err) }
   return err
 }
 
 func (p *JobCzarAddJobArgs) writeField3(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "agentCfg", thrift.STRING, 3); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:agentCfg: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.AgentCfg)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.agentCfg (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "agent_param", thrift.STRING, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:agent_param: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.AgentParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.agent_param (3) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:agentCfg: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:agent_param: ", p), err) }
   return err
 }
 
 func (p *JobCzarAddJobArgs) writeField4(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "worldCfg", thrift.STRING, 4); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:worldCfg: ", p), err) }
-  if err := oprot.WriteString(ctx, string(p.WorldCfg)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.worldCfg (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "world_param", thrift.STRING, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:world_param: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.WorldParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.world_param (4) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:worldCfg: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:world_param: ", p), err) }
   return err
 }
 
@@ -2736,12 +2736,12 @@ func (p *JobCzarAddJobArgs) writeField5(ctx context.Context, oprot thrift.TProto
 }
 
 func (p *JobCzarAddJobArgs) writeField6(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "userID", thrift.I32, 6); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:userID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "user_id", thrift.I32, 6); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:user_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.UserID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.userID (6) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.user_id (6) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 6:userID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 6:user_id: ", p), err) }
   return err
 }
 
@@ -2865,7 +2865,7 @@ func (p *JobCzarAddJobResult) String() string {
 // Attributes:
 //  - JobID
 type JobCzarFetchRunResultsArgs struct {
-  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
+  JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
 }
 
 func NewJobCzarFetchRunResultsArgs() *JobCzarFetchRunResultsArgs {
@@ -2937,12 +2937,12 @@ func (p *JobCzarFetchRunResultsArgs) Write(ctx context.Context, oprot thrift.TPr
 }
 
 func (p *JobCzarFetchRunResultsArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.job_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:job_id: ", p), err) }
   return err
 }
 
@@ -3008,7 +3008,7 @@ func (p *JobCzarFetchRunResultsResult) String() string {
 //  - JobID
 //  - Note
 type JobCzarAppendNoteArgs struct {
-  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
+  JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
   Note string `thrift:"note,2" db:"note" json:"note"`
 }
 
@@ -3105,12 +3105,12 @@ func (p *JobCzarAppendNoteArgs) Write(ctx context.Context, oprot thrift.TProtoco
 }
 
 func (p *JobCzarAppendNoteArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.job_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:job_id: ", p), err) }
   return err
 }
 
@@ -3185,7 +3185,7 @@ func (p *JobCzarAppendNoteResult) String() string {
 // Attributes:
 //  - BinID
 type JobCzarGetBinInfoArgs struct {
-  BinID int32 `thrift:"binID,1" db:"binID" json:"binID"`
+  BinID int32 `thrift:"bin_id,1" db:"bin_id" json:"bin_id"`
 }
 
 func NewJobCzarGetBinInfoArgs() *JobCzarGetBinInfoArgs {
@@ -3257,12 +3257,12 @@ func (p *JobCzarGetBinInfoArgs) Write(ctx context.Context, oprot thrift.TProtoco
 }
 
 func (p *JobCzarGetBinInfoArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "binID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:binID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "bin_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:bin_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.BinID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.binID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.bin_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:binID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:bin_id: ", p), err) }
   return err
 }
 
@@ -3376,7 +3376,7 @@ func (p *JobCzarGetBinInfoResult) String() string {
 // Attributes:
 //  - FilterBy
 type JobCzarGetBinInfosArgs struct {
-  FilterBy string `thrift:"filterBy,1" db:"filterBy" json:"filterBy"`
+  FilterBy string `thrift:"filter_by,1" db:"filter_by" json:"filter_by"`
 }
 
 func NewJobCzarGetBinInfosArgs() *JobCzarGetBinInfosArgs {
@@ -3448,12 +3448,12 @@ func (p *JobCzarGetBinInfosArgs) Write(ctx context.Context, oprot thrift.TProtoc
 }
 
 func (p *JobCzarGetBinInfosArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "filterBy", thrift.STRING, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:filterBy: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "filter_by", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:filter_by: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.FilterBy)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.filterBy (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.filter_by (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:filterBy: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:filter_by: ", p), err) }
   return err
 }
 
@@ -3776,7 +3776,7 @@ func (p *JobCzarRunSQLResult) String() string {
 // Attributes:
 //  - JobID
 type JobCzarRemoveJobArgs struct {
-  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
+  JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
 }
 
 func NewJobCzarRemoveJobArgs() *JobCzarRemoveJobArgs {
@@ -3848,12 +3848,12 @@ func (p *JobCzarRemoveJobArgs) Write(ctx context.Context, oprot thrift.TProtocol
 }
 
 func (p *JobCzarRemoveJobArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.job_id (1) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:job_id: ", p), err) }
   return err
 }
 
