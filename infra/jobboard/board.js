@@ -48,11 +48,15 @@ function toHtml(ji) {
       <tr>
         <td>${ji.job_id}</td>
         <td>${ji.agent_id}</td>
+        <td>${ji.agent_param}</td>
         <td>${ji.world_id}</td>
+        <td>${ji.world_param}</td>
         <td>${ji.score}</td>
         <td>${toStatus(ji.status)}</td>
+        <td>${ji.search_id}</td>
+        <td>${ji.time_added}</td>
+        <td>${ji.note}</td>
         <td><button type="button" class="btn" id="${ji.job_id}">cancel</button></td>
-        <!-- TODO: add more columns, cancel job, etc -->
        </tr>
      `;
 }
@@ -74,6 +78,24 @@ function generateJobsTable(jobInfos) {
     table.empty();
     // clear out old click listeners or they pile up
     table.off('click');
+
+    const head = $('#jobs_table > thead');
+    head.empty();
+    head.append(`
+        <tr>
+            <th scope="col">Job id</th>
+            <th scope="col">Agent</th>
+            <th scope="col">Agent param</th>
+            <th scope="col">World</th>
+            <th scope="col">World param</th>
+            <th scope="col">Score</th>
+            <th scope="col">Status</th>
+            <th scope="col">Search id</th>
+            <th scope="col">Time added</th>
+            <th scope="col">Note</th>
+            <th scope="col">Cancel</th>
+        </tr>
+    `);
 
     jobInfos.forEach(function (ji) {
         table.append(toHtml(ji));
