@@ -16,7 +16,8 @@ type Config struct {
 
 func (config *Config) Load() {
 
-	_, err := toml.DecodeFile("world.cfg", &config)
+	_, err := toml.DecodeFile("default/fworld.cfg", &config)
+	_, err = toml.DecodeFile("fworld.cfg", &config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		fmt.Fprintln(os.Stderr, "Using defaults")
