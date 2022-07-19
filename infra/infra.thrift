@@ -80,7 +80,7 @@ service JobCzar {
 
     BinInfo getBinInfo(1:i32 binID);
 
-    list<BinInfo> getBinInfos();
+    list<BinInfo> getBinInfos(1:string filterBy);
 
     string runSQL(1:string query);
 

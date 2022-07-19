@@ -101,9 +101,10 @@ function queryJobs() {
 
     client.queryJobs(function (result) {
         if (result instanceof Error) {
-            console.error("queryJobs server error: ", result);
+            errorAlert("queryJobs server error: ", result);
         } else {
             console.log("queryJobs result", result);
+            successAlert("Received jobs data from server");
             generateJobsTable(result);
         }
     });
@@ -117,12 +118,15 @@ function populateOptions(selectElem, binInfos) {
 
 function getBinInfos() {
     const client = getClient();
+    // status=0 means current
+    const filterBy = "status=0";
 
-    client.getBinInfos(function (binInfos) {
+    client.getBinInfos(filterBy,function (binInfos) {
         if (binInfos instanceof Error) {
-            console.error("getBinInfos server error: ", binInfos);
+            errorAlert("getBinInfos server error: ", binInfos);
         } else {
             console.log("getBinInfos result", binInfos);
+            successAlert("Received bin info data from server");
             // type 0 means agent, type 1 means world
             const agents = binInfos.filter(bi => bi.type === 0);
             const worlds = binInfos.filter(bi => bi.type === 1);
@@ -142,6 +146,23 @@ function fetchData() {
 function setServerText() {
     const serverText = $("#serverText");
     serverText.text(local ? "Localhost" : "Production");
+}
+
+function successAlert(text) {
+    const error = $(".alert-danger");
+    error.hide();
+    const success = $(".alert-success");
+    success.show();
+    success.text(text);
+}
+
+function errorAlert(text) {
+    const success = $(".alert-success");
+    success.hide();
+    const error = $(".alert-danger");
+    error.show();
+    error.text(text);
+    console.error(text);
 }
 
 $(function() {

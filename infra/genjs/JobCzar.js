@@ -683,6 +683,12 @@ JobCzar_getBinInfo_result.prototype.write = function(output) {
 };
 
 JobCzar_getBinInfos_args = function(args) {
+  this.filterBy = null;
+  if (args) {
+    if (args.filterBy !== undefined && args.filterBy !== null) {
+      this.filterBy = args.filterBy;
+    }
+  }
 };
 JobCzar_getBinInfos_args.prototype = {};
 JobCzar_getBinInfos_args.prototype.read = function(input) {
@@ -690,10 +696,24 @@ JobCzar_getBinInfos_args.prototype.read = function(input) {
   while (true) {
     var ret = input.readFieldBegin();
     var ftype = ret.ftype;
+    var fid = ret.fid;
     if (ftype == Thrift.Type.STOP) {
       break;
     }
-    input.skip(ftype);
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.STRING) {
+        this.filterBy = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
     input.readFieldEnd();
   }
   input.readStructEnd();
@@ -702,6 +722,11 @@ JobCzar_getBinInfos_args.prototype.read = function(input) {
 
 JobCzar_getBinInfos_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_getBinInfos_args');
+  if (this.filterBy !== null && this.filterBy !== undefined) {
+    output.writeFieldBegin('filterBy', Thrift.Type.STRING, 1);
+    output.writeString(this.filterBy);
+    output.writeFieldEnd();
+  }
   output.writeFieldStop();
   output.writeStructEnd();
   return;
@@ -1421,15 +1446,18 @@ JobCzarClient.prototype.recv_getBinInfo = function() {
   throw 'getBinInfo failed: unknown result';
 };
 
-JobCzarClient.prototype.getBinInfos = function(callback) {
-  this.send_getBinInfos(callback); 
+JobCzarClient.prototype.getBinInfos = function(filterBy, callback) {
+  this.send_getBinInfos(filterBy, callback); 
   if (!callback) {
     return this.recv_getBinInfos();
   }
 };
 
-JobCzarClient.prototype.send_getBinInfos = function(callback) {
-  var args = new JobCzar_getBinInfos_args();
+JobCzarClient.prototype.send_getBinInfos = function(filterBy, callback) {
+  var params = {
+    filterBy: filterBy
+  };
+  var args = new JobCzar_getBinInfos_args(params);
   try {
     this.output.writeMessageBegin('getBinInfos', Thrift.MessageType.CALL, this.seqid);
     args.write(this.output);

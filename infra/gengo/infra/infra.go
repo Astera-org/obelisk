@@ -1929,7 +1929,9 @@ type JobCzar interface {
   // Parameters:
   //  - BinID
   GetBinInfo(ctx context.Context, binID int32) (_r *BinInfo, _err error)
-  GetBinInfos(ctx context.Context) (_r []*BinInfo, _err error)
+  // Parameters:
+  //  - FilterBy
+  GetBinInfos(ctx context.Context, filterBy string) (_r []*BinInfo, _err error)
   // Parameters:
   //  - Query
   RunSQL(ctx context.Context, query string) (_r string, _err error)
@@ -2086,8 +2088,11 @@ func (p *JobCzarClient) GetBinInfo(ctx context.Context, binID int32) (_r *BinInf
   return nil, thrift.NewTApplicationException(thrift.MISSING_RESULT, "getBinInfo failed: unknown result")
 }
 
-func (p *JobCzarClient) GetBinInfos(ctx context.Context) (_r []*BinInfo, _err error) {
+// Parameters:
+//  - FilterBy
+func (p *JobCzarClient) GetBinInfos(ctx context.Context, filterBy string) (_r []*BinInfo, _err error) {
   var _args20 JobCzarGetBinInfosArgs
+  _args20.FilterBy = filterBy
   var _result22 JobCzarGetBinInfosResult
   var _meta21 thrift.ResponseMeta
   _meta21, _err = p.Client_().Call(ctx, "getBinInfos", &_args20, &_result22)
@@ -2705,7 +2710,7 @@ func (p *jobCzarProcessorGetBinInfos) Process(ctx context.Context, seqId int32, 
 
   result := JobCzarGetBinInfosResult{}
   var retval []*BinInfo
-  if retval, err2 = p.handler.GetBinInfos(ctx); err2 != nil {
+  if retval, err2 = p.handler.GetBinInfos(ctx, args.FilterBy); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
       return false, thrift.WrapTException(err2)
@@ -4321,13 +4326,20 @@ func (p *JobCzarGetBinInfoResult) String() string {
   return fmt.Sprintf("JobCzarGetBinInfoResult(%+v)", *p)
 }
 
+// Attributes:
+//  - FilterBy
 type JobCzarGetBinInfosArgs struct {
+  FilterBy string `thrift:"filterBy,1" db:"filterBy" json:"filterBy"`
 }
 
 func NewJobCzarGetBinInfosArgs() *JobCzarGetBinInfosArgs {
   return &JobCzarGetBinInfosArgs{}
 }
 
+
+func (p *JobCzarGetBinInfosArgs) GetFilterBy() string {
+  return p.FilterBy
+}
 func (p *JobCzarGetBinInfosArgs) Read(ctx context.Context, iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(ctx); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
@@ -4340,8 +4352,21 @@ func (p *JobCzarGetBinInfosArgs) Read(ctx context.Context, iprot thrift.TProtoco
       return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
     }
     if fieldTypeId == thrift.STOP { break; }
-    if err := iprot.Skip(ctx, fieldTypeId); err != nil {
-      return err
+    switch fieldId {
+    case 1:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField1(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+        return err
+      }
     }
     if err := iprot.ReadFieldEnd(ctx); err != nil {
       return err
@@ -4353,16 +4378,36 @@ func (p *JobCzarGetBinInfosArgs) Read(ctx context.Context, iprot thrift.TProtoco
   return nil
 }
 
+func (p *JobCzarGetBinInfosArgs)  ReadField1(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.FilterBy = v
+}
+  return nil
+}
+
 func (p *JobCzarGetBinInfosArgs) Write(ctx context.Context, oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin(ctx, "getBinInfos_args"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
+    if err := p.writeField1(ctx, oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(ctx); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
   if err := oprot.WriteStructEnd(ctx); err != nil {
     return thrift.PrependError("write struct stop error: ", err) }
   return nil
+}
+
+func (p *JobCzarGetBinInfosArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "filterBy", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:filterBy: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.FilterBy)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.filterBy (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:filterBy: ", p), err) }
+  return err
 }
 
 func (p *JobCzarGetBinInfosArgs) String() string {
