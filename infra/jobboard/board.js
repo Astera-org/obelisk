@@ -8,6 +8,9 @@ let local = true;
 // thrift client that talks to the server
 let gClient = null;
 
+// map agent, world ids to names
+let gBinInfos = null;
+
 // TODO: some code organization:
 // separate thrift client code
 // how should we organize javascript? modules?
@@ -42,14 +45,23 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     });
 }
 
+function getBinName(bin_id) {
+    if (!gBinInfos)
+        return ""
+    const binInfo = gBinInfos[bin_id];
+    if (!binInfo)
+        return "";
+    return binInfo.name;
+}
+
 // convert a JobInfo object to a table row
 function toHtml(ji) {
     return `
       <tr>
         <td>${ji.job_id}</td>
-        <td>${ji.agent_id}</td>
+        <td>${getBinName(ji.agent_id)}/${ji.agent_id}</td>
         <td>${ji.agent_param}</td>
-        <td>${ji.world_id}</td>
+        <td>${getBinName(ji.world_id)}/${ji.world_id}</td>
         <td>${ji.world_param}</td>
         <td>${ji.score}</td>
         <td>${toStatus(ji.status)}</td>
@@ -94,6 +106,7 @@ function generateJobsTable(jobInfos) {
             <th scope="col">Time added</th>
             <th scope="col">Note</th>
             <th scope="col">Cancel</th>
+            <!-- Any other useful columns? -->
         </tr>
     `);
 
@@ -148,6 +161,8 @@ function getBinInfos() {
             errorAlert("getBinInfos server error: ", binInfos);
         } else {
             console.log("getBinInfos result", binInfos);
+            // convert the list of infos to map from id to info
+            gBinInfos = binInfos.reduce((map, obj) => (map[obj.bin_id] = obj, map), {});
             successAlert("Received bin info data from server");
             // type 0 means agent, type 1 means world
             const agents = binInfos.filter(bi => bi.type === 0);
@@ -156,13 +171,11 @@ function getBinInfos() {
             const worldSelect = $("#world");
             populateOptions(agentSelect, agents);
             populateOptions(worldSelect, worlds);
+
+            // we call this here because we need the bin info first
+            queryJobs();
         }
     });
-}
-
-function fetchData() {
-    queryJobs();
-    getBinInfos();
 }
 
 function setServerText() {
@@ -197,14 +210,14 @@ $(function() {
     local = !isChecked;
     setServerText(isChecked);
 
-    fetchData();
+    getBinInfos();
 
     $("#serverToggle").click(function (event) {
         local = !local;
         // reset the client to point to the new address
         gClient = null;
         setServerText();
-        fetchData();
+        getBinInfos();
     });
 
     // setup add job form
