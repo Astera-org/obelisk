@@ -27,6 +27,32 @@ struct ResultJob {
     8: string instance_name
 }
 
+// basically a single row of the jobs table (see database.sql)
+struct JobInfo {
+    1: i32 jobID,
+    2: i32 userID,
+    3: i32 searchID,
+    4: i32 status,
+    5: i32 priority,
+    6: optional string callback,
+    7: string timeAdded,
+    8: i32 agentID,
+    9: i32 worldID,
+    10: string agentParam,
+    11: string worldParam,
+    12: string note,
+    13: double bailThreshold,
+    14: optional string workerName,
+    15: optional string instanceName,
+    16: optional string timeHanded,
+    17: optional i32 seconds,
+    18: optional i32 steps,
+    19: optional i32 cycles,
+    20: optional bool bailed,
+    21: double score
+}
+
+// basically a single row of the binaries table (see database.sql)
 struct BinInfo {
     1: i32 bin_id,
     2: string name,
@@ -61,5 +87,5 @@ service JobCzar {
 
     bool removeJob(1:i32 job_id);
 
-    list<map<string, string>> queryJobs();
+    list<JobInfo> queryJobs();
 }

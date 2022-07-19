@@ -627,6 +627,959 @@ func (p *ResultJob) String() string {
 }
 
 // Attributes:
+//  - JobID
+//  - UserID
+//  - SearchID
+//  - Status
+//  - Priority
+//  - Callback
+//  - TimeAdded
+//  - AgentID
+//  - WorldID
+//  - AgentParam
+//  - WorldParam
+//  - Note
+//  - BailThreshold
+//  - WorkerName
+//  - InstanceName
+//  - TimeHanded
+//  - Seconds
+//  - Steps
+//  - Cycles
+//  - Bailed
+//  - Score
+type JobInfo struct {
+  JobID int32 `thrift:"jobID,1" db:"jobID" json:"jobID"`
+  UserID int32 `thrift:"userID,2" db:"userID" json:"userID"`
+  SearchID int32 `thrift:"searchID,3" db:"searchID" json:"searchID"`
+  Status int32 `thrift:"status,4" db:"status" json:"status"`
+  Priority int32 `thrift:"priority,5" db:"priority" json:"priority"`
+  Callback *string `thrift:"callback,6" db:"callback" json:"callback,omitempty"`
+  TimeAdded string `thrift:"timeAdded,7" db:"timeAdded" json:"timeAdded"`
+  AgentID int32 `thrift:"agentID,8" db:"agentID" json:"agentID"`
+  WorldID int32 `thrift:"worldID,9" db:"worldID" json:"worldID"`
+  AgentParam string `thrift:"agentParam,10" db:"agentParam" json:"agentParam"`
+  WorldParam string `thrift:"worldParam,11" db:"worldParam" json:"worldParam"`
+  Note string `thrift:"note,12" db:"note" json:"note"`
+  BailThreshold float64 `thrift:"bailThreshold,13" db:"bailThreshold" json:"bailThreshold"`
+  WorkerName *string `thrift:"workerName,14" db:"workerName" json:"workerName,omitempty"`
+  InstanceName *string `thrift:"instanceName,15" db:"instanceName" json:"instanceName,omitempty"`
+  TimeHanded *string `thrift:"timeHanded,16" db:"timeHanded" json:"timeHanded,omitempty"`
+  Seconds *int32 `thrift:"seconds,17" db:"seconds" json:"seconds,omitempty"`
+  Steps *int32 `thrift:"steps,18" db:"steps" json:"steps,omitempty"`
+  Cycles *int32 `thrift:"cycles,19" db:"cycles" json:"cycles,omitempty"`
+  Bailed *bool `thrift:"bailed,20" db:"bailed" json:"bailed,omitempty"`
+  Score float64 `thrift:"score,21" db:"score" json:"score"`
+}
+
+func NewJobInfo() *JobInfo {
+  return &JobInfo{}
+}
+
+
+func (p *JobInfo) GetJobID() int32 {
+  return p.JobID
+}
+
+func (p *JobInfo) GetUserID() int32 {
+  return p.UserID
+}
+
+func (p *JobInfo) GetSearchID() int32 {
+  return p.SearchID
+}
+
+func (p *JobInfo) GetStatus() int32 {
+  return p.Status
+}
+
+func (p *JobInfo) GetPriority() int32 {
+  return p.Priority
+}
+var JobInfo_Callback_DEFAULT string
+func (p *JobInfo) GetCallback() string {
+  if !p.IsSetCallback() {
+    return JobInfo_Callback_DEFAULT
+  }
+return *p.Callback
+}
+
+func (p *JobInfo) GetTimeAdded() string {
+  return p.TimeAdded
+}
+
+func (p *JobInfo) GetAgentID() int32 {
+  return p.AgentID
+}
+
+func (p *JobInfo) GetWorldID() int32 {
+  return p.WorldID
+}
+
+func (p *JobInfo) GetAgentParam() string {
+  return p.AgentParam
+}
+
+func (p *JobInfo) GetWorldParam() string {
+  return p.WorldParam
+}
+
+func (p *JobInfo) GetNote() string {
+  return p.Note
+}
+
+func (p *JobInfo) GetBailThreshold() float64 {
+  return p.BailThreshold
+}
+var JobInfo_WorkerName_DEFAULT string
+func (p *JobInfo) GetWorkerName() string {
+  if !p.IsSetWorkerName() {
+    return JobInfo_WorkerName_DEFAULT
+  }
+return *p.WorkerName
+}
+var JobInfo_InstanceName_DEFAULT string
+func (p *JobInfo) GetInstanceName() string {
+  if !p.IsSetInstanceName() {
+    return JobInfo_InstanceName_DEFAULT
+  }
+return *p.InstanceName
+}
+var JobInfo_TimeHanded_DEFAULT string
+func (p *JobInfo) GetTimeHanded() string {
+  if !p.IsSetTimeHanded() {
+    return JobInfo_TimeHanded_DEFAULT
+  }
+return *p.TimeHanded
+}
+var JobInfo_Seconds_DEFAULT int32
+func (p *JobInfo) GetSeconds() int32 {
+  if !p.IsSetSeconds() {
+    return JobInfo_Seconds_DEFAULT
+  }
+return *p.Seconds
+}
+var JobInfo_Steps_DEFAULT int32
+func (p *JobInfo) GetSteps() int32 {
+  if !p.IsSetSteps() {
+    return JobInfo_Steps_DEFAULT
+  }
+return *p.Steps
+}
+var JobInfo_Cycles_DEFAULT int32
+func (p *JobInfo) GetCycles() int32 {
+  if !p.IsSetCycles() {
+    return JobInfo_Cycles_DEFAULT
+  }
+return *p.Cycles
+}
+var JobInfo_Bailed_DEFAULT bool
+func (p *JobInfo) GetBailed() bool {
+  if !p.IsSetBailed() {
+    return JobInfo_Bailed_DEFAULT
+  }
+return *p.Bailed
+}
+
+func (p *JobInfo) GetScore() float64 {
+  return p.Score
+}
+func (p *JobInfo) IsSetCallback() bool {
+  return p.Callback != nil
+}
+
+func (p *JobInfo) IsSetWorkerName() bool {
+  return p.WorkerName != nil
+}
+
+func (p *JobInfo) IsSetInstanceName() bool {
+  return p.InstanceName != nil
+}
+
+func (p *JobInfo) IsSetTimeHanded() bool {
+  return p.TimeHanded != nil
+}
+
+func (p *JobInfo) IsSetSeconds() bool {
+  return p.Seconds != nil
+}
+
+func (p *JobInfo) IsSetSteps() bool {
+  return p.Steps != nil
+}
+
+func (p *JobInfo) IsSetCycles() bool {
+  return p.Cycles != nil
+}
+
+func (p *JobInfo) IsSetBailed() bool {
+  return p.Bailed != nil
+}
+
+func (p *JobInfo) Read(ctx context.Context, iprot thrift.TProtocol) error {
+  if _, err := iprot.ReadStructBegin(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
+  }
+
+
+  for {
+    _, fieldTypeId, fieldId, err := iprot.ReadFieldBegin(ctx)
+    if err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
+    }
+    if fieldTypeId == thrift.STOP { break; }
+    switch fieldId {
+    case 1:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField1(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 2:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField2(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 3:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField3(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 4:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField4(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 5:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField5(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 6:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField6(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 7:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField7(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 8:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField8(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 9:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField9(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 10:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField10(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 11:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField11(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 12:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField12(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 13:
+      if fieldTypeId == thrift.DOUBLE {
+        if err := p.ReadField13(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 14:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField14(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 15:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField15(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 16:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField16(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 17:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField17(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 18:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField18(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 19:
+      if fieldTypeId == thrift.I32 {
+        if err := p.ReadField19(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 20:
+      if fieldTypeId == thrift.BOOL {
+        if err := p.ReadField20(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 21:
+      if fieldTypeId == thrift.DOUBLE {
+        if err := p.ReadField21(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+        return err
+      }
+    }
+    if err := iprot.ReadFieldEnd(ctx); err != nil {
+      return err
+    }
+  }
+  if err := iprot.ReadStructEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+  }
+  return nil
+}
+
+func (p *JobInfo)  ReadField1(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.JobID = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField2(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 2: ", err)
+} else {
+  p.UserID = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField3(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 3: ", err)
+} else {
+  p.SearchID = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField4(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 4: ", err)
+} else {
+  p.Status = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField5(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 5: ", err)
+} else {
+  p.Priority = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField6(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 6: ", err)
+} else {
+  p.Callback = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField7(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 7: ", err)
+} else {
+  p.TimeAdded = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField8(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 8: ", err)
+} else {
+  p.AgentID = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField9(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 9: ", err)
+} else {
+  p.WorldID = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField10(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 10: ", err)
+} else {
+  p.AgentParam = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField11(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 11: ", err)
+} else {
+  p.WorldParam = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField12(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 12: ", err)
+} else {
+  p.Note = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField13(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadDouble(ctx); err != nil {
+  return thrift.PrependError("error reading field 13: ", err)
+} else {
+  p.BailThreshold = v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField14(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 14: ", err)
+} else {
+  p.WorkerName = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField15(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 15: ", err)
+} else {
+  p.InstanceName = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField16(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 16: ", err)
+} else {
+  p.TimeHanded = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField17(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 17: ", err)
+} else {
+  p.Seconds = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField18(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 18: ", err)
+} else {
+  p.Steps = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField19(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadI32(ctx); err != nil {
+  return thrift.PrependError("error reading field 19: ", err)
+} else {
+  p.Cycles = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField20(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadBool(ctx); err != nil {
+  return thrift.PrependError("error reading field 20: ", err)
+} else {
+  p.Bailed = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField21(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadDouble(ctx); err != nil {
+  return thrift.PrependError("error reading field 21: ", err)
+} else {
+  p.Score = v
+}
+  return nil
+}
+
+func (p *JobInfo) Write(ctx context.Context, oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin(ctx, "JobInfo"); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
+  if p != nil {
+    if err := p.writeField1(ctx, oprot); err != nil { return err }
+    if err := p.writeField2(ctx, oprot); err != nil { return err }
+    if err := p.writeField3(ctx, oprot); err != nil { return err }
+    if err := p.writeField4(ctx, oprot); err != nil { return err }
+    if err := p.writeField5(ctx, oprot); err != nil { return err }
+    if err := p.writeField6(ctx, oprot); err != nil { return err }
+    if err := p.writeField7(ctx, oprot); err != nil { return err }
+    if err := p.writeField8(ctx, oprot); err != nil { return err }
+    if err := p.writeField9(ctx, oprot); err != nil { return err }
+    if err := p.writeField10(ctx, oprot); err != nil { return err }
+    if err := p.writeField11(ctx, oprot); err != nil { return err }
+    if err := p.writeField12(ctx, oprot); err != nil { return err }
+    if err := p.writeField13(ctx, oprot); err != nil { return err }
+    if err := p.writeField14(ctx, oprot); err != nil { return err }
+    if err := p.writeField15(ctx, oprot); err != nil { return err }
+    if err := p.writeField16(ctx, oprot); err != nil { return err }
+    if err := p.writeField17(ctx, oprot); err != nil { return err }
+    if err := p.writeField18(ctx, oprot); err != nil { return err }
+    if err := p.writeField19(ctx, oprot); err != nil { return err }
+    if err := p.writeField20(ctx, oprot); err != nil { return err }
+    if err := p.writeField21(ctx, oprot); err != nil { return err }
+  }
+  if err := oprot.WriteFieldStop(ctx); err != nil {
+    return thrift.PrependError("write field stop error: ", err) }
+  if err := oprot.WriteStructEnd(ctx); err != nil {
+    return thrift.PrependError("write struct stop error: ", err) }
+  return nil
+}
+
+func (p *JobInfo) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "jobID", thrift.I32, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:jobID: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.jobID (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:jobID: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "userID", thrift.I32, 2); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:userID: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.UserID)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.userID (2) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 2:userID: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField3(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "searchID", thrift.I32, 3); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 3:searchID: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.SearchID)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.searchID (3) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 3:searchID: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField4(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "status", thrift.I32, 4); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 4:status: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.Status)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.status (4) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 4:status: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField5(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "priority", thrift.I32, 5); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 5:priority: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.Priority)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.priority (5) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 5:priority: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField6(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetCallback() {
+    if err := oprot.WriteFieldBegin(ctx, "callback", thrift.STRING, 6); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 6:callback: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.Callback)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.callback (6) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 6:callback: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField7(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "timeAdded", thrift.STRING, 7); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 7:timeAdded: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.TimeAdded)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.timeAdded (7) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 7:timeAdded: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField8(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "agentID", thrift.I32, 8); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 8:agentID: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.AgentID)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.agentID (8) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 8:agentID: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField9(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "worldID", thrift.I32, 9); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 9:worldID: ", p), err) }
+  if err := oprot.WriteI32(ctx, int32(p.WorldID)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.worldID (9) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 9:worldID: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField10(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "agentParam", thrift.STRING, 10); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 10:agentParam: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.AgentParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.agentParam (10) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 10:agentParam: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField11(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "worldParam", thrift.STRING, 11); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 11:worldParam: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.WorldParam)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.worldParam (11) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 11:worldParam: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField12(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "note", thrift.STRING, 12); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 12:note: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.Note)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.note (12) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 12:note: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField13(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "bailThreshold", thrift.DOUBLE, 13); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 13:bailThreshold: ", p), err) }
+  if err := oprot.WriteDouble(ctx, float64(p.BailThreshold)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.bailThreshold (13) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 13:bailThreshold: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) writeField14(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetWorkerName() {
+    if err := oprot.WriteFieldBegin(ctx, "workerName", thrift.STRING, 14); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 14:workerName: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.WorkerName)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.workerName (14) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 14:workerName: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField15(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetInstanceName() {
+    if err := oprot.WriteFieldBegin(ctx, "instanceName", thrift.STRING, 15); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 15:instanceName: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.InstanceName)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.instanceName (15) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 15:instanceName: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField16(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetTimeHanded() {
+    if err := oprot.WriteFieldBegin(ctx, "timeHanded", thrift.STRING, 16); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 16:timeHanded: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.TimeHanded)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.timeHanded (16) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 16:timeHanded: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField17(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetSeconds() {
+    if err := oprot.WriteFieldBegin(ctx, "seconds", thrift.I32, 17); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 17:seconds: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Seconds)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.seconds (17) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 17:seconds: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField18(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetSteps() {
+    if err := oprot.WriteFieldBegin(ctx, "steps", thrift.I32, 18); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 18:steps: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Steps)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.steps (18) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 18:steps: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField19(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetCycles() {
+    if err := oprot.WriteFieldBegin(ctx, "cycles", thrift.I32, 19); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 19:cycles: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Cycles)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.cycles (19) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 19:cycles: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField20(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetBailed() {
+    if err := oprot.WriteFieldBegin(ctx, "bailed", thrift.BOOL, 20); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 20:bailed: ", p), err) }
+    if err := oprot.WriteBool(ctx, bool(*p.Bailed)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.bailed (20) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 20:bailed: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField21(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "score", thrift.DOUBLE, 21); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 21:score: ", p), err) }
+  if err := oprot.WriteDouble(ctx, float64(p.Score)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.score (21) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 21:score: ", p), err) }
+  return err
+}
+
+func (p *JobInfo) Equals(other *JobInfo) bool {
+  if p == other {
+    return true
+  } else if p == nil || other == nil {
+    return false
+  }
+  if p.JobID != other.JobID { return false }
+  if p.UserID != other.UserID { return false }
+  if p.SearchID != other.SearchID { return false }
+  if p.Status != other.Status { return false }
+  if p.Priority != other.Priority { return false }
+  if p.Callback != other.Callback {
+    if p.Callback == nil || other.Callback == nil {
+      return false
+    }
+    if (*p.Callback) != (*other.Callback) { return false }
+  }
+  if p.TimeAdded != other.TimeAdded { return false }
+  if p.AgentID != other.AgentID { return false }
+  if p.WorldID != other.WorldID { return false }
+  if p.AgentParam != other.AgentParam { return false }
+  if p.WorldParam != other.WorldParam { return false }
+  if p.Note != other.Note { return false }
+  if p.BailThreshold != other.BailThreshold { return false }
+  if p.WorkerName != other.WorkerName {
+    if p.WorkerName == nil || other.WorkerName == nil {
+      return false
+    }
+    if (*p.WorkerName) != (*other.WorkerName) { return false }
+  }
+  if p.InstanceName != other.InstanceName {
+    if p.InstanceName == nil || other.InstanceName == nil {
+      return false
+    }
+    if (*p.InstanceName) != (*other.InstanceName) { return false }
+  }
+  if p.TimeHanded != other.TimeHanded {
+    if p.TimeHanded == nil || other.TimeHanded == nil {
+      return false
+    }
+    if (*p.TimeHanded) != (*other.TimeHanded) { return false }
+  }
+  if p.Seconds != other.Seconds {
+    if p.Seconds == nil || other.Seconds == nil {
+      return false
+    }
+    if (*p.Seconds) != (*other.Seconds) { return false }
+  }
+  if p.Steps != other.Steps {
+    if p.Steps == nil || other.Steps == nil {
+      return false
+    }
+    if (*p.Steps) != (*other.Steps) { return false }
+  }
+  if p.Cycles != other.Cycles {
+    if p.Cycles == nil || other.Cycles == nil {
+      return false
+    }
+    if (*p.Cycles) != (*other.Cycles) { return false }
+  }
+  if p.Bailed != other.Bailed {
+    if p.Bailed == nil || other.Bailed == nil {
+      return false
+    }
+    if (*p.Bailed) != (*other.Bailed) { return false }
+  }
+  if p.Score != other.Score { return false }
+  return true
+}
+
+func (p *JobInfo) String() string {
+  if p == nil {
+    return "<nil>"
+  }
+  return fmt.Sprintf("JobInfo(%+v)", *p)
+}
+
+// Attributes:
 //  - BinID
 //  - Name
 //  - Version
@@ -985,7 +1938,7 @@ type JobCzar interface {
   // Parameters:
   //  - JobID
   RemoveJob(ctx context.Context, job_id int32) (_r bool, _err error)
-  QueryJobs(ctx context.Context) (_r []map[string]string, _err error)
+  QueryJobs(ctx context.Context) (_r []*JobInfo, _err error)
 }
 
 type JobCzarClient struct {
@@ -1180,7 +2133,7 @@ func (p *JobCzarClient) RemoveJob(ctx context.Context, job_id int32) (_r bool, _
   return _result28.GetSuccess(), nil
 }
 
-func (p *JobCzarClient) QueryJobs(ctx context.Context) (_r []map[string]string, _err error) {
+func (p *JobCzarClient) QueryJobs(ctx context.Context) (_r []*JobInfo, _err error) {
   var _args29 JobCzarQueryJobsArgs
   var _result31 JobCzarQueryJobsResult
   var _meta30 thrift.ResponseMeta
@@ -1993,7 +2946,7 @@ func (p *jobCzarProcessorQueryJobs) Process(ctx context.Context, seqId int32, ip
   }
 
   result := JobCzarQueryJobsResult{}
-  var retval []map[string]string
+  var retval []*JobInfo
   if retval, err2 = p.handler.QueryJobs(ctx); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
@@ -4018,16 +4971,16 @@ func (p *JobCzarQueryJobsArgs) String() string {
 // Attributes:
 //  - Success
 type JobCzarQueryJobsResult struct {
-  Success []map[string]string `thrift:"success,0" db:"success" json:"success,omitempty"`
+  Success []*JobInfo `thrift:"success,0" db:"success" json:"success,omitempty"`
 }
 
 func NewJobCzarQueryJobsResult() *JobCzarQueryJobsResult {
   return &JobCzarQueryJobsResult{}
 }
 
-var JobCzarQueryJobsResult_Success_DEFAULT []map[string]string
+var JobCzarQueryJobsResult_Success_DEFAULT []*JobInfo
 
-func (p *JobCzarQueryJobsResult) GetSuccess() []map[string]string {
+func (p *JobCzarQueryJobsResult) GetSuccess() []*JobInfo {
   return p.Success
 }
 func (p *JobCzarQueryJobsResult) IsSetSuccess() bool {
@@ -4077,32 +5030,12 @@ func (p *JobCzarQueryJobsResult)  ReadField0(ctx context.Context, iprot thrift.T
   if err != nil {
     return thrift.PrependError("error reading list begin: ", err)
   }
-  tSlice := make([]map[string]string, 0, size)
+  tSlice := make([]*JobInfo, 0, size)
   p.Success =  tSlice
   for i := 0; i < size; i ++ {
-    _, _, size, err := iprot.ReadMapBegin(ctx)
-    if err != nil {
-      return thrift.PrependError("error reading map begin: ", err)
-    }
-    tMap := make(map[string]string, size)
-    _elem35 :=  tMap
-    for i := 0; i < size; i ++ {
-var _key36 string
-      if v, err := iprot.ReadString(ctx); err != nil {
-      return thrift.PrependError("error reading field 0: ", err)
-} else {
-      _key36 = v
-}
-var _val37 string
-      if v, err := iprot.ReadString(ctx); err != nil {
-      return thrift.PrependError("error reading field 0: ", err)
-} else {
-      _val37 = v
-}
-      _elem35[_key36] = _val37
-    }
-    if err := iprot.ReadMapEnd(ctx); err != nil {
-      return thrift.PrependError("error reading map end: ", err)
+    _elem35 := &JobInfo{}
+    if err := _elem35.Read(ctx, iprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", _elem35), err)
     }
     p.Success = append(p.Success, _elem35)
   }
@@ -4129,21 +5062,12 @@ func (p *JobCzarQueryJobsResult) writeField0(ctx context.Context, oprot thrift.T
   if p.IsSetSuccess() {
     if err := oprot.WriteFieldBegin(ctx, "success", thrift.LIST, 0); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
-    if err := oprot.WriteListBegin(ctx, thrift.MAP, len(p.Success)); err != nil {
+    if err := oprot.WriteListBegin(ctx, thrift.STRUCT, len(p.Success)); err != nil {
       return thrift.PrependError("error writing list begin: ", err)
     }
     for _, v := range p.Success {
-      if err := oprot.WriteMapBegin(ctx, thrift.STRING, thrift.STRING, len(v)); err != nil {
-        return thrift.PrependError("error writing map begin: ", err)
-      }
-      for k, v := range v {
-        if err := oprot.WriteString(ctx, string(k)); err != nil {
-        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
-        if err := oprot.WriteString(ctx, string(v)); err != nil {
-        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
-      }
-      if err := oprot.WriteMapEnd(ctx); err != nil {
-        return thrift.PrependError("error writing map end: ", err)
+      if err := v.Write(ctx, oprot); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T error writing struct: ", v), err)
       }
     }
     if err := oprot.WriteListEnd(ctx); err != nil {

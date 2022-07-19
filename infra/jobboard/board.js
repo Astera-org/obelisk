@@ -42,18 +42,16 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     });
 }
 
-// convert a json object to a table row
-// see database.sql for the column names
-// keep in sync with the table headers in jobboard.html
-function toHtml(row) {
+// convert a JobInfo object to a table row
+function toHtml(ji) {
     return `
       <tr>
-        <td>${row.job_id}</td>
-        <td>${row.agent_id}</td>
-        <td>${row.world_id}</td>
-        <td>${row.score}</td>
-        <td>${toStatus(row.status)}</td>
-        <td><button type="button" class="btn" id="${row.job_id}">cancel</button></td>
+        <td>${ji.jobID}</td>
+        <td>${ji.jobID}</td>
+        <td>${ji.worldID}</td>
+        <td>${ji.score}</td>
+        <td>${toStatus(ji.status)}</td>
+        <td><button type="button" class="btn" id="${ji.jobID}">cancel</button></td>
         <!-- TODO: add more columns, cancel job, etc -->
        </tr>
      `;
@@ -71,14 +69,14 @@ function toStatus(status) {
     return "unknown status " + status
 }
 
-function generateJobsTable(rows) {
+function generateJobsTable(jobInfos) {
     const table = $('#jobs_table > tbody');
     table.empty();
     // clear out old click listeners or they pile up
     table.off('click');
 
-    rows.forEach(function (row) {
-        table.append(toHtml(row));
+    jobInfos.forEach(function (ji) {
+        table.append(toHtml(ji));
     });
 
     // handle cancel job click

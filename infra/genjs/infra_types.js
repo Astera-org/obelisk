@@ -278,6 +278,373 @@ ResultJob.prototype.write = function(output) {
   return;
 };
 
+JobInfo = function(args) {
+  this.jobID = null;
+  this.userID = null;
+  this.searchID = null;
+  this.status = null;
+  this.priority = null;
+  this.callback = null;
+  this.timeAdded = null;
+  this.agentID = null;
+  this.worldID = null;
+  this.agentParam = null;
+  this.worldParam = null;
+  this.note = null;
+  this.bailThreshold = null;
+  this.workerName = null;
+  this.instanceName = null;
+  this.timeHanded = null;
+  this.seconds = null;
+  this.steps = null;
+  this.cycles = null;
+  this.bailed = null;
+  this.score = null;
+  if (args) {
+    if (args.jobID !== undefined && args.jobID !== null) {
+      this.jobID = args.jobID;
+    }
+    if (args.userID !== undefined && args.userID !== null) {
+      this.userID = args.userID;
+    }
+    if (args.searchID !== undefined && args.searchID !== null) {
+      this.searchID = args.searchID;
+    }
+    if (args.status !== undefined && args.status !== null) {
+      this.status = args.status;
+    }
+    if (args.priority !== undefined && args.priority !== null) {
+      this.priority = args.priority;
+    }
+    if (args.callback !== undefined && args.callback !== null) {
+      this.callback = args.callback;
+    }
+    if (args.timeAdded !== undefined && args.timeAdded !== null) {
+      this.timeAdded = args.timeAdded;
+    }
+    if (args.agentID !== undefined && args.agentID !== null) {
+      this.agentID = args.agentID;
+    }
+    if (args.worldID !== undefined && args.worldID !== null) {
+      this.worldID = args.worldID;
+    }
+    if (args.agentParam !== undefined && args.agentParam !== null) {
+      this.agentParam = args.agentParam;
+    }
+    if (args.worldParam !== undefined && args.worldParam !== null) {
+      this.worldParam = args.worldParam;
+    }
+    if (args.note !== undefined && args.note !== null) {
+      this.note = args.note;
+    }
+    if (args.bailThreshold !== undefined && args.bailThreshold !== null) {
+      this.bailThreshold = args.bailThreshold;
+    }
+    if (args.workerName !== undefined && args.workerName !== null) {
+      this.workerName = args.workerName;
+    }
+    if (args.instanceName !== undefined && args.instanceName !== null) {
+      this.instanceName = args.instanceName;
+    }
+    if (args.timeHanded !== undefined && args.timeHanded !== null) {
+      this.timeHanded = args.timeHanded;
+    }
+    if (args.seconds !== undefined && args.seconds !== null) {
+      this.seconds = args.seconds;
+    }
+    if (args.steps !== undefined && args.steps !== null) {
+      this.steps = args.steps;
+    }
+    if (args.cycles !== undefined && args.cycles !== null) {
+      this.cycles = args.cycles;
+    }
+    if (args.bailed !== undefined && args.bailed !== null) {
+      this.bailed = args.bailed;
+    }
+    if (args.score !== undefined && args.score !== null) {
+      this.score = args.score;
+    }
+  }
+};
+JobInfo.prototype = {};
+JobInfo.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.jobID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 2:
+      if (ftype == Thrift.Type.I32) {
+        this.userID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 3:
+      if (ftype == Thrift.Type.I32) {
+        this.searchID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 4:
+      if (ftype == Thrift.Type.I32) {
+        this.status = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 5:
+      if (ftype == Thrift.Type.I32) {
+        this.priority = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 6:
+      if (ftype == Thrift.Type.STRING) {
+        this.callback = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 7:
+      if (ftype == Thrift.Type.STRING) {
+        this.timeAdded = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 8:
+      if (ftype == Thrift.Type.I32) {
+        this.agentID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 9:
+      if (ftype == Thrift.Type.I32) {
+        this.worldID = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 10:
+      if (ftype == Thrift.Type.STRING) {
+        this.agentParam = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 11:
+      if (ftype == Thrift.Type.STRING) {
+        this.worldParam = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 12:
+      if (ftype == Thrift.Type.STRING) {
+        this.note = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 13:
+      if (ftype == Thrift.Type.DOUBLE) {
+        this.bailThreshold = input.readDouble().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 14:
+      if (ftype == Thrift.Type.STRING) {
+        this.workerName = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 15:
+      if (ftype == Thrift.Type.STRING) {
+        this.instanceName = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 16:
+      if (ftype == Thrift.Type.STRING) {
+        this.timeHanded = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 17:
+      if (ftype == Thrift.Type.I32) {
+        this.seconds = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 18:
+      if (ftype == Thrift.Type.I32) {
+        this.steps = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 19:
+      if (ftype == Thrift.Type.I32) {
+        this.cycles = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 20:
+      if (ftype == Thrift.Type.BOOL) {
+        this.bailed = input.readBool().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 21:
+      if (ftype == Thrift.Type.DOUBLE) {
+        this.score = input.readDouble().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobInfo.prototype.write = function(output) {
+  output.writeStructBegin('JobInfo');
+  if (this.jobID !== null && this.jobID !== undefined) {
+    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
+    output.writeI32(this.jobID);
+    output.writeFieldEnd();
+  }
+  if (this.userID !== null && this.userID !== undefined) {
+    output.writeFieldBegin('userID', Thrift.Type.I32, 2);
+    output.writeI32(this.userID);
+    output.writeFieldEnd();
+  }
+  if (this.searchID !== null && this.searchID !== undefined) {
+    output.writeFieldBegin('searchID', Thrift.Type.I32, 3);
+    output.writeI32(this.searchID);
+    output.writeFieldEnd();
+  }
+  if (this.status !== null && this.status !== undefined) {
+    output.writeFieldBegin('status', Thrift.Type.I32, 4);
+    output.writeI32(this.status);
+    output.writeFieldEnd();
+  }
+  if (this.priority !== null && this.priority !== undefined) {
+    output.writeFieldBegin('priority', Thrift.Type.I32, 5);
+    output.writeI32(this.priority);
+    output.writeFieldEnd();
+  }
+  if (this.callback !== null && this.callback !== undefined) {
+    output.writeFieldBegin('callback', Thrift.Type.STRING, 6);
+    output.writeString(this.callback);
+    output.writeFieldEnd();
+  }
+  if (this.timeAdded !== null && this.timeAdded !== undefined) {
+    output.writeFieldBegin('timeAdded', Thrift.Type.STRING, 7);
+    output.writeString(this.timeAdded);
+    output.writeFieldEnd();
+  }
+  if (this.agentID !== null && this.agentID !== undefined) {
+    output.writeFieldBegin('agentID', Thrift.Type.I32, 8);
+    output.writeI32(this.agentID);
+    output.writeFieldEnd();
+  }
+  if (this.worldID !== null && this.worldID !== undefined) {
+    output.writeFieldBegin('worldID', Thrift.Type.I32, 9);
+    output.writeI32(this.worldID);
+    output.writeFieldEnd();
+  }
+  if (this.agentParam !== null && this.agentParam !== undefined) {
+    output.writeFieldBegin('agentParam', Thrift.Type.STRING, 10);
+    output.writeString(this.agentParam);
+    output.writeFieldEnd();
+  }
+  if (this.worldParam !== null && this.worldParam !== undefined) {
+    output.writeFieldBegin('worldParam', Thrift.Type.STRING, 11);
+    output.writeString(this.worldParam);
+    output.writeFieldEnd();
+  }
+  if (this.note !== null && this.note !== undefined) {
+    output.writeFieldBegin('note', Thrift.Type.STRING, 12);
+    output.writeString(this.note);
+    output.writeFieldEnd();
+  }
+  if (this.bailThreshold !== null && this.bailThreshold !== undefined) {
+    output.writeFieldBegin('bailThreshold', Thrift.Type.DOUBLE, 13);
+    output.writeDouble(this.bailThreshold);
+    output.writeFieldEnd();
+  }
+  if (this.workerName !== null && this.workerName !== undefined) {
+    output.writeFieldBegin('workerName', Thrift.Type.STRING, 14);
+    output.writeString(this.workerName);
+    output.writeFieldEnd();
+  }
+  if (this.instanceName !== null && this.instanceName !== undefined) {
+    output.writeFieldBegin('instanceName', Thrift.Type.STRING, 15);
+    output.writeString(this.instanceName);
+    output.writeFieldEnd();
+  }
+  if (this.timeHanded !== null && this.timeHanded !== undefined) {
+    output.writeFieldBegin('timeHanded', Thrift.Type.STRING, 16);
+    output.writeString(this.timeHanded);
+    output.writeFieldEnd();
+  }
+  if (this.seconds !== null && this.seconds !== undefined) {
+    output.writeFieldBegin('seconds', Thrift.Type.I32, 17);
+    output.writeI32(this.seconds);
+    output.writeFieldEnd();
+  }
+  if (this.steps !== null && this.steps !== undefined) {
+    output.writeFieldBegin('steps', Thrift.Type.I32, 18);
+    output.writeI32(this.steps);
+    output.writeFieldEnd();
+  }
+  if (this.cycles !== null && this.cycles !== undefined) {
+    output.writeFieldBegin('cycles', Thrift.Type.I32, 19);
+    output.writeI32(this.cycles);
+    output.writeFieldEnd();
+  }
+  if (this.bailed !== null && this.bailed !== undefined) {
+    output.writeFieldBegin('bailed', Thrift.Type.BOOL, 20);
+    output.writeBool(this.bailed);
+    output.writeFieldEnd();
+  }
+  if (this.score !== null && this.score !== undefined) {
+    output.writeFieldBegin('score', Thrift.Type.DOUBLE, 21);
+    output.writeDouble(this.score);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 BinInfo = function(args) {
   this.bin_id = null;
   this.name = null;
