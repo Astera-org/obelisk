@@ -87,5 +87,5 @@ service JobCzar {
 
     bool removeJob(1:i32 job_id);
 
-    list<JobInfo> queryJobs();
+    list<JobInfo> queryJobs(1:string filter_by);
 }

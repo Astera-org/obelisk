@@ -75,8 +75,8 @@ func (handler RequestHandler) RemoveJob(ctx context.Context, jobID int32) (bool,
 	return gDatabase.RemoveJob(jobID)
 }
 
-func (handler RequestHandler) QueryJobs(ctx context.Context) ([]*infra.JobInfo, error) {
-	return gDatabase.QueryJobs()
+func (handler RequestHandler) QueryJobs(ctx context.Context, filterBy string) ([]*infra.JobInfo, error) {
+	return gDatabase.QueryJobs(filterBy)
 }
 
 func (handler RequestHandler) GetBinInfo(ctx context.Context, binID int32) (*infra.BinInfo, error) {

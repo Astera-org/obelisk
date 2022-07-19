@@ -31,7 +31,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "   getBinInfos(string filter_by)")
   fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
   fmt.Fprintln(os.Stderr, "  bool removeJob(i32 job_id)")
-  fmt.Fprintln(os.Stderr, "   queryJobs()")
+  fmt.Fprintln(os.Stderr, "   queryJobs(string filter_by)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -316,11 +316,13 @@ func main() {
     fmt.Print("\n")
     break
   case "queryJobs":
-    if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "QueryJobs requires 0 args")
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "QueryJobs requires 1 args")
       flag.Usage()
     }
-    fmt.Print(client.QueryJobs(context.Background()))
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.QueryJobs(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":
