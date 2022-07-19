@@ -119,8 +119,10 @@ function populateOptions(selectElem, binInfos) {
 
 function getBinInfos() {
     const client = getClient();
+    // status=0 means current
+    const filterBy = "status=0";
 
-    client.getBinInfos(function (binInfos) {
+    client.getBinInfos(filterBy,function (binInfos) {
         if (binInfos instanceof Error) {
             console.error("getBinInfos server error: ", binInfos);
         } else {

@@ -43,10 +43,17 @@ func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	return &binInfo
 }
 
-func (db *Database) GetBinInfos() ([]*infra.BinInfo, error) {
+func (db *Database) GetBinInfos(filterBy string) ([]*infra.BinInfo, error) {
 	sql := fmt.Sprintf(
 		`SELECT bin_id, name, version, package_hash, time_added, type, status
                 FROM binaries order by time_added desc`)
+
+	if filterBy != "" {
+		sql = fmt.Sprintf(
+			`SELECT bin_id, name, version, package_hash, time_added, type, status
+                FROM binaries where %s order by time_added desc`, filterBy)
+	}
+
 	rows, err := gDatabase.db.Query(sql)
 	if err != nil {
 		log.Error(err)
