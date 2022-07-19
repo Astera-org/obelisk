@@ -93,7 +93,7 @@ func fetchJob(job *Job) {
 		log.Info("Fetching new job")
 
 		err := job.fetchWork()
-		log.Info("Job Fetched: ", job.jobID) // TEMP
+		log.Info("Job Fetched: ", job.JobID) // TEMP
 		if err != nil {
 			log.Error("Fetching err: ", err)
 			wait(&waitSeconds)

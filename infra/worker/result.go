@@ -10,21 +10,21 @@ import (
 
 // if result file isn't there tell server it failed
 func readResults(job *Job) {
-	if job.result.Status == goodJob {
+	if job.Result.Status == goodJob {
 
-		os.Chdir(job.agentWorkingDir)
+		os.Chdir(job.AgentWorkingDir)
 		// read the result file
 		file, err := os.Open("result.json")
 		if err != nil {
 			log.Error("Couldn't open result.json", err)
-			job.result.Status = jobFailed
+			job.Result.Status = jobFailed
 			return
 		}
 		defer file.Close()
 		// parse the result file
 		byteValue, _ := ioutil.ReadAll(file)
 
-		json.Unmarshal(byteValue, &job.result)
-		job.result.Cycles = int32(float32(job.result.Seconds) * gConfig.CPU_FACTOR)
+		json.Unmarshal(byteValue, &job.Result)
+		job.Result.Cycles = int32(float32(job.Result.Seconds) * gConfig.CPU_FACTOR)
 	}
 }
