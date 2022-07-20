@@ -33,7 +33,8 @@ func (db *Database) GetJobCount(status int32) int32 {
 
 func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	binInfo := infra.BinInfo{}
-	err := db.db.Get(&binInfo, "SELECT * FROM binaries where bin_id = ?", binID)
+	sql := fmt.Sprintf("SELECT name, version,package_hash FROM binaries where bin_id = %d", binID)
+	err := db.db.Get(&binInfo, sql)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -71,7 +72,8 @@ func (db *Database) GetBinInfos(filterBy string) ([]*infra.BinInfo, error) {
 
 func (db *Database) GetCallback(jobID int32) string {
 	var callback string = ""
-	err := db.db.Get(&callback, "SELECT callback from jobs where job_id = ?", jobID)
+	sql := fmt.Sprint("SELECT callback from jobs where job_id =%d", jobID)
+	err := db.db.Get(&callback, sql)
 	if err != nil {
 		log.Error(err)
 	}

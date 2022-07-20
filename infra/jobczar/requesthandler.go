@@ -23,6 +23,7 @@ const (
 	malformedJob       = 2
 )
 
+// TODO: move database guts into the database file
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	return gDatabase.FetchWork(workerName, instanceName)
 }
