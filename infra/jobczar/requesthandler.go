@@ -26,7 +26,7 @@ const (
 // TODO: move database guts into the database file
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
-	query := "SELECT * FROM jobs where status=0 order by priority desc LIMIT 1"
+	query := "SELECT job_id,agent_id,world_id,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1"
 	err := gDatabase.db.Get(&job, query)
 	if err == sql.ErrNoRows {
 		log.Error(err)
