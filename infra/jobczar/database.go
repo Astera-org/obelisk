@@ -33,7 +33,8 @@ func (db *Database) GetJobCount(status int32) int32 {
 
 func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	binInfo := infra.BinInfo{}
-	err := db.db.Get(&binInfo, "SELECT * FROM binaries where bin_id = ?", binID)
+	sql := fmt.Sprintf("SELECT name, version,package_hash FROM binaries where bin_id = %d", binID)
+	err := db.db.Get(&binInfo, sql)
 	if err != nil {
 		log.Error(err)
 		return nil
@@ -74,7 +75,8 @@ func (db *Database) GetBinInfos(filterBy string) ([]*infra.BinInfo, error) {
 
 func (db *Database) GetCallback(jobID int32) string {
 	var callback string = ""
-	err := db.db.Get(&callback, "SELECT callback from jobs where job_id = ?", jobID)
+	sql := fmt.Sprint("SELECT callback from jobs where job_id =%d", jobID)
+	err := db.db.Get(&callback, sql)
 	if err != nil {
 		log.Error(err)
 	}
@@ -112,14 +114,14 @@ func (db *Database) UpdateGoodJob(result *infra.ResultJob) (sql.Result, error) {
 
 func (db *Database) UpdateFailedJob(result *infra.ResultJob) (sql.Result, error) {
 	sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name='' where job_id=%d", result.JobID)
-	return gDatabase.db.Exec(sql)
+	return db.db.Exec(sql)
 }
 
 func (db *Database) AddJob(agentId int32, worldId int32,
 	agentParam string, worldParam string, priority int32, userId int32, note string) (int64, error) {
 	sql := fmt.Sprintf("INSERT into jobs (user_id,priority,agent_id,world_id,agent_param,world_param,note) values (%d,%d,%d,%d,'%s','%s','%s')",
 		userId, priority, agentId, worldId, agentParam, worldParam, note)
-	result, err := gDatabase.db.Exec(sql)
+	result, err := db.db.Exec(sql)
 	if err != nil {
 		log.Error(err)
 		return -1, err

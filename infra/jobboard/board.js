@@ -147,6 +147,7 @@ function queryJobs() {
 }
 
 function populateOptions(selectElem, binInfos) {
+    selectElem.empty();
     binInfos.forEach(function (bi) {
         selectElem.append('<option value="' + bi.bin_id + '">' + bi.name + '</option>');
     });
