@@ -133,8 +133,9 @@ function cancelJob(job_id) {
 // TODO: pagination, fetch by user id, etc.
 function queryJobs() {
     const client = getClient();
+    const filter_by = "";
 
-    client.queryJobs(function (result) {
+    client.queryJobs(filter_by, function (result) {
         if (result instanceof Error) {
             errorAlert("queryJobs server error: ", result);
         } else {

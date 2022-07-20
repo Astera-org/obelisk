@@ -1938,7 +1938,9 @@ type JobCzar interface {
   // Parameters:
   //  - JobID
   RemoveJob(ctx context.Context, job_id int32) (_r bool, _err error)
-  QueryJobs(ctx context.Context) (_r []*JobInfo, _err error)
+  // Parameters:
+  //  - FilterBy
+  QueryJobs(ctx context.Context, filter_by string) (_r []*JobInfo, _err error)
 }
 
 type JobCzarClient struct {
@@ -2133,8 +2135,11 @@ func (p *JobCzarClient) RemoveJob(ctx context.Context, job_id int32) (_r bool, _
   return _result28.GetSuccess(), nil
 }
 
-func (p *JobCzarClient) QueryJobs(ctx context.Context) (_r []*JobInfo, _err error) {
+// Parameters:
+//  - FilterBy
+func (p *JobCzarClient) QueryJobs(ctx context.Context, filter_by string) (_r []*JobInfo, _err error) {
   var _args29 JobCzarQueryJobsArgs
+  _args29.FilterBy = filter_by
   var _result31 JobCzarQueryJobsResult
   var _meta30 thrift.ResponseMeta
   _meta30, _err = p.Client_().Call(ctx, "queryJobs", &_args29, &_result31)
@@ -2947,7 +2952,7 @@ func (p *jobCzarProcessorQueryJobs) Process(ctx context.Context, seqId int32, ip
 
   result := JobCzarQueryJobsResult{}
   var retval []*JobInfo
-  if retval, err2 = p.handler.QueryJobs(ctx); err2 != nil {
+  if retval, err2 = p.handler.QueryJobs(ctx, args.FilterBy); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
       return false, thrift.WrapTException(err2)
@@ -4917,13 +4922,20 @@ func (p *JobCzarRemoveJobResult) String() string {
   return fmt.Sprintf("JobCzarRemoveJobResult(%+v)", *p)
 }
 
+// Attributes:
+//  - FilterBy
 type JobCzarQueryJobsArgs struct {
+  FilterBy string `thrift:"filter_by,1" db:"filter_by" json:"filter_by"`
 }
 
 func NewJobCzarQueryJobsArgs() *JobCzarQueryJobsArgs {
   return &JobCzarQueryJobsArgs{}
 }
 
+
+func (p *JobCzarQueryJobsArgs) GetFilterBy() string {
+  return p.FilterBy
+}
 func (p *JobCzarQueryJobsArgs) Read(ctx context.Context, iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(ctx); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
@@ -4936,8 +4948,21 @@ func (p *JobCzarQueryJobsArgs) Read(ctx context.Context, iprot thrift.TProtocol)
       return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
     }
     if fieldTypeId == thrift.STOP { break; }
-    if err := iprot.Skip(ctx, fieldTypeId); err != nil {
-      return err
+    switch fieldId {
+    case 1:
+      if fieldTypeId == thrift.STRING {
+        if err := p.ReadField1(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+        return err
+      }
     }
     if err := iprot.ReadFieldEnd(ctx); err != nil {
       return err
@@ -4949,16 +4974,36 @@ func (p *JobCzarQueryJobsArgs) Read(ctx context.Context, iprot thrift.TProtocol)
   return nil
 }
 
+func (p *JobCzarQueryJobsArgs)  ReadField1(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadString(ctx); err != nil {
+  return thrift.PrependError("error reading field 1: ", err)
+} else {
+  p.FilterBy = v
+}
+  return nil
+}
+
 func (p *JobCzarQueryJobsArgs) Write(ctx context.Context, oprot thrift.TProtocol) error {
   if err := oprot.WriteStructBegin(ctx, "queryJobs_args"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
+    if err := p.writeField1(ctx, oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(ctx); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
   if err := oprot.WriteStructEnd(ctx); err != nil {
     return thrift.PrependError("write struct stop error: ", err) }
   return nil
+}
+
+func (p *JobCzarQueryJobsArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "filter_by", thrift.STRING, 1); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:filter_by: ", p), err) }
+  if err := oprot.WriteString(ctx, string(p.FilterBy)); err != nil {
+  return thrift.PrependError(fmt.Sprintf("%T.filter_by (1) field write error: ", p), err) }
+  if err := oprot.WriteFieldEnd(ctx); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 1:filter_by: ", p), err) }
+  return err
 }
 
 func (p *JobCzarQueryJobsArgs) String() string {

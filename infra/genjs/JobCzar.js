@@ -999,6 +999,12 @@ JobCzar_removeJob_result.prototype.write = function(output) {
 };
 
 JobCzar_queryJobs_args = function(args) {
+  this.filter_by = null;
+  if (args) {
+    if (args.filter_by !== undefined && args.filter_by !== null) {
+      this.filter_by = args.filter_by;
+    }
+  }
 };
 JobCzar_queryJobs_args.prototype = {};
 JobCzar_queryJobs_args.prototype.read = function(input) {
@@ -1006,10 +1012,24 @@ JobCzar_queryJobs_args.prototype.read = function(input) {
   while (true) {
     var ret = input.readFieldBegin();
     var ftype = ret.ftype;
+    var fid = ret.fid;
     if (ftype == Thrift.Type.STOP) {
       break;
     }
-    input.skip(ftype);
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.STRING) {
+        this.filter_by = input.readString().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
     input.readFieldEnd();
   }
   input.readStructEnd();
@@ -1018,6 +1038,11 @@ JobCzar_queryJobs_args.prototype.read = function(input) {
 
 JobCzar_queryJobs_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_queryJobs_args');
+  if (this.filter_by !== null && this.filter_by !== undefined) {
+    output.writeFieldBegin('filter_by', Thrift.Type.STRING, 1);
+    output.writeString(this.filter_by);
+    output.writeFieldEnd();
+  }
   output.writeFieldStop();
   output.writeStructEnd();
   return;
@@ -1620,15 +1645,18 @@ JobCzarClient.prototype.recv_removeJob = function() {
   throw 'removeJob failed: unknown result';
 };
 
-JobCzarClient.prototype.queryJobs = function(callback) {
-  this.send_queryJobs(callback); 
+JobCzarClient.prototype.queryJobs = function(filter_by, callback) {
+  this.send_queryJobs(filter_by, callback); 
   if (!callback) {
     return this.recv_queryJobs();
   }
 };
 
-JobCzarClient.prototype.send_queryJobs = function(callback) {
-  var args = new JobCzar_queryJobs_args();
+JobCzarClient.prototype.send_queryJobs = function(filter_by, callback) {
+  var params = {
+    filter_by: filter_by
+  };
+  var args = new JobCzar_queryJobs_args(params);
   try {
     this.output.writeMessageBegin('queryJobs', Thrift.MessageType.CALL, this.seqid);
     args.write(this.output);

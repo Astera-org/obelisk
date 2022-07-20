@@ -42,8 +42,11 @@ func (db *Database) GetBinInfo(binID int32) *infra.BinInfo {
 	return &binInfo
 }
 
-func (db *Database) QueryJobs() ([]*infra.JobInfo, error) {
+func (db *Database) QueryJobs(filterBy string) ([]*infra.JobInfo, error) {
 	query := "SELECT * from jobs order by job_id desc LIMIT 1000"
+	if filterBy != "" {
+		query = fmt.Sprintf("SELECT * from jobs WHERE %s order by job_id desc LIMIT 1000", filterBy)
+	}
 	res := []*infra.JobInfo{}
 	err := db.db.Select(&res, query)
 	if err != nil {
