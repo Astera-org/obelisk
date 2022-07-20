@@ -3,11 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	log "github.com/Astera-org/easylog"
 	"net"
 	"net/http"
 	"os"
-
-	log "github.com/Astera-org/easylog"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
@@ -59,17 +61,48 @@ func main() {
 	//}
 
 	handler := RequestHandler{}
-	server := MakeServer(handler)
-
-	go httpServer(&handler)
-	go server.Serve()
+	thriftServer := MakeThriftServer(handler)
 
 	log.Info("thrift server listening on ", gConfig.THRIFT_SERVER_ADDR)
 	log.Info("http server listening on ", gConfig.HTTP_SERVER_ADDR)
 
+	go httpServer(&handler)
+	go thriftServer.Serve()
+
+	signalHandler()
+	inputHandler()
+}
+
+func signalHandler() {
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(sigs)
+	// this happens when running in background and the stdin closes
+	signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
+
+	go func() {
+		for sig := range sigs {
+			log.Info("signalHandler received signal: ", sig)
+			// the reason we need to custom handle this is goji intercepts it
+			// but doesn't stop the entire process since we have multiple goroutines
+			if sig == syscall.SIGINT || sig == syscall.SIGTERM {
+				log.Info("exiting")
+				os.Exit(0)
+			}
+		}
+	}()
+}
+
+func inputHandler() {
+	log.Info("Listening for input")
 	for true {
 		var command string
 		fmt.Scan(&command)
+		if len(command) == 0 {
+			// this happens when we try to run the process in the background
+			time.Sleep(time.Second)
+			continue
+		}
 		switch command {
 		case "q":
 			os.Exit(0)
@@ -78,6 +111,7 @@ func main() {
 		case "v":
 			fmt.Println("Version: ", VERSION)
 		default:
+			fmt.Println("Unknown key", command, len(command))
 			printHelp()
 		}
 	}
@@ -109,7 +143,7 @@ func httpServer(handler *RequestHandler) {
 	goji.ServeListener(listener)
 }
 
-func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
+func MakeThriftServer(handler infra.JobCzar) *thrift.TSimpleServer {
 	transportFactory := thrift.NewTBufferedTransportFactory(8192)
 	transport, _ := thrift.NewTServerSocket(gConfig.THRIFT_SERVER_ADDR)
 	processor := infra.NewJobCzarProcessor(handler)
