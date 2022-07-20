@@ -23,12 +23,11 @@ const (
 	malformedJob       = 2
 )
 
+// TODO: move database guts into the database file
 func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
 	job := infra.Job{}
-
-	row := gDatabase.db.QueryRow("SELECT job_id,agent_id,world_id,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1")
-
-	err := row.Scan(&job.JobID, &job.AgentID, &job.WorldID, &job.AgentCfg, &job.WorldCfg)
+	query := "SELECT job_id,agent_id,world_id,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1"
+	err := gDatabase.db.Get(&job, query)
 	if err == sql.ErrNoRows {
 		log.Error(err)
 		return &job, errors.New("empty")

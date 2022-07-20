@@ -11,14 +11,14 @@ if (typeof Int64 === 'undefined' && typeof require === 'function') {
 //HELPER FUNCTIONS AND STRUCTURES
 
 JobCzar_fetchWork_args = function(args) {
-  this.workerName = null;
-  this.instanceName = null;
+  this.worker_name = null;
+  this.instance_name = null;
   if (args) {
-    if (args.workerName !== undefined && args.workerName !== null) {
-      this.workerName = args.workerName;
+    if (args.worker_name !== undefined && args.worker_name !== null) {
+      this.worker_name = args.worker_name;
     }
-    if (args.instanceName !== undefined && args.instanceName !== null) {
-      this.instanceName = args.instanceName;
+    if (args.instance_name !== undefined && args.instance_name !== null) {
+      this.instance_name = args.instance_name;
     }
   }
 };
@@ -35,14 +35,14 @@ JobCzar_fetchWork_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.workerName = input.readString().value;
+        this.worker_name = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.STRING) {
-        this.instanceName = input.readString().value;
+        this.instance_name = input.readString().value;
       } else {
         input.skip(ftype);
       }
@@ -58,14 +58,14 @@ JobCzar_fetchWork_args.prototype.read = function(input) {
 
 JobCzar_fetchWork_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_fetchWork_args');
-  if (this.workerName !== null && this.workerName !== undefined) {
-    output.writeFieldBegin('workerName', Thrift.Type.STRING, 1);
-    output.writeString(this.workerName);
+  if (this.worker_name !== null && this.worker_name !== undefined) {
+    output.writeFieldBegin('worker_name', Thrift.Type.STRING, 1);
+    output.writeString(this.worker_name);
     output.writeFieldEnd();
   }
-  if (this.instanceName !== null && this.instanceName !== undefined) {
-    output.writeFieldBegin('instanceName', Thrift.Type.STRING, 2);
-    output.writeString(this.instanceName);
+  if (this.instance_name !== null && this.instance_name !== undefined) {
+    output.writeFieldBegin('instance_name', Thrift.Type.STRING, 2);
+    output.writeString(this.instance_name);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -226,31 +226,31 @@ JobCzar_submitResult_result.prototype.write = function(output) {
 };
 
 JobCzar_addJob_args = function(args) {
-  this.agentID = null;
-  this.worldID = null;
-  this.agentCfg = null;
-  this.worldCfg = null;
+  this.agent_id = null;
+  this.world_id = null;
+  this.agent_param = null;
+  this.world_param = null;
   this.priority = null;
-  this.userID = null;
+  this.user_id = null;
   this.note = null;
   if (args) {
-    if (args.agentID !== undefined && args.agentID !== null) {
-      this.agentID = args.agentID;
+    if (args.agent_id !== undefined && args.agent_id !== null) {
+      this.agent_id = args.agent_id;
     }
-    if (args.worldID !== undefined && args.worldID !== null) {
-      this.worldID = args.worldID;
+    if (args.world_id !== undefined && args.world_id !== null) {
+      this.world_id = args.world_id;
     }
-    if (args.agentCfg !== undefined && args.agentCfg !== null) {
-      this.agentCfg = args.agentCfg;
+    if (args.agent_param !== undefined && args.agent_param !== null) {
+      this.agent_param = args.agent_param;
     }
-    if (args.worldCfg !== undefined && args.worldCfg !== null) {
-      this.worldCfg = args.worldCfg;
+    if (args.world_param !== undefined && args.world_param !== null) {
+      this.world_param = args.world_param;
     }
     if (args.priority !== undefined && args.priority !== null) {
       this.priority = args.priority;
     }
-    if (args.userID !== undefined && args.userID !== null) {
-      this.userID = args.userID;
+    if (args.user_id !== undefined && args.user_id !== null) {
+      this.user_id = args.user_id;
     }
     if (args.note !== undefined && args.note !== null) {
       this.note = args.note;
@@ -270,28 +270,28 @@ JobCzar_addJob_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.agentID = input.readI32().value;
+        this.agent_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 2:
       if (ftype == Thrift.Type.I32) {
-        this.worldID = input.readI32().value;
+        this.world_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 3:
       if (ftype == Thrift.Type.STRING) {
-        this.agentCfg = input.readString().value;
+        this.agent_param = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 4:
       if (ftype == Thrift.Type.STRING) {
-        this.worldCfg = input.readString().value;
+        this.world_param = input.readString().value;
       } else {
         input.skip(ftype);
       }
@@ -305,7 +305,7 @@ JobCzar_addJob_args.prototype.read = function(input) {
       break;
       case 6:
       if (ftype == Thrift.Type.I32) {
-        this.userID = input.readI32().value;
+        this.user_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -328,24 +328,24 @@ JobCzar_addJob_args.prototype.read = function(input) {
 
 JobCzar_addJob_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_addJob_args');
-  if (this.agentID !== null && this.agentID !== undefined) {
-    output.writeFieldBegin('agentID', Thrift.Type.I32, 1);
-    output.writeI32(this.agentID);
+  if (this.agent_id !== null && this.agent_id !== undefined) {
+    output.writeFieldBegin('agent_id', Thrift.Type.I32, 1);
+    output.writeI32(this.agent_id);
     output.writeFieldEnd();
   }
-  if (this.worldID !== null && this.worldID !== undefined) {
-    output.writeFieldBegin('worldID', Thrift.Type.I32, 2);
-    output.writeI32(this.worldID);
+  if (this.world_id !== null && this.world_id !== undefined) {
+    output.writeFieldBegin('world_id', Thrift.Type.I32, 2);
+    output.writeI32(this.world_id);
     output.writeFieldEnd();
   }
-  if (this.agentCfg !== null && this.agentCfg !== undefined) {
-    output.writeFieldBegin('agentCfg', Thrift.Type.STRING, 3);
-    output.writeString(this.agentCfg);
+  if (this.agent_param !== null && this.agent_param !== undefined) {
+    output.writeFieldBegin('agent_param', Thrift.Type.STRING, 3);
+    output.writeString(this.agent_param);
     output.writeFieldEnd();
   }
-  if (this.worldCfg !== null && this.worldCfg !== undefined) {
-    output.writeFieldBegin('worldCfg', Thrift.Type.STRING, 4);
-    output.writeString(this.worldCfg);
+  if (this.world_param !== null && this.world_param !== undefined) {
+    output.writeFieldBegin('world_param', Thrift.Type.STRING, 4);
+    output.writeString(this.world_param);
     output.writeFieldEnd();
   }
   if (this.priority !== null && this.priority !== undefined) {
@@ -353,9 +353,9 @@ JobCzar_addJob_args.prototype.write = function(output) {
     output.writeI32(this.priority);
     output.writeFieldEnd();
   }
-  if (this.userID !== null && this.userID !== undefined) {
-    output.writeFieldBegin('userID', Thrift.Type.I32, 6);
-    output.writeI32(this.userID);
+  if (this.user_id !== null && this.user_id !== undefined) {
+    output.writeFieldBegin('user_id', Thrift.Type.I32, 6);
+    output.writeI32(this.user_id);
     output.writeFieldEnd();
   }
   if (this.note !== null && this.note !== undefined) {
@@ -419,10 +419,10 @@ JobCzar_addJob_result.prototype.write = function(output) {
 };
 
 JobCzar_fetchRunResults_args = function(args) {
-  this.jobID = null;
+  this.job_id = null;
   if (args) {
-    if (args.jobID !== undefined && args.jobID !== null) {
-      this.jobID = args.jobID;
+    if (args.job_id !== undefined && args.job_id !== null) {
+      this.job_id = args.job_id;
     }
   }
 };
@@ -439,7 +439,7 @@ JobCzar_fetchRunResults_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.jobID = input.readI32().value;
+        this.job_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -458,9 +458,9 @@ JobCzar_fetchRunResults_args.prototype.read = function(input) {
 
 JobCzar_fetchRunResults_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_fetchRunResults_args');
-  if (this.jobID !== null && this.jobID !== undefined) {
-    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
-    output.writeI32(this.jobID);
+  if (this.job_id !== null && this.job_id !== undefined) {
+    output.writeFieldBegin('job_id', Thrift.Type.I32, 1);
+    output.writeI32(this.job_id);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -494,11 +494,11 @@ JobCzar_fetchRunResults_result.prototype.write = function(output) {
 };
 
 JobCzar_appendNote_args = function(args) {
-  this.jobID = null;
+  this.job_id = null;
   this.note = null;
   if (args) {
-    if (args.jobID !== undefined && args.jobID !== null) {
-      this.jobID = args.jobID;
+    if (args.job_id !== undefined && args.job_id !== null) {
+      this.job_id = args.job_id;
     }
     if (args.note !== undefined && args.note !== null) {
       this.note = args.note;
@@ -518,7 +518,7 @@ JobCzar_appendNote_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.jobID = input.readI32().value;
+        this.job_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -541,9 +541,9 @@ JobCzar_appendNote_args.prototype.read = function(input) {
 
 JobCzar_appendNote_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_appendNote_args');
-  if (this.jobID !== null && this.jobID !== undefined) {
-    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
-    output.writeI32(this.jobID);
+  if (this.job_id !== null && this.job_id !== undefined) {
+    output.writeFieldBegin('job_id', Thrift.Type.I32, 1);
+    output.writeI32(this.job_id);
     output.writeFieldEnd();
   }
   if (this.note !== null && this.note !== undefined) {
@@ -582,10 +582,10 @@ JobCzar_appendNote_result.prototype.write = function(output) {
 };
 
 JobCzar_getBinInfo_args = function(args) {
-  this.binID = null;
+  this.bin_id = null;
   if (args) {
-    if (args.binID !== undefined && args.binID !== null) {
-      this.binID = args.binID;
+    if (args.bin_id !== undefined && args.bin_id !== null) {
+      this.bin_id = args.bin_id;
     }
   }
 };
@@ -602,7 +602,7 @@ JobCzar_getBinInfo_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.binID = input.readI32().value;
+        this.bin_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -621,9 +621,9 @@ JobCzar_getBinInfo_args.prototype.read = function(input) {
 
 JobCzar_getBinInfo_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_getBinInfo_args');
-  if (this.binID !== null && this.binID !== undefined) {
-    output.writeFieldBegin('binID', Thrift.Type.I32, 1);
-    output.writeI32(this.binID);
+  if (this.bin_id !== null && this.bin_id !== undefined) {
+    output.writeFieldBegin('bin_id', Thrift.Type.I32, 1);
+    output.writeI32(this.bin_id);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -683,10 +683,10 @@ JobCzar_getBinInfo_result.prototype.write = function(output) {
 };
 
 JobCzar_getBinInfos_args = function(args) {
-  this.filterBy = null;
+  this.filter_by = null;
   if (args) {
-    if (args.filterBy !== undefined && args.filterBy !== null) {
-      this.filterBy = args.filterBy;
+    if (args.filter_by !== undefined && args.filter_by !== null) {
+      this.filter_by = args.filter_by;
     }
   }
 };
@@ -703,7 +703,7 @@ JobCzar_getBinInfos_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.STRING) {
-        this.filterBy = input.readString().value;
+        this.filter_by = input.readString().value;
       } else {
         input.skip(ftype);
       }
@@ -722,9 +722,9 @@ JobCzar_getBinInfos_args.prototype.read = function(input) {
 
 JobCzar_getBinInfos_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_getBinInfos_args');
-  if (this.filterBy !== null && this.filterBy !== undefined) {
-    output.writeFieldBegin('filterBy', Thrift.Type.STRING, 1);
-    output.writeString(this.filterBy);
+  if (this.filter_by !== null && this.filter_by !== undefined) {
+    output.writeFieldBegin('filter_by', Thrift.Type.STRING, 1);
+    output.writeString(this.filter_by);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -899,10 +899,10 @@ JobCzar_runSQL_result.prototype.write = function(output) {
 };
 
 JobCzar_removeJob_args = function(args) {
-  this.jobID = null;
+  this.job_id = null;
   if (args) {
-    if (args.jobID !== undefined && args.jobID !== null) {
-      this.jobID = args.jobID;
+    if (args.job_id !== undefined && args.job_id !== null) {
+      this.job_id = args.job_id;
     }
   }
 };
@@ -919,7 +919,7 @@ JobCzar_removeJob_args.prototype.read = function(input) {
     switch (fid) {
       case 1:
       if (ftype == Thrift.Type.I32) {
-        this.jobID = input.readI32().value;
+        this.job_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -938,9 +938,9 @@ JobCzar_removeJob_args.prototype.read = function(input) {
 
 JobCzar_removeJob_args.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_removeJob_args');
-  if (this.jobID !== null && this.jobID !== undefined) {
-    output.writeFieldBegin('jobID', Thrift.Type.I32, 1);
-    output.writeI32(this.jobID);
+  if (this.job_id !== null && this.job_id !== undefined) {
+    output.writeFieldBegin('job_id', Thrift.Type.I32, 1);
+    output.writeI32(this.job_id);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -1096,17 +1096,17 @@ JobCzarClient = function(input, output) {
 };
 JobCzarClient.prototype = {};
 
-JobCzarClient.prototype.fetchWork = function(workerName, instanceName, callback) {
-  this.send_fetchWork(workerName, instanceName, callback); 
+JobCzarClient.prototype.fetchWork = function(worker_name, instance_name, callback) {
+  this.send_fetchWork(worker_name, instance_name, callback); 
   if (!callback) {
     return this.recv_fetchWork();
   }
 };
 
-JobCzarClient.prototype.send_fetchWork = function(workerName, instanceName, callback) {
+JobCzarClient.prototype.send_fetchWork = function(worker_name, instance_name, callback) {
   var params = {
-    workerName: workerName,
-    instanceName: instanceName
+    worker_name: worker_name,
+    instance_name: instance_name
   };
   var args = new JobCzar_fetchWork_args(params);
   try {
@@ -1213,21 +1213,21 @@ JobCzarClient.prototype.recv_submitResult = function() {
   throw 'submitResult failed: unknown result';
 };
 
-JobCzarClient.prototype.addJob = function(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback) {
-  this.send_addJob(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback); 
+JobCzarClient.prototype.addJob = function(agent_id, world_id, agent_param, world_param, priority, user_id, note, callback) {
+  this.send_addJob(agent_id, world_id, agent_param, world_param, priority, user_id, note, callback); 
   if (!callback) {
     return this.recv_addJob();
   }
 };
 
-JobCzarClient.prototype.send_addJob = function(agentID, worldID, agentCfg, worldCfg, priority, userID, note, callback) {
+JobCzarClient.prototype.send_addJob = function(agent_id, world_id, agent_param, world_param, priority, user_id, note, callback) {
   var params = {
-    agentID: agentID,
-    worldID: worldID,
-    agentCfg: agentCfg,
-    worldCfg: worldCfg,
+    agent_id: agent_id,
+    world_id: world_id,
+    agent_param: agent_param,
+    world_param: world_param,
     priority: priority,
-    userID: userID,
+    user_id: user_id,
     note: note
   };
   var args = new JobCzar_addJob_args(params);
@@ -1277,16 +1277,16 @@ JobCzarClient.prototype.recv_addJob = function() {
   throw 'addJob failed: unknown result';
 };
 
-JobCzarClient.prototype.fetchRunResults = function(jobID, callback) {
-  this.send_fetchRunResults(jobID, callback); 
+JobCzarClient.prototype.fetchRunResults = function(job_id, callback) {
+  this.send_fetchRunResults(job_id, callback); 
   if (!callback) {
   this.recv_fetchRunResults();
   }
 };
 
-JobCzarClient.prototype.send_fetchRunResults = function(jobID, callback) {
+JobCzarClient.prototype.send_fetchRunResults = function(job_id, callback) {
   var params = {
-    jobID: jobID
+    job_id: job_id
   };
   var args = new JobCzar_fetchRunResults_args(params);
   try {
@@ -1332,16 +1332,16 @@ JobCzarClient.prototype.recv_fetchRunResults = function() {
   return;
 };
 
-JobCzarClient.prototype.appendNote = function(jobID, note, callback) {
-  this.send_appendNote(jobID, note, callback); 
+JobCzarClient.prototype.appendNote = function(job_id, note, callback) {
+  this.send_appendNote(job_id, note, callback); 
   if (!callback) {
   this.recv_appendNote();
   }
 };
 
-JobCzarClient.prototype.send_appendNote = function(jobID, note, callback) {
+JobCzarClient.prototype.send_appendNote = function(job_id, note, callback) {
   var params = {
-    jobID: jobID,
+    job_id: job_id,
     note: note
   };
   var args = new JobCzar_appendNote_args(params);
@@ -1388,16 +1388,16 @@ JobCzarClient.prototype.recv_appendNote = function() {
   return;
 };
 
-JobCzarClient.prototype.getBinInfo = function(binID, callback) {
-  this.send_getBinInfo(binID, callback); 
+JobCzarClient.prototype.getBinInfo = function(bin_id, callback) {
+  this.send_getBinInfo(bin_id, callback); 
   if (!callback) {
     return this.recv_getBinInfo();
   }
 };
 
-JobCzarClient.prototype.send_getBinInfo = function(binID, callback) {
+JobCzarClient.prototype.send_getBinInfo = function(bin_id, callback) {
   var params = {
-    binID: binID
+    bin_id: bin_id
   };
   var args = new JobCzar_getBinInfo_args(params);
   try {
@@ -1446,16 +1446,16 @@ JobCzarClient.prototype.recv_getBinInfo = function() {
   throw 'getBinInfo failed: unknown result';
 };
 
-JobCzarClient.prototype.getBinInfos = function(filterBy, callback) {
-  this.send_getBinInfos(filterBy, callback); 
+JobCzarClient.prototype.getBinInfos = function(filter_by, callback) {
+  this.send_getBinInfos(filter_by, callback); 
   if (!callback) {
     return this.recv_getBinInfos();
   }
 };
 
-JobCzarClient.prototype.send_getBinInfos = function(filterBy, callback) {
+JobCzarClient.prototype.send_getBinInfos = function(filter_by, callback) {
   var params = {
-    filterBy: filterBy
+    filter_by: filter_by
   };
   var args = new JobCzar_getBinInfos_args(params);
   try {
@@ -1562,16 +1562,16 @@ JobCzarClient.prototype.recv_runSQL = function() {
   throw 'runSQL failed: unknown result';
 };
 
-JobCzarClient.prototype.removeJob = function(jobID, callback) {
-  this.send_removeJob(jobID, callback); 
+JobCzarClient.prototype.removeJob = function(job_id, callback) {
+  this.send_removeJob(job_id, callback); 
   if (!callback) {
     return this.recv_removeJob();
   }
 };
 
-JobCzarClient.prototype.send_removeJob = function(jobID, callback) {
+JobCzarClient.prototype.send_removeJob = function(job_id, callback) {
   var params = {
-    jobID: jobID
+    job_id: job_id
   };
   var args = new JobCzar_removeJob_args(params);
   try {
