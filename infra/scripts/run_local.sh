@@ -6,9 +6,10 @@
 
 s_flag=false
 
-# TODO
 print_usage() {
-  printf "Usage: ..."
+  echo "This script starts or stops all infra services locally"
+  echo "Usage: $0 [-s]"
+  echo "  -s      kills all services and exits"
 }
 
 while getopts 's' flag; do
