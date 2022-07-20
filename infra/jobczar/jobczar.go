@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	log "github.com/Astera-org/easylog"
 	"net"
 	"net/http"
 	"os"
+	"time"
 
-	log "github.com/Astera-org/easylog"
-
+	"github.com/Astera-org/obelisk/infra/common"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/rs/cors"
@@ -59,17 +60,28 @@ func main() {
 	//}
 
 	handler := RequestHandler{}
-	server := MakeServer(handler)
-
-	go httpServer(&handler)
-	go server.Serve()
+	thriftServer := MakeThriftServer(handler)
 
 	log.Info("thrift server listening on ", gConfig.THRIFT_SERVER_ADDR)
 	log.Info("http server listening on ", gConfig.HTTP_SERVER_ADDR)
 
+	go httpServer(&handler)
+	go thriftServer.Serve()
+
+	common.SignalHandler()
+	inputHandler()
+}
+
+func inputHandler() {
+	log.Info("Listening for input")
 	for true {
 		var command string
 		fmt.Scan(&command)
+		if len(command) == 0 {
+			// this happens when we try to run the process in the background
+			time.Sleep(10 * time.Second)
+			continue
+		}
 		switch command {
 		case "q":
 			os.Exit(0)
@@ -78,6 +90,7 @@ func main() {
 		case "v":
 			fmt.Println("Version: ", VERSION)
 		default:
+			fmt.Println("Unknown key", command, len(command))
 			printHelp()
 		}
 	}
@@ -109,7 +122,7 @@ func httpServer(handler *RequestHandler) {
 	goji.ServeListener(listener)
 }
 
-func MakeServer(handler infra.JobCzar) *thrift.TSimpleServer {
+func MakeThriftServer(handler infra.JobCzar) *thrift.TSimpleServer {
 	transportFactory := thrift.NewTBufferedTransportFactory(8192)
 	transport, _ := thrift.NewTServerSocket(gConfig.THRIFT_SERVER_ADDR)
 	processor := infra.NewJobCzarProcessor(handler)
