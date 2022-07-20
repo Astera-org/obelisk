@@ -7,10 +7,9 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
+	"github.com/Astera-org/obelisk/infra/common"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	"github.com/apache/thrift/lib/go/thrift"
 	"github.com/rs/cors"
@@ -69,28 +68,8 @@ func main() {
 	go httpServer(&handler)
 	go thriftServer.Serve()
 
-	signalHandler()
+	common.SignalHandler()
 	inputHandler()
-}
-
-func signalHandler() {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	signal.Notify(sigs)
-	// this happens when running in background and the stdin closes
-	signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
-
-	go func() {
-		for sig := range sigs {
-			log.Info("signalHandler received signal: ", sig)
-			// the reason we need to custom handle this is goji intercepts it
-			// but doesn't stop the entire process since we have multiple goroutines
-			if sig == syscall.SIGINT || sig == syscall.SIGTERM {
-				log.Info("exiting")
-				os.Exit(0)
-			}
-		}
-	}()
 }
 
 func inputHandler() {
@@ -100,7 +79,7 @@ func inputHandler() {
 		fmt.Scan(&command)
 		if len(command) == 0 {
 			// this happens when we try to run the process in the background
-			time.Sleep(time.Second)
+			time.Sleep(10 * time.Second)
 			continue
 		}
 		switch command {
