@@ -41,7 +41,11 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     const client = getClient();
     client.addJob(agent_id, world_id, agent_param, world_param, -1, -1, note,function (result) {
         console.log("addJob result", result);
-        queryJobs();
+        if (result instanceof Error) {
+            errorAlert("addJob server error: " + result);
+        } else {
+            successAlert("Success! New jod id: " + result);
+        }
     });
 }
 
