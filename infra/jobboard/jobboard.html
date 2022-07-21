@@ -1,92 +1,134 @@
 <!doctype html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Obelisk Job Board!</title>
-        <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
-        <link rel="stylesheet" type="text/css" href="board.css">
-    </head>
-    <body>
-        <script src="jquery.min.js"></script>
-        <script src="bootstrap.min.js"></script>
-        <script src="thrift.js"></script>
-        <script src="../genjs/infra_types.js"></script>
-        <script src="../genjs/JobCzar.js"></script>
-        <script src="board.js"></script>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Obelisk Job Board!</title>
+    <link rel="stylesheet" type="text/css" href="bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="board.css">
+</head>
 
-        <!-- Alerts -->
-        <div class="alert alert-success" style="display: none" role="alert">
-            This is a success alert—check it out!
+<body>
+
+<script src="jquery.min.js"></script>
+<script src="popper.min.js"></script>
+<script src="bootstrap.min.js"></script>
+<script src="thrift.js"></script>
+<script src="../genjs/infra_types.js"></script>
+<script src="../genjs/JobCzar.js"></script>
+<script src="board.js"></script>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <div class="container-fluid"> <!-- just for padding left and right -->
+        <a class="navbar-brand" href="#">Jobboard</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Home</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">Add Job</a>
+                </li>
+                <li class="nav-item active">
+                    <a class="nav-link" href="#">SQL</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="serverText" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        [SERVER]
+                    </a>
+                    <!-- Server toggle -->
+                    <div class="dropdown-menu" aria-labelledby="serverText">
+                        <a class="dropdown-item" href="#" id="serverToggleLocalhost">Localhost</a>
+                        <a class="dropdown-item" href="#" id="serverToggleProduction">Production</a>
+                    </div>
+                </li>
+                <li class="nav-item active">
+                    <!-- Server toggle -->
+                    <!-- Keeping this around for now because it uses a checkbox
+                         and the checkbox saves its state across browser refreshes -->
+                    <label class="switch container-fluid" hidden>
+                        <input type="checkbox" id="serverToggleCheckbox">
+                        <span class="slider round" id="serverToggle">Localhost</span>
+                    </label>
+                </li>
+            </ul>
         </div>
-        <div class="alert alert-danger" style="display:none" role="alert">
-            This is a danger alert—check it out!
+    </div>
+</nav>
+
+<!-- Top level container -->
+<div class="container-fluid">
+
+    <!-- Alerts -->
+    <div class="alert alert-success" style="display: none" role="alert">
+        This is a success alert—check it out!
+    </div>
+    <div class="alert alert-danger" style="display:none" role="alert">
+        This is a danger alert—check it out!
+    </div>
+
+    <!-- Raw sql -->
+    <form id="submit_sql_form">
+        <div class="form-group">
+            <label for="sqlString">Sql string</label>
+            <input class="form-control" id="sqlString" required>
+        </div>
+        <button type="submit" class="btn">Send Query</button>
+        <div id="result"></div>
+    </form>
+
+    <!-- Add job -->
+    <form id="add_job_form">
+        <div class="form-group">
+            <label for="agent">Select agent</label>
+            <select class="form-control" id="agent" required>
+                <!-- options get populated dynamically (see getBinInfos)-->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="agent-config">Agent Config</label>
+            <textarea class="form-control" id="agent-config"></textarea>
         </div>
 
-        <!-- Server toggle -->
-        <label class="switch">
-            <input type="checkbox" id="serverToggleCheckbox">
-            <span class="slider round" id="serverToggle"></span>
-            <span id="serverText">Localhost</span>
-        </label>
+        <div class="form-group">
+            <label for="world">Select world</label>
+            <select class="form-control" id="world" required>
+                <!-- options get populated dynamically (see getBinInfos)-->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="world-config">World Config</label>
+            <textarea class="form-control" id="world-config"></textarea>
+        </div>
 
-        <div class="container">Match idle workers with rewarding work.</div>
+        <div class="form-group">
+            <label for="note">Note</label>
+            <textarea class="form-control" id="note"></textarea>
+        </div>
 
-        <!-- Raw sql -->
-        <form id="submit_sql_form">
-            <div class="form-group">
-                <label for="sqlString">Sql string</label>
-                <input class="form-control" id="sqlString" required>
-            </div>
-            <button type="submit" class="btn">Send Query</button>
-            <div id="result"></div>
-        </form>
+        <button type="submit" class="btn btn-primary">Add Job</button>
+    </form>
 
-        <!-- Add job -->
-        <form id="add_job_form">
-            <div class="form-group">
-                <label for="agent">Select agent</label>
-                <select class="form-control" id="agent" required>
-                    <!-- options get populated dynamically (see getBinInfos)-->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="agent-config">Agent Config</label>
-                <textarea class="form-control" id="agent-config"></textarea>
-            </div>
+    <!-- Show jobs -->
 
-            <div class="form-group">
-                <label for="world">Select world</label>
-                <select class="form-control" id="world" required>
-                    <!-- options get populated dynamically (see getBinInfos)-->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="world-config">World Config</label>
-                <textarea class="form-control" id="world-config"></textarea>
-            </div>
+    <!-- see database.sql for the column names -->
+    <!-- keep in sync with toHtml in board.js -->
+    <table id="jobs_table" class="table table-hover">
+        <thead>
+        <!-- Gets created in code (board.js generateJobsTable) -->
+        </thead>
 
-            <div class="form-group">
-                <label for="note">Note</label>
-                <textarea class="form-control" id="note"></textarea>
-            </div>
+        <tbody>
+        <!-- This gets filled in board.js generateJobsTable -->
+        </tbody>
 
-            <button type="submit" class="btn btn-primary">Add Job</button>
-        </form>
+    </table>
 
-        <!-- Show jobs -->
+</div> <!-- End top most container-fluid -->
 
-        <!-- see database.sql for the column names -->
-        <!-- keep in sync with toHtml in board.js -->
-        <table id="jobs_table" class="table table-hover">
-            <thead>
-            <!-- Gets created in code (board.js generateJobsTable) -->
-            </thead>
-
-            <tbody>
-            <!-- This gets filled in board.js generateJobsTable -->
-            </tbody>
-
-        </table>
-
-    </body>
+</body>
 </html>
