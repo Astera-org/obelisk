@@ -31,12 +31,12 @@ func createParams(gconfig Config) params.Sets {
 						"Layer.Act.Decay.Act":   "0.2", // 8 [0 - 1]
 						"Layer.Act.Decay.Glong": "0.6", // 8 [0 - 1]
 						"Layer.Act.Clamp.Ge":    "1.0", // 4 Probs fine  [.6 1.5]
+						"Layer.Inhib.Pool.Gi":   "1.1",
 					}},
 				{Sel: ".Hidden", Desc: "noise? sub-pools",
 					Params: params.Params{
 						"Layer.Inhib.ActAvg.Init":    "0.06",
 						"Layer.Inhib.ActAvg.AdaptGi": "false", // no!
-						"Layer.Inhib.Layer.Gi":       "1.1",   //Remove ALL 1.1's so it uses Layer from config
 						"Layer.Inhib.Pool.Gi":        "1.1",
 						"Layer.Inhib.Pool.On":        "true",
 						"Layer.Inhib.Layer.On":       "true", // full layer
@@ -45,8 +45,6 @@ func createParams(gconfig Config) params.Sets {
 					Params: params.Params{
 						"Layer.Inhib.ActAvg.Init": "0.06",
 						"Layer.CtxtGeGain":        "0.2", //10, [.1 - .3]
-						"Layer.Inhib.Layer.Gi":    "1.1", //todo REMOVE ALL that overlap with Layer
-						"Layer.Inhib.Pool.Gi":     "1.1", //todo remove all that overlap with layer
 						"Layer.Inhib.Pool.On":     "true",
 						"Layer.Inhib.Layer.On":    "true",
 						"Layer.Act.KNa.On":        "true",
@@ -92,30 +90,22 @@ func createParams(gconfig Config) params.Sets {
 					}},
 				{Sel: ".S1V", Desc: "lower inhib, higher act",
 					Params: params.Params{
-						"Layer.Inhib.Layer.On":    "true",
-						"Layer.Inhib.Layer.Gi":    "1.1",
-						"Layer.Inhib.Pool.On":     "false",
-						"Layer.Inhib.ActAvg.Init": "0.1",
+						"Layer.Inhib.Layer.On": "true",
+						"Layer.Inhib.Pool.On":  "false",
 					}},
 				{Sel: ".Ins", Desc: "pools",
 					Params: params.Params{
-						"Layer.Inhib.Layer.Gi":    "1.1",
-						"Layer.Inhib.Pool.On":     "true",
-						"Layer.Inhib.Pool.Gi":     "1.1",
-						"Layer.Inhib.ActAvg.Init": "0.1",
+						"Layer.Inhib.Pool.On": "true",
 					}},
 				{Sel: ".M1", Desc: "",
 					Params: params.Params{
 						"Layer.Inhib.ActAvg.Init": "0.12",
-						"Layer.Inhib.Layer.Gi":    "1.1",
 					}},
 				{Sel: ".MSTd", Desc: "",
 					Params: params.Params{
 						"Layer.Inhib.Layer.On":    "true",
 						"Layer.Inhib.Pool.On":     "true",
 						"Layer.Inhib.ActAvg.Init": "0.03",
-						"Layer.Inhib.Layer.Gi":    "1.1", // 1.1 > 1.0
-						"Layer.Inhib.Pool.Gi":     "1.1",
 						"Layer.Inhib.Pool.FFEx":   "0.02", //
 						"Layer.Inhib.Layer.FFEx":  "0.02",
 					}},
@@ -130,14 +120,11 @@ func createParams(gconfig Config) params.Sets {
 					Params: params.Params{
 						"Layer.Inhib.Layer.On": "true",
 						"Layer.Inhib.Pool.On":  "true",
-						"Layer.Inhib.Layer.Gi": "1.1",
-						"Layer.Inhib.Pool.Gi":  "1.1",
 					}},
 				{Sel: ".PCC", Desc: "PCC general",
 					Params: params.Params{
 						"Layer.Inhib.Layer.On": "true",
 						"Layer.Inhib.Pool.On":  "true",
-						"Layer.Inhib.Layer.Gi": "1.1",
 					}},
 				{Sel: "#V2WdP", Desc: "weaker inhibition for pulvinar",
 					Params: params.Params{ //LEAVE ALONE
@@ -167,8 +154,6 @@ func createParams(gconfig Config) params.Sets {
 					}},
 				{Sel: "#SMAP", Desc: "pulv",
 					Params: params.Params{
-						"Layer.Inhib.Layer.Gi":    "1.1",
-						"Layer.Inhib.Pool.Gi":     "1.1",
 						"Layer.Inhib.Pool.On":     "true", // independent pathways
 						"Layer.Inhib.ActAvg.Init": "0.1",
 					}},
@@ -196,23 +181,7 @@ func createParams(gconfig Config) params.Sets {
 					Params: params.Params{ //LEAVE MOST ALONE
 						"Layer.Inhib.ActAvg.Init": "0.12",
 						"Layer.Inhib.Pool.On":     "false",
-						"Layer.Inhib.Layer.Gi":    "1.1", //REMOVE
 					}},
-				{Sel: "#ITCT", Desc: "reg",
-					Params: params.Params{ //REMOVE
-						"Layer.Inhib.Layer.Gi": "1.1",
-						"Layer.Inhib.Layer.On": "true",
-						"Layer.Inhib.Pool.On":  "true",
-					}},
-				{Sel: ".LIP", Desc: "reg",
-					Params: params.Params{ //REMOVE
-						"Layer.Inhib.ActAvg.Init": "0.06",
-						"Layer.Inhib.Layer.Gi":    "1.1",
-						"Layer.Inhib.Layer.On":    "true",
-						"Layer.Inhib.Pool.On":     "true",
-						"Layer.Inhib.Pool.Gi":     "1.1",
-					}},
-
 				//////////////////////////////////////////////////////////
 				// Prjns
 
