@@ -41,7 +41,11 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     const client = getClient();
     client.addJob(agent_id, world_id, agent_param, world_param, -1, -1, note,function (result) {
         console.log("addJob result", result);
-        queryJobs();
+        if (result instanceof Error) {
+            errorAlert("addJob server error: " + result);
+        } else {
+            successAlert("Success! New jod id: " + result);
+        }
     });
 }
 
@@ -183,6 +187,9 @@ function getBinInfos() {
 function setServerText() {
     const serverText = $("#serverText");
     serverText.text(local ? "Localhost" : "Production");
+    // also set the hidden checkbox so it saves state
+    const serverToggleCb = $("#serverToggleCheckbox");
+    serverToggleCb.prop("checked", !local);
 }
 
 function successAlert(text) {
@@ -202,6 +209,14 @@ function errorAlert(text) {
     console.error(text);
 }
 
+function toggleServer() {
+    local = !local;
+    // reset the client to point to the new address
+    gClient = null;
+    setServerText();
+    getBinInfos();
+}
+
 $(function() {
     console.log("document ready");
 
@@ -210,16 +225,23 @@ $(function() {
     const isChecked = serverToggleCb.is(':checked');
     // the browser saves the last state of the checkbox so set it based on it
     local = !isChecked;
-    setServerText(isChecked);
+    setServerText();
 
     getBinInfos();
 
-    $("#serverToggle").click(function (event) {
-        local = !local;
-        // reset the client to point to the new address
-        gClient = null;
-        setServerText();
-        getBinInfos();
+    $("#serverToggleLocalhost").click(function (event) {
+        if (local) {
+            console.log("already local");
+            return;
+        }
+        toggleServer();
+    });
+    $("#serverToggleProduction").click(function (event) {
+        if (!local) {
+            console.log("already prod");
+            return;
+        }
+        toggleServer();
     });
 
     // setup add job form
