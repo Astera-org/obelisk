@@ -852,7 +852,7 @@ JobCzar_runSQL_result = function(args) {
   this.success = null;
   if (args) {
     if (args.success !== undefined && args.success !== null) {
-      this.success = args.success;
+      this.success = Thrift.copyList(args.success, [Thrift.copyMap, null]);
     }
   }
 };
@@ -868,8 +868,31 @@ JobCzar_runSQL_result.prototype.read = function(input) {
     }
     switch (fid) {
       case 0:
-      if (ftype == Thrift.Type.STRING) {
-        this.success = input.readString().value;
+      if (ftype == Thrift.Type.LIST) {
+        this.success = [];
+        var _rtmp36 = input.readListBegin();
+        var _size5 = _rtmp36.size || 0;
+        for (var _i7 = 0; _i7 < _size5; ++_i7) {
+          var elem8 = null;
+          elem8 = {};
+          var _rtmp310 = input.readMapBegin();
+          var _size9 = _rtmp310.size || 0;
+          for (var _i11 = 0; _i11 < _size9; ++_i11) {
+            if (_i11 > 0 ) {
+              if (input.rstack.length > input.rpos[input.rpos.length -1] + 1) {
+                input.rstack.pop();
+              }
+            }
+            var key12 = null;
+            var val13 = null;
+            key12 = input.readString().value;
+            val13 = input.readString().value;
+            elem8[key12] = val13;
+          }
+          input.readMapEnd();
+          this.success.push(elem8);
+        }
+        input.readListEnd();
       } else {
         input.skip(ftype);
       }
@@ -889,8 +912,23 @@ JobCzar_runSQL_result.prototype.read = function(input) {
 JobCzar_runSQL_result.prototype.write = function(output) {
   output.writeStructBegin('JobCzar_runSQL_result');
   if (this.success !== null && this.success !== undefined) {
-    output.writeFieldBegin('success', Thrift.Type.STRING, 0);
-    output.writeString(this.success);
+    output.writeFieldBegin('success', Thrift.Type.LIST, 0);
+    output.writeListBegin(Thrift.Type.MAP, this.success.length);
+    for (var iter14 in this.success) {
+      if (this.success.hasOwnProperty(iter14)) {
+        iter14 = this.success[iter14];
+        output.writeMapBegin(Thrift.Type.STRING, Thrift.Type.STRING, Thrift.objectLength(iter14));
+        for (var kiter15 in iter14) {
+          if (iter14.hasOwnProperty(kiter15)) {
+            var viter16 = iter14[kiter15];
+            output.writeString(kiter15);
+            output.writeString(viter16);
+          }
+        }
+        output.writeMapEnd();
+      }
+    }
+    output.writeListEnd();
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -1070,13 +1108,13 @@ JobCzar_queryJobs_result.prototype.read = function(input) {
       case 0:
       if (ftype == Thrift.Type.LIST) {
         this.success = [];
-        var _rtmp36 = input.readListBegin();
-        var _size5 = _rtmp36.size || 0;
-        for (var _i7 = 0; _i7 < _size5; ++_i7) {
-          var elem8 = null;
-          elem8 = new JobInfo();
-          elem8.read(input);
-          this.success.push(elem8);
+        var _rtmp318 = input.readListBegin();
+        var _size17 = _rtmp318.size || 0;
+        for (var _i19 = 0; _i19 < _size17; ++_i19) {
+          var elem20 = null;
+          elem20 = new JobInfo();
+          elem20.read(input);
+          this.success.push(elem20);
         }
         input.readListEnd();
       } else {
@@ -1100,10 +1138,10 @@ JobCzar_queryJobs_result.prototype.write = function(output) {
   if (this.success !== null && this.success !== undefined) {
     output.writeFieldBegin('success', Thrift.Type.LIST, 0);
     output.writeListBegin(Thrift.Type.STRUCT, this.success.length);
-    for (var iter9 in this.success) {
-      if (this.success.hasOwnProperty(iter9)) {
-        iter9 = this.success[iter9];
-        iter9.write(output);
+    for (var iter21 in this.success) {
+      if (this.success.hasOwnProperty(iter21)) {
+        iter21 = this.success[iter21];
+        iter21.write(output);
       }
     }
     output.writeListEnd();
