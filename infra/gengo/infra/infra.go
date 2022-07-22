@@ -1934,7 +1934,7 @@ type JobCzar interface {
   GetBinInfos(ctx context.Context, filter_by string) (_r []*BinInfo, _err error)
   // Parameters:
   //  - Query
-  RunSQL(ctx context.Context, query string) (_r string, _err error)
+  RunSQL(ctx context.Context, query string) (_r []map[string]string, _err error)
   // Parameters:
   //  - JobID
   RemoveJob(ctx context.Context, job_id int32) (_r bool, _err error)
@@ -2107,7 +2107,7 @@ func (p *JobCzarClient) GetBinInfos(ctx context.Context, filter_by string) (_r [
 
 // Parameters:
 //  - Query
-func (p *JobCzarClient) RunSQL(ctx context.Context, query string) (_r string, _err error) {
+func (p *JobCzarClient) RunSQL(ctx context.Context, query string) (_r []map[string]string, _err error) {
   var _args23 JobCzarRunSQLArgs
   _args23.Query = query
   var _result25 JobCzarRunSQLResult
@@ -2793,7 +2793,7 @@ func (p *jobCzarProcessorRunSQL) Process(ctx context.Context, seqId int32, iprot
   }
 
   result := JobCzarRunSQLResult{}
-  var retval string
+  var retval []map[string]string
   if retval, err2 = p.handler.RunSQL(ctx, args.Query); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
@@ -2806,7 +2806,7 @@ func (p *jobCzarProcessorRunSQL) Process(ctx context.Context, seqId int32, iprot
     oprot.Flush(ctx)
     return true, thrift.WrapTException(err2)
   } else {
-    result.Success = &retval
+    result.Success = retval
   }
   tickerCancel()
   if err2 = oprot.WriteMessageBegin(ctx, "runSQL", thrift.REPLY, seqId); err2 != nil {
@@ -4634,19 +4634,17 @@ func (p *JobCzarRunSQLArgs) String() string {
 // Attributes:
 //  - Success
 type JobCzarRunSQLResult struct {
-  Success *string `thrift:"success,0" db:"success" json:"success,omitempty"`
+  Success []map[string]string `thrift:"success,0" db:"success" json:"success,omitempty"`
 }
 
 func NewJobCzarRunSQLResult() *JobCzarRunSQLResult {
   return &JobCzarRunSQLResult{}
 }
 
-var JobCzarRunSQLResult_Success_DEFAULT string
-func (p *JobCzarRunSQLResult) GetSuccess() string {
-  if !p.IsSetSuccess() {
-    return JobCzarRunSQLResult_Success_DEFAULT
-  }
-return *p.Success
+var JobCzarRunSQLResult_Success_DEFAULT []map[string]string
+
+func (p *JobCzarRunSQLResult) GetSuccess() []map[string]string {
+  return p.Success
 }
 func (p *JobCzarRunSQLResult) IsSetSuccess() bool {
   return p.Success != nil
@@ -4666,7 +4664,7 @@ func (p *JobCzarRunSQLResult) Read(ctx context.Context, iprot thrift.TProtocol) 
     if fieldTypeId == thrift.STOP { break; }
     switch fieldId {
     case 0:
-      if fieldTypeId == thrift.STRING {
+      if fieldTypeId == thrift.LIST {
         if err := p.ReadField0(ctx, iprot); err != nil {
           return err
         }
@@ -4691,11 +4689,42 @@ func (p *JobCzarRunSQLResult) Read(ctx context.Context, iprot thrift.TProtocol) 
 }
 
 func (p *JobCzarRunSQLResult)  ReadField0(ctx context.Context, iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadString(ctx); err != nil {
-  return thrift.PrependError("error reading field 0: ", err)
+  _, size, err := iprot.ReadListBegin(ctx)
+  if err != nil {
+    return thrift.PrependError("error reading list begin: ", err)
+  }
+  tSlice := make([]map[string]string, 0, size)
+  p.Success =  tSlice
+  for i := 0; i < size; i ++ {
+    _, _, size, err := iprot.ReadMapBegin(ctx)
+    if err != nil {
+      return thrift.PrependError("error reading map begin: ", err)
+    }
+    tMap := make(map[string]string, size)
+    _elem35 :=  tMap
+    for i := 0; i < size; i ++ {
+var _key36 string
+      if v, err := iprot.ReadString(ctx); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
 } else {
-  p.Success = &v
+      _key36 = v
 }
+var _val37 string
+      if v, err := iprot.ReadString(ctx); err != nil {
+      return thrift.PrependError("error reading field 0: ", err)
+} else {
+      _val37 = v
+}
+      _elem35[_key36] = _val37
+    }
+    if err := iprot.ReadMapEnd(ctx); err != nil {
+      return thrift.PrependError("error reading map end: ", err)
+    }
+    p.Success = append(p.Success, _elem35)
+  }
+  if err := iprot.ReadListEnd(ctx); err != nil {
+    return thrift.PrependError("error reading list end: ", err)
+  }
   return nil
 }
 
@@ -4714,10 +4743,28 @@ func (p *JobCzarRunSQLResult) Write(ctx context.Context, oprot thrift.TProtocol)
 
 func (p *JobCzarRunSQLResult) writeField0(ctx context.Context, oprot thrift.TProtocol) (err error) {
   if p.IsSetSuccess() {
-    if err := oprot.WriteFieldBegin(ctx, "success", thrift.STRING, 0); err != nil {
+    if err := oprot.WriteFieldBegin(ctx, "success", thrift.LIST, 0); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
-    if err := oprot.WriteString(ctx, string(*p.Success)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.success (0) field write error: ", p), err) }
+    if err := oprot.WriteListBegin(ctx, thrift.MAP, len(p.Success)); err != nil {
+      return thrift.PrependError("error writing list begin: ", err)
+    }
+    for _, v := range p.Success {
+      if err := oprot.WriteMapBegin(ctx, thrift.STRING, thrift.STRING, len(v)); err != nil {
+        return thrift.PrependError("error writing map begin: ", err)
+      }
+      for k, v := range v {
+        if err := oprot.WriteString(ctx, string(k)); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+        if err := oprot.WriteString(ctx, string(v)); err != nil {
+        return thrift.PrependError(fmt.Sprintf("%T. (0) field write error: ", p), err) }
+      }
+      if err := oprot.WriteMapEnd(ctx); err != nil {
+        return thrift.PrependError("error writing map end: ", err)
+      }
+    }
+    if err := oprot.WriteListEnd(ctx); err != nil {
+      return thrift.PrependError("error writing list end: ", err)
+    }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
       return thrift.PrependError(fmt.Sprintf("%T write field end error 0:success: ", p), err) }
   }
@@ -5078,11 +5125,11 @@ func (p *JobCzarQueryJobsResult)  ReadField0(ctx context.Context, iprot thrift.T
   tSlice := make([]*JobInfo, 0, size)
   p.Success =  tSlice
   for i := 0; i < size; i ++ {
-    _elem35 := &JobInfo{}
-    if err := _elem35.Read(ctx, iprot); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", _elem35), err)
+    _elem38 := &JobInfo{}
+    if err := _elem38.Read(ctx, iprot); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T error reading struct: ", _elem38), err)
     }
-    p.Success = append(p.Success, _elem35)
+    p.Success = append(p.Success, _elem38)
   }
   if err := iprot.ReadListEnd(ctx); err != nil {
     return thrift.PrependError("error reading list end: ", err)

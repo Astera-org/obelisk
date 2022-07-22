@@ -31,7 +31,12 @@ function runSql(sqlString) {
     const client = getClient();
     client.runSQL(sqlString, function (result) {
         console.log("runSQL result", result);
-        $('#result').text(result);
+        if (result instanceof Error) {
+            errorAlert("runSql server error: " + result);
+        } else {
+            successAlert("Success! num results: " + result.length);
+            generateResultsTable(result);
+        }
     });
 }
 
@@ -87,6 +92,34 @@ function toStatus(status) {
         case 3: return "errored"
     }
     return "unknown status " + status
+}
+
+// each row is a map from column name to string value
+function generateResultsTable(rows) {
+    if (!rows)
+        return;
+
+    const table = $('#results_table > tbody');
+    table.empty();
+
+    const head = $('#results_table > thead');
+    head.empty();
+
+    // generate header from column names
+    const columns = Object.keys(rows[0]);
+    head.append(`<tr>`);
+    columns.forEach(function (col) {
+        head.append(`<th scope="col">${col}</th>`);
+    });
+    head.append(`</tr>`);
+
+    rows.forEach(function(row) {
+        table.append(`<tr>`);
+        columns.forEach(function (col) {
+            table.append(`<td>${row[col]}</td>`);
+        });
+        table.append(`</tr>`);
+    });
 }
 
 function generateJobsTable(jobInfos) {

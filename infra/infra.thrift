@@ -83,7 +83,7 @@ service JobCzar {
 
     list<BinInfo> getBinInfos(1:string filter_by);
 
-    string runSQL(1:string query);
+    list<map<string, string>> runSQL(1:string query);
 
     bool removeJob(1:i32 job_id);
 
