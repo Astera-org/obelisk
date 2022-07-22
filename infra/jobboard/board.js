@@ -8,6 +8,9 @@ let local = true;
 // thrift client that talks to the server
 let gClient = null;
 
+// map agent, world ids to names
+let gBinInfos = null;
+
 // TODO: some code organization:
 // separate thrift client code
 // how should we organize javascript? modules?
@@ -32,27 +35,40 @@ function runSql(sqlString) {
     });
 }
 
-function addJob(agentID, agentCfg, worldID, worldCfg, note) {
-    console.log("addJob agent:", agentID, "agent config:", agentCfg, "world:",
-        worldID, "world config:", worldCfg, "note:", note);
+function addJob(agent_id, agent_param, world_id, world_param, note) {
+    console.log("addJob agent:", agent_id, "agent config:", agent_param, "world:",
+        world_id, "world config:", world_param, "note:", note);
     const client = getClient();
-    client.addJob(agentID, worldID, agentCfg, worldCfg, -1, -1, note,function (result) {
+    client.addJob(agent_id, world_id, agent_param, world_param, -1, -1, note,function (result) {
         console.log("addJob result", result);
         queryJobs();
     });
+}
+
+function getBinName(bin_id) {
+    if (!gBinInfos)
+        return ""
+    const binInfo = gBinInfos[bin_id];
+    if (!binInfo)
+        return "";
+    return binInfo.name;
 }
 
 // convert a JobInfo object to a table row
 function toHtml(ji) {
     return `
       <tr>
-        <td>${ji.jobID}</td>
-        <td>${ji.jobID}</td>
-        <td>${ji.worldID}</td>
+        <td>${ji.job_id}</td>
+        <td>${getBinName(ji.agent_id)}/${ji.agent_id}</td>
+        <td>${ji.agent_param}</td>
+        <td>${getBinName(ji.world_id)}/${ji.world_id}</td>
+        <td>${ji.world_param}</td>
         <td>${ji.score}</td>
         <td>${toStatus(ji.status)}</td>
-        <td><button type="button" class="btn" id="${ji.jobID}">cancel</button></td>
-        <!-- TODO: add more columns, cancel job, etc -->
+        <td>${ji.search_id}</td>
+        <td>${ji.time_added}</td>
+        <td>${ji.note}</td>
+        <td><button type="button" class="btn" id="${ji.job_id}">cancel</button></td>
        </tr>
      `;
 }
@@ -74,6 +90,25 @@ function generateJobsTable(jobInfos) {
     table.empty();
     // clear out old click listeners or they pile up
     table.off('click');
+
+    const head = $('#jobs_table > thead');
+    head.empty();
+    head.append(`
+        <tr>
+            <th scope="col">Job id</th>
+            <th scope="col">Agent</th>
+            <th scope="col">Agent param</th>
+            <th scope="col">World</th>
+            <th scope="col">World param</th>
+            <th scope="col">Score</th>
+            <th scope="col">Status</th>
+            <th scope="col">Search id</th>
+            <th scope="col">Time added</th>
+            <th scope="col">Note</th>
+            <th scope="col">Cancel</th>
+            <!-- Any other useful columns? -->
+        </tr>
+    `);
 
     jobInfos.forEach(function (ji) {
         table.append(toHtml(ji));
@@ -98,8 +133,9 @@ function cancelJob(job_id) {
 // TODO: pagination, fetch by user id, etc.
 function queryJobs() {
     const client = getClient();
+    const filter_by = "";
 
-    client.queryJobs(function (result) {
+    client.queryJobs(filter_by, function (result) {
         if (result instanceof Error) {
             errorAlert("queryJobs server error: ", result);
         } else {
@@ -111,21 +147,24 @@ function queryJobs() {
 }
 
 function populateOptions(selectElem, binInfos) {
+    selectElem.empty();
     binInfos.forEach(function (bi) {
-        selectElem.append('<option value="' + bi.binID + '">' + bi.name + '</option>');
+        selectElem.append('<option value="' + bi.bin_id + '">' + bi.name + '</option>');
     });
 }
 
 function getBinInfos() {
     const client = getClient();
     // status=0 means current
-    const filterBy = "status=0";
+    const filter_by = "status=0";
 
-    client.getBinInfos(filterBy,function (binInfos) {
+    client.getBinInfos(filter_by,function (binInfos) {
         if (binInfos instanceof Error) {
             errorAlert("getBinInfos server error: ", binInfos);
         } else {
             console.log("getBinInfos result", binInfos);
+            // convert the list of infos to map from id to info
+            gBinInfos = binInfos.reduce((map, obj) => (map[obj.bin_id] = obj, map), {});
             successAlert("Received bin info data from server");
             // type 0 means agent, type 1 means world
             const agents = binInfos.filter(bi => bi.type === 0);
@@ -134,13 +173,11 @@ function getBinInfos() {
             const worldSelect = $("#world");
             populateOptions(agentSelect, agents);
             populateOptions(worldSelect, worlds);
+
+            // we call this here because we need the bin info first
+            queryJobs();
         }
     });
-}
-
-function fetchData() {
-    queryJobs();
-    getBinInfos();
 }
 
 function setServerText() {
@@ -175,28 +212,28 @@ $(function() {
     local = !isChecked;
     setServerText(isChecked);
 
-    fetchData();
+    getBinInfos();
 
     $("#serverToggle").click(function (event) {
         local = !local;
         // reset the client to point to the new address
         gClient = null;
         setServerText();
-        fetchData();
+        getBinInfos();
     });
 
     // setup add job form
     $("#add_job_form").submit(function(event) {
         event.preventDefault();
         const agentSelect = $("#agent");
-        const agentID = agentSelect.val();
-        const agentCfg = $("#agent-config").val();
+        const agent_id = agentSelect.val();
+        const agent_param = $("#agent-config").val();
         const worldSelect = $("#world");
-        const worldID = worldSelect.val();
-        const worldCfg = $("#world-config").val();
+        const world_id = worldSelect.val();
+        const world_param = $("#world-config").val();
         const note = $("#note").val();
 
-        addJob(agentID, agentCfg, worldID, worldCfg, note);
+        addJob(agent_id, agent_param, world_id, world_param, note);
     });
 
     // setup raw sql form

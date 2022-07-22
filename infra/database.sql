@@ -6,7 +6,7 @@ use obelisk;
 #status (0-pending,1-working,2-complete,3-errored)
 #priority lower priority numbers take precedence
 drop table if exists jobs;
-create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0, 
+create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT DEFAULT 0,
     search_id INT DEFAULT 0, status INT DEFAULT 0, priority INT DEFAULT 0,
     callback VARCHAR(30), time_added TIMESTAMP DEFAULT NOW(),
     agent_id INT DEFAULT 0,

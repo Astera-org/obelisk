@@ -15,3 +15,5 @@ require (
 	github.com/rs/cors v1.8.2
 	goji.io v2.0.2+incompatible
 )
+
+require github.com/jmoiron/sqlx v1.3.5 // indirect

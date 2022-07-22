@@ -22,16 +22,16 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
-  fmt.Fprintln(os.Stderr, "  Job fetchWork(string workerName, string instanceName)")
+  fmt.Fprintln(os.Stderr, "  Job fetchWork(string worker_name, string instance_name)")
   fmt.Fprintln(os.Stderr, "  bool submitResult(ResultJob result)")
-  fmt.Fprintln(os.Stderr, "  i32 addJob(i32 agentID, i32 worldID, string agentCfg, string worldCfg, i32 priority, i32 userID, string note)")
-  fmt.Fprintln(os.Stderr, "  void fetchRunResults(i32 jobID)")
-  fmt.Fprintln(os.Stderr, "  void appendNote(i32 jobID, string note)")
-  fmt.Fprintln(os.Stderr, "  BinInfo getBinInfo(i32 binID)")
-  fmt.Fprintln(os.Stderr, "   getBinInfos(string filterBy)")
+  fmt.Fprintln(os.Stderr, "  i32 addJob(i32 agent_id, i32 world_id, string agent_param, string world_param, i32 priority, i32 user_id, string note)")
+  fmt.Fprintln(os.Stderr, "  void fetchRunResults(i32 job_id)")
+  fmt.Fprintln(os.Stderr, "  void appendNote(i32 job_id, string note)")
+  fmt.Fprintln(os.Stderr, "  BinInfo getBinInfo(i32 bin_id)")
+  fmt.Fprintln(os.Stderr, "   getBinInfos(string filter_by)")
   fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
-  fmt.Fprintln(os.Stderr, "  bool removeJob(i32 jobID)")
-  fmt.Fprintln(os.Stderr, "   queryJobs()")
+  fmt.Fprintln(os.Stderr, "  bool removeJob(i32 job_id)")
+  fmt.Fprintln(os.Stderr, "   queryJobs(string filter_by)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -316,11 +316,13 @@ func main() {
     fmt.Print("\n")
     break
   case "queryJobs":
-    if flag.NArg() - 1 != 0 {
-      fmt.Fprintln(os.Stderr, "QueryJobs requires 0 args")
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "QueryJobs requires 1 args")
       flag.Usage()
     }
-    fmt.Print(client.QueryJobs(context.Background()))
+    argvalue0 := flag.Arg(1)
+    value0 := argvalue0
+    fmt.Print(client.QueryJobs(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":

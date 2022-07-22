@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/Astera-org/obelisk/infra/common"
 	"os"
 	"time"
 
@@ -37,9 +38,16 @@ func main() {
 
 	go mainLoop()
 
+	common.SignalHandler()
+
 	for true {
 		var command string
 		fmt.Scan(&command)
+		if len(command) == 0 {
+			// this happens when we try to run the process in the background
+			time.Sleep(10 * time.Second)
+			continue
+		}
 		switch command {
 		case "q":
 			os.Exit(0)
@@ -93,7 +101,7 @@ func fetchJob(job *Job) {
 		log.Info("Fetching new job")
 
 		err := job.fetchWork()
-		log.Info("Job Fetched: ", job.jobID) // TEMP
+		log.Info("Job Fetched: ", job.JobID) // TEMP
 		if err != nil {
 			log.Error("Fetching err: ", err)
 			wait(&waitSeconds)
