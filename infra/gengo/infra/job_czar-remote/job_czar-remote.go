@@ -29,7 +29,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  void appendNote(i32 job_id, string note)")
   fmt.Fprintln(os.Stderr, "  BinInfo getBinInfo(i32 bin_id)")
   fmt.Fprintln(os.Stderr, "   getBinInfos(string filter_by)")
-  fmt.Fprintln(os.Stderr, "  string runSQL(string query)")
+  fmt.Fprintln(os.Stderr, "   runSQL(string query)")
   fmt.Fprintln(os.Stderr, "  bool removeJob(i32 job_id)")
   fmt.Fprintln(os.Stderr, "   queryJobs(string filter_by)")
   fmt.Fprintln(os.Stderr)
@@ -171,19 +171,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "SubmitResult_ requires 1 args")
       flag.Usage()
     }
-    arg38 := flag.Arg(1)
-    mbTrans39 := thrift.NewTMemoryBufferLen(len(arg38))
-    defer mbTrans39.Close()
-    _, err40 := mbTrans39.WriteString(arg38)
-    if err40 != nil {
+    arg41 := flag.Arg(1)
+    mbTrans42 := thrift.NewTMemoryBufferLen(len(arg41))
+    defer mbTrans42.Close()
+    _, err43 := mbTrans42.WriteString(arg41)
+    if err43 != nil {
       Usage()
       return
     }
-    factory41 := thrift.NewTJSONProtocolFactory()
-    jsProt42 := factory41.GetProtocol(mbTrans39)
+    factory44 := thrift.NewTJSONProtocolFactory()
+    jsProt45 := factory44.GetProtocol(mbTrans42)
     argvalue0 := infra.NewResultJob()
-    err43 := argvalue0.Read(context.Background(), jsProt42)
-    if err43 != nil {
+    err46 := argvalue0.Read(context.Background(), jsProt45)
+    if err46 != nil {
       Usage()
       return
     }
@@ -196,15 +196,15 @@ func main() {
       fmt.Fprintln(os.Stderr, "AddJob requires 7 args")
       flag.Usage()
     }
-    tmp0, err44 := (strconv.Atoi(flag.Arg(1)))
-    if err44 != nil {
+    tmp0, err47 := (strconv.Atoi(flag.Arg(1)))
+    if err47 != nil {
       Usage()
       return
     }
     argvalue0 := int32(tmp0)
     value0 := argvalue0
-    tmp1, err45 := (strconv.Atoi(flag.Arg(2)))
-    if err45 != nil {
+    tmp1, err48 := (strconv.Atoi(flag.Arg(2)))
+    if err48 != nil {
       Usage()
       return
     }
@@ -214,15 +214,15 @@ func main() {
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
-    tmp4, err48 := (strconv.Atoi(flag.Arg(5)))
-    if err48 != nil {
+    tmp4, err51 := (strconv.Atoi(flag.Arg(5)))
+    if err51 != nil {
       Usage()
       return
     }
     argvalue4 := int32(tmp4)
     value4 := argvalue4
-    tmp5, err49 := (strconv.Atoi(flag.Arg(6)))
-    if err49 != nil {
+    tmp5, err52 := (strconv.Atoi(flag.Arg(6)))
+    if err52 != nil {
       Usage()
       return
     }
@@ -238,8 +238,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "FetchRunResults requires 1 args")
       flag.Usage()
     }
-    tmp0, err51 := (strconv.Atoi(flag.Arg(1)))
-    if err51 != nil {
+    tmp0, err54 := (strconv.Atoi(flag.Arg(1)))
+    if err54 != nil {
       Usage()
       return
     }
@@ -253,8 +253,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "AppendNote requires 2 args")
       flag.Usage()
     }
-    tmp0, err52 := (strconv.Atoi(flag.Arg(1)))
-    if err52 != nil {
+    tmp0, err55 := (strconv.Atoi(flag.Arg(1)))
+    if err55 != nil {
       Usage()
       return
     }
@@ -270,8 +270,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "GetBinInfo requires 1 args")
       flag.Usage()
     }
-    tmp0, err54 := (strconv.Atoi(flag.Arg(1)))
-    if err54 != nil {
+    tmp0, err57 := (strconv.Atoi(flag.Arg(1)))
+    if err57 != nil {
       Usage()
       return
     }
@@ -305,8 +305,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "RemoveJob requires 1 args")
       flag.Usage()
     }
-    tmp0, err57 := (strconv.Atoi(flag.Arg(1)))
-    if err57 != nil {
+    tmp0, err60 := (strconv.Atoi(flag.Arg(1)))
+    if err60 != nil {
       Usage()
       return
     }

@@ -31,7 +31,12 @@ function runSql(sqlString) {
     const client = getClient();
     client.runSQL(sqlString, function (result) {
         console.log("runSQL result", result);
-        $('#result').text(result);
+        if (result instanceof Error) {
+            errorAlert("runSql server error: " + result);
+        } else {
+            successAlert("Success! num results: " + result.length);
+            generateResultsTable(result);
+        }
     });
 }
 
@@ -41,7 +46,11 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     const client = getClient();
     client.addJob(agent_id, world_id, agent_param, world_param, -1, -1, note,function (result) {
         console.log("addJob result", result);
-        queryJobs();
+        if (result instanceof Error) {
+            errorAlert("addJob server error: " + result);
+        } else {
+            successAlert("Success! New jod id: " + result);
+        }
     });
 }
 
@@ -83,6 +92,34 @@ function toStatus(status) {
         case 3: return "errored"
     }
     return "unknown status " + status
+}
+
+// each row is a map from column name to string value
+function generateResultsTable(rows) {
+    if (!rows)
+        return;
+
+    const table = $('#results_table > tbody');
+    table.empty();
+
+    const head = $('#results_table > thead');
+    head.empty();
+
+    // generate header from column names
+    const columns = Object.keys(rows[0]);
+    head.append(`<tr>`);
+    columns.forEach(function (col) {
+        head.append(`<th scope="col">${col}</th>`);
+    });
+    head.append(`</tr>`);
+
+    rows.forEach(function(row) {
+        table.append(`<tr>`);
+        columns.forEach(function (col) {
+            table.append(`<td>${row[col]}</td>`);
+        });
+        table.append(`</tr>`);
+    });
 }
 
 function generateJobsTable(jobInfos) {
@@ -183,6 +220,9 @@ function getBinInfos() {
 function setServerText() {
     const serverText = $("#serverText");
     serverText.text(local ? "Localhost" : "Production");
+    // also set the hidden checkbox so it saves state
+    const serverToggleCb = $("#serverToggleCheckbox");
+    serverToggleCb.prop("checked", !local);
 }
 
 function successAlert(text) {
@@ -202,6 +242,14 @@ function errorAlert(text) {
     console.error(text);
 }
 
+function toggleServer() {
+    local = !local;
+    // reset the client to point to the new address
+    gClient = null;
+    setServerText();
+    getBinInfos();
+}
+
 $(function() {
     console.log("document ready");
 
@@ -210,16 +258,23 @@ $(function() {
     const isChecked = serverToggleCb.is(':checked');
     // the browser saves the last state of the checkbox so set it based on it
     local = !isChecked;
-    setServerText(isChecked);
+    setServerText();
 
     getBinInfos();
 
-    $("#serverToggle").click(function (event) {
-        local = !local;
-        // reset the client to point to the new address
-        gClient = null;
-        setServerText();
-        getBinInfos();
+    $("#serverToggleLocalhost").click(function (event) {
+        if (local) {
+            console.log("already local");
+            return;
+        }
+        toggleServer();
+    });
+    $("#serverToggleProduction").click(function (event) {
+        if (!local) {
+            console.log("already prod");
+            return;
+        }
+        toggleServer();
     });
 
     // setup add job form

@@ -28,10 +28,10 @@
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav">
                 <li class="nav-item active">
-                    <a class="nav-link" href="#">Home</a>
+                    <a class="nav-link" href="jobboard.html">Home</a>
                 </li>
                 <li class="nav-item active">
-                    <a class="nav-link" href="addjob.html">Add Job</a>
+                    <a class="nav-link" href="#">Add Job</a>
                 </li>
                 <li class="nav-item active">
                     <a class="nav-link" href="sql.html">SQL</a>
@@ -71,20 +71,37 @@
         This is a danger alert—check it out!
     </div>
 
-    <!-- Show jobs -->
+    <!-- Add job -->
+    <form id="add_job_form">
+        <div class="form-group">
+            <label for="agent">Select agent</label>
+            <select class="form-control" id="agent" required>
+                <!-- options get populated dynamically (see getBinInfos)-->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="agent-config">Agent Config</label>
+            <textarea class="form-control" id="agent-config"></textarea>
+        </div>
 
-    <!-- see database.sql for the column names -->
-    <!-- keep in sync with toHtml in board.js -->
-    <table id="jobs_table" class="table table-hover">
-        <thead>
-        <!-- Gets created in code (board.js generateJobsTable) -->
-        </thead>
+        <div class="form-group">
+            <label for="world">Select world</label>
+            <select class="form-control" id="world" required>
+                <!-- options get populated dynamically (see getBinInfos)-->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="world-config">World Config</label>
+            <textarea class="form-control" id="world-config"></textarea>
+        </div>
 
-        <tbody>
-        <!-- This gets filled in board.js generateJobsTable -->
-        </tbody>
+        <div class="form-group">
+            <label for="note">Note</label>
+            <textarea class="form-control" id="note"></textarea>
+        </div>
 
-    </table>
+        <button type="submit" class="btn btn-primary">Add Job</button>
+    </form>
 
 </div> <!-- End top most container-fluid -->
 
