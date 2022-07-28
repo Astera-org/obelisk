@@ -135,6 +135,7 @@ func (ev *FWorld) Desc() string { return ev.Dsc }
 
 // Config configures the world
 func (ev *FWorld) Config(ntrls int) {
+
 	ev.predictedActions = make([]int32, 1)
 	ev.bestActions = make([]int32, 1)
 	ev.Nm = "Demo"
@@ -1276,10 +1277,13 @@ func (ev FWorld) PossiblyGetTeachingSignal(agentChosenAction int) (chosenAction 
 	if heuristicAction == agentChosenAction {
 		//ev.ActMatch = 1 // TODO Maybe record this for metrics reasons
 	}
+
 	// TODO Reduce PctCortex over time
 	if rand.Float64() < ev.PctCortex {
+		log.Info("performance:", agentChosenAction, ",", heuristicAction, ",", "agent", ",", ev.PctCortex, ",", ev.InterStates["Energy"], ",", ev.InterStates["Hydra"])
 		return agentChosenAction
 	} else {
+		log.Info("performance:", agentChosenAction, ",", heuristicAction, ",", "heuristic", ",", ev.PctCortex, ",", ev.InterStates["Energy"], ",", ev.InterStates["Hydra"])
 		return heuristicAction
 	}
 }
