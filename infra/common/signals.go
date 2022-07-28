@@ -1,17 +1,18 @@
 package common
 
 import (
-	log "github.com/Astera-org/easylog"
 	"os"
 	"os/signal"
 	"syscall"
+
+	log "github.com/Astera-org/easylog"
 )
 
 func SignalHandler() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	// this happens when running in background and the stdin closes
-	signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
+	// ERDAL: this doesn't work on Windows signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
 
 	go func() {
 		for sig := range sigs {
