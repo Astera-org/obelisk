@@ -75,8 +75,9 @@ class BoltzmannMachine(nn.Module):
     def delta_rule_update_weights_matrix(self, minus_phase: torch.Tensor, plus_phase: torch.Tensor):
         # Rule: delta_w = x'y' - xy # Primes taken from acts_x_y, normals taken from acts_x. x and y here don't correspond to the other x and y, they're the pre- and post-neurons, so it's for all pairs. Sorry for that notation.
         # print("Weights before adjustment: ", self.layer.weight)
-        assert ((len(minus_phase.shape)) == 2) & (minus_phase.shape[0] == 1)
-        assert ((len(plus_phase.shape)) == 2) & (plus_phase.shape[0] == 1)
+        if self.params.batch_data == False:
+            assert ((len(minus_phase.shape)) == 2) & (minus_phase.shape[0] == 1)
+            assert ((len(plus_phase.shape)) == 2) & (plus_phase.shape[0] == 1)
         # Equivalent to this:
         # for ii in range(acts_x.size(dim=1)):  # Pre, X
         #     for jj in range(acts_x_y.size(dim=1)):  # Post, Y # Should be the same length, square matrix
@@ -90,8 +91,8 @@ class BoltzmannMachine(nn.Module):
         #         delta = (sender_plus * receiver_plus) - (sender_minus * receiver_minus)
         #         self.layer.weight[ii, jj] += self.learning_rate * delta
         with torch.no_grad():
-            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(0) # no self correlation, multiply incoming times outgoing
-            plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(0)
+            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(0)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing
+            plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(0)/plus_phase.shape[0]
             self.layer.weight[:] = self.layer.weight[:] + self.learning_rate * (plus_mult - minus_mult)
             self.norm_weights()
 

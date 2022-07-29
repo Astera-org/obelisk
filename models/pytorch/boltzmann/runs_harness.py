@@ -7,11 +7,12 @@ import datasets
 
 
 def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: torch.FloatTensor):
-    one_sample = predicted
-    if predicted.shape[0] == 1:
-        one_sample = predicted[0]
-    min_index = torch.argmin((possible_targets - one_sample).abs().sum(dim=1))
-    return min_index
+    #make this into a batch operaiton later, but blobby
+    nearest_indices = []
+    for example in predicted:
+        min_index = torch.argmin((possible_targets - example).abs().sum(dim=1))
+        nearest_indices.append(min_index)
+    return torch.Tensor(nearest_indices)
 
 
 # Get data, create a network, and then run it, collecting a lot of performance data on the way.
@@ -38,16 +39,22 @@ def create_and_run_network(params: Parameters = Parameters()):
             if params.batch_data == False:
                 x = torch.unsqueeze(xs[index],dim=0)
                 y = torch.unsqueeze(ys[index],dim=0)
-
+            else:
+                x = xs
+                y = ys
             # TODO First 4 should have learning off. Michael: What does this comment mean?
             acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)
 
             # Analytics
             dist = boltzy.y_distance(acts_clamp_x, acts_clamp_y) # For reporting, not used for training
             h_dist = boltzy.h_distance(acts_clamp_x, acts_clamp_y)
-            predicted_y = acts_clamp_x[0][boltzy.input_size:boltzy.input_size+boltzy.output_size]
-            predicted_index = calc_nearest_example_index(predicted_y, ys)
-            correct = ((ys[predicted_index] - y).abs().sum() == 0) # same class predicted
+            predicted_ys = acts_clamp_x[:,boltzy.input_size:boltzy.input_size+boltzy.output_size]
+
+            predicted_indices = calc_nearest_example_index(predicted_ys, ys)
+
+            correct = (((ys[(predicted_indices).long()] - y).abs().sum(dim=1)) == 0).sum()/len(predicted_indices) #so can handle batches
+            #correct = ((ys[predicted_index] - y).abs().sum() == 0) # same class predicted
+            #print(ys[(predicted_indices).long()])
             classification.append(correct)
             if params.verbose >= 5:
                 print("Clamp X:    ", acts_clamp_x.detach())
