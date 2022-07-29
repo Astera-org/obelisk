@@ -3,7 +3,6 @@ from runs_harness import run_many_times
 from parameters import Parameters
 
 
-# TODO params should be an object so it can have defaults
 if __name__ == '__main__':
     # torch.manual_seed(2) # For debugging purposes.
     torch.set_printoptions(precision=3, sci_mode=False)
@@ -11,7 +10,13 @@ if __name__ == '__main__':
     epochs = 100
 
     # Only one run
-    run_many_times(Parameters(epochs=epochs, hidden_size=2, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, learning_rate=0.1))
+    run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, io="xor", verbose=1, norm_weights=True, score="convergence"))
+
+    # # Hypothesis: norm_weights=True improves performance for high num_rnn_steps, but reduces it for low values.
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, io="xor", verbose=1, norm_weights=False, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, io="xor", verbose=1, norm_weights=True, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, io="xor", verbose=1, norm_weights=False, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, io="xor", verbose=1, norm_weights=True, score="convergence"))
 
     # # Look at learning rate for large num_data
     # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, io="random", verbose=0, norm_weights=True, input_size=10, output_size=10, learning_rate=0.1, num_data=10))
@@ -60,9 +65,3 @@ if __name__ == '__main__':
     # run_many_times({epochs=epochs, hidden_size=2, num_rnn_steps=10, num_runs=num_runs)
     # run_many_times({epochs=epochs, hidden_size=5, num_rnn_steps=10, num_runs=num_runs)
     # run_many_times({epochs=epochs, hidden_size=10, num_rnn_steps=10, num_runs=num_runs)
-
-# NOTES
-# ☑️ Evaluate Y similarity in two cases
-# ☑️ Many different X,Y pairs
-# Experimental setup to try hyperparameters, like hidden layer size
-# Hypothesis: After learning enough, the Y component of acts_clamp_x will approach the true Y

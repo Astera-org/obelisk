@@ -3,8 +3,11 @@ from dataclasses import dataclass
 
 @dataclass
 class Parameters:
-    # What data set to use.
+    # What data set to use. See datasets.py for legal values.
     io: str = "xor"
+
+    # What metric to report as the score.
+    score: str = "perc_correct"
 
     # How long to run it.
     epochs: int = 100

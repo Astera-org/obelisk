@@ -87,7 +87,7 @@ def create_and_run_network(params: Parameters = Parameters()):
     initial_score = torch.Tensor(all_distances[0]).mean().detach().numpy()
 
     final_score = torch.Tensor(all_distances[-1]).mean().detach().numpy()
-    if params.num_runs == 1:
+    if params.num_runs == 1 and params.verbose > 0:
         print("End correct ", final_percent_correct, "Start correct", initial_percent_correct, "End Dist: ", final_score, " compared to initial score: ", initial_score)
         if first_correct_start_of_run < params.epochs:
             print("Got first correct score in a run of at least 5 at timestep: ", first_correct_start_of_run)
@@ -96,7 +96,18 @@ def create_and_run_network(params: Parameters = Parameters()):
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
         print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ", torch.Tensor(all_h_distances[-1]).mean().numpy())
         # print("End weights: ", boltzy.layer.weight)
-    return first_correct_start_of_run
+    if params.score == "distance":
+        return final_score
+    if params.score == "distance_improvement":
+        return final_score - initial_score
+    if params.score == "h_distance":
+        return torch.Tensor(all_h_distances[0]).mean().numpy()
+    elif params.score == "perc_correct":
+        return final_percent_correct
+    elif params.score == "convergence":
+        return first_correct_start_of_run
+    else:
+        assert False, "Invalid params.score: " + params.score
 
 
 def run_many_times(params: Parameters):
