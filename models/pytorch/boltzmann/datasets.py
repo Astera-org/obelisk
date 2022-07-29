@@ -1,3 +1,5 @@
+import math
+
 import torch
 from hyperparams import HParams
 import random
@@ -6,7 +8,7 @@ from torchvision.transforms import ToTensor
 
 
 def get_mnist(params: HParams):
-    train_dt=dts.MNIST(
+    train_X=dts.MNIST(
         root='data',
         train=True,
         transform=ToTensor(),
@@ -17,12 +19,21 @@ def get_mnist(params: HParams):
         train=False,
         transform=ToTensor()
     )
-    print("cat")
-    return 0,0
+    x = train_X.data[15]
+    items = []
+    labels = []
+    size = int(math.sqrt(params.input_size))
+    for _ in range(params.num_data):
+        sample = random.randint(0, len(train_X)-1)
+        number = train_X[sample][0]
+        samp = [[0 if number.data[0, int(j*28/size), int(i*28/size)] < .2 else 1 for i in range(size)] for j in range(size)] # Downsample
+        items.append(torch.tensor([[x for xs in samp for x in xs]]).float()) # Flatten and tensorize
+        label = train_X[sample][1]
+        labels.append(torch.Tensor([[1 if i == label else 0 for i in range(10)]]))
+    return items, labels
 
 
 def get_data(params: HParams):
-
     # Network
     input_size = 3
     output_size = 2
@@ -47,7 +58,9 @@ def get_data(params: HParams):
     elif params.dataset == "or":
         ys = y_or
     elif params.dataset == "mnist":
-        ys, xs = get_mnist(params)
+        input_size = params.input_size
+        output_size = 10 # 10 digits
+        xs, ys = get_mnist(params)
     elif params.dataset == "ra25":
         num_data = 25
         choose_n = 6

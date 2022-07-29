@@ -42,7 +42,7 @@ class BoltzmannMachine(nn.Module):
         else:
             full_act = torch.concat([x, torch.zeros_like(y), h], dim=1) # Y shouldn't be present here. Use zeros
         record = None
-        if self.params.average_window >0:
+        if self.params.average_window > 0:
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
             full_act = F.relu(self.layer(full_act))

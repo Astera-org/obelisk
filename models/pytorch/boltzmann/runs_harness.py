@@ -31,14 +31,14 @@ def create_and_run_network(params: HParams = HParams()):
         h_distances = []
         classification = []
 
-        if params.batch_data == True:
-            num_data = 1 #all data is run at once
+        if params.batch_data is True:
+            num_data = 1 # all data is run at once
 
         for data_row in range(num_data):
             index = data_row % num_data
-            if params.batch_data == False:
-                x = torch.unsqueeze(xs[index],dim=0)
-                y = torch.unsqueeze(ys[index],dim=0)
+            if params.batch_data is False:
+                x = torch.unsqueeze(xs[index], dim=0)
+                y = torch.unsqueeze(ys[index], dim=0)
             else:
                 x = xs
                 y = ys
@@ -59,7 +59,7 @@ def create_and_run_network(params: HParams = HParams()):
             if params.verbose >= 5:
                 print("Clamp X:    ", acts_clamp_x.detach())
                 print("Clamp X, Y: ", acts_clamp_y.detach())
-                print("Correct? ", correct.item(), "\n")
+                print("Correct? ", correct.item())
             # print("Y Distance: ", dist)
             # print("H Distance: ", h_dist)
             # print("Weights: ", boltzy.layer.weight)
@@ -79,13 +79,15 @@ def create_and_run_network(params: HParams = HParams()):
         all_classification.append(classification)
         all_h_distances.append(h_distances)
         percent_correct = (torch.Tensor(classification).sum()/len(classification)).detach().numpy()
+        if params.verbose >= 3:
+            print("In Epoch", epoch, "got percent correct: ", percent_correct)
         if percent_correct < 1.0:
             first_correct = max(params.epochs+1, 999999)
         else:
             first_correct = min(first_correct, epoch)
             if epoch >= first_correct + params.stopping_success:
                 first_correct_start_of_run = first_correct
-                if params.verbose >= params.stopping_success:
+                if params.verbose >= 5:
                     print("Hooray! Got", params.stopping_success, "successes in a row starting at time: ", first_correct)
                 break
 
