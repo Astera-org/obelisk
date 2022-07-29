@@ -7,7 +7,7 @@ from parameters import Parameters
 class BoltzmannMachine(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, params: Parameters):
         super().__init__()
-        self.params = params
+        self.params:Parameters = params
         self.layer_size = input_size + output_size + hidden_size
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -23,37 +23,38 @@ class BoltzmannMachine(nn.Module):
         #                 self.layer.weight[ii, jj] = self.layer.weight[jj, ii] # Start symmetric # This seems to make it worse
 
     def forward(self, x, y, n, clamp_x=False, clamp_y=False):
-        h: torch.Tensor = torch.zeros(size=(1, self.hidden_size))
+        h: torch.Tensor = torch.zeros(size=(x.shape[0], self.hidden_size))
         if clamp_y:
             full_act = torch.concat([x, y, h], dim=1)
         else:
             full_act = torch.concat([x, torch.zeros_like(y), h], dim=1) # Y shouldn't be present here. Use zeros
         record = None
-        if self.params.average_window > 0:
+        if self.params.average_window >0:
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
             full_act = F.relu(self.layer(full_act))
             if clamp_x:
-                full_act[0, 0:self.input_size] = x
+                full_act[:, 0:self.input_size] = x
             if clamp_y:
-                full_act[0, self.input_size:self.input_size+self.output_size] = y
+                full_act[:, self.input_size:self.input_size+self.output_size] = y
             # print("Act: ", full_act.detach())
-            if self.params.norm_act is True:
-                full_act = F.normalize(full_act, p=2.0, dim=1)
             if self.params.norm_hidden is True:
-                hidden = full_act[0, self.input_size + self.output_size:]
-                hidden = F.normalize(hidden, p=2.0, dim=0)
+                hidden = full_act[:, self.input_size + self.output_size:]
+                hidden = F.normalize(hidden, p=2.0, dim=1)
                 with torch.no_grad():
-                    full_act[0, self.input_size + self.output_size:] = hidden
+                    full_act[:, self.input_size + self.output_size:] = hidden
             if record is not None:
                 record[ii % record.size(0), :] = full_act
             if self.params.verbose >= 5:
                 print("Normed vec: ", self.print_activity(full_act.detach()))
+        # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
         # print(torch.mean(record, 0))
-        if self.params.average_window <= 0:
+        if (self.params.average_window <=0):
             return full_act
         else:
-            return torch.mean(record, 0, True)
+            # TODO Evaluate the benefit of this
+            return torch.mean(record, 0, True) #verify this is correct
+
 
     def print_activity(self, activity):
         s = "In: "
@@ -95,16 +96,16 @@ class BoltzmannMachine(nn.Module):
             self.norm_weights()
 
     def y_distance(self, act1, act2):
-        y1 = act1[0, self.input_size:self.input_size+self.output_size]
-        y2 = act2[0, self.input_size:self.input_size+self.output_size]
+        y1 = act1[:, self.input_size:self.input_size+self.output_size]
+        y2 = act2[:, self.input_size:self.input_size+self.output_size]
         # print("Y clamp x:   ", y1)
         # print("Y clamp x,y: ", y2)
         # return 1-spatial.distance.cosine(y1.detach().numpy(), y2.detach().numpy())
         return (y1 - y2).abs().sum().detach()
 
     def h_distance(self, act1, act2):
-        h1 = act1[0, self.input_size+self.output_size:]
-        h2 = act2[0, self.input_size+self.output_size:]
+        h1 = act1[:, self.input_size+self.output_size:]
+        h2 = act2[:, self.input_size+self.output_size:]
         # return 1-spatial.distance.cosine(h1.detach().numpy(), h2.detach().numpy())
         return (h1 - h2).abs().sum().detach()
 

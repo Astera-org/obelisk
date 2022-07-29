@@ -37,4 +37,4 @@ def get_data(params: Parameters):
         ys = [torch.tensor([random.sample([1] * choose_n + [0] * (output_size - choose_n), output_size)]) for _ in range(num_data)]
     num_data = len(xs)
 
-    return xs, ys, input_size, hidden_size, output_size, num_data
+    return torch.concat(xs), torch.concat(ys), input_size, hidden_size, output_size, num_data

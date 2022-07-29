@@ -7,8 +7,10 @@ import datasets
 
 
 def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: torch.FloatTensor):
-    all_targets = torch.concat(possible_targets)
-    min_index = torch.argmin((all_targets - predicted).abs().sum(dim=1))
+    one_sample = predicted
+    if predicted.shape[0] == 1:
+        one_sample = predicted[0]
+    min_index = torch.argmin((possible_targets - one_sample).abs().sum(dim=1))
     return min_index
 
 
@@ -28,10 +30,14 @@ def create_and_run_network(params: Parameters = Parameters()):
         h_distances = []
         classification = []
 
+        if params.batch_data == True:
+            num_data = 1 #all data is run at once
+
         for data_row in range(num_data):
             index = data_row % num_data
-            x = xs[index]
-            y = ys[index]
+            if params.batch_data == False:
+                x = torch.unsqueeze(xs[index],dim=0)
+                y = torch.unsqueeze(ys[index],dim=0)
 
             # TODO First 4 should have learning off. Michael: What does this comment mean?
             acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)

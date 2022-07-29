@@ -37,3 +37,6 @@ class Parameters:
 
     # verbose is purely a logging option. Higher numbers mean more logging.
     verbose: int = 0
+
+    #put all the data into a single batch, we need to use dataloaders since this will not always be possible
+    batch_data: bool = False
