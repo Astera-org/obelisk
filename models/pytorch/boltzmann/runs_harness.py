@@ -16,10 +16,13 @@ def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: t
 
 
 # Get data, create a network, and then run it, collecting a lot of performance data on the way.
-def create_and_run_network(params: HParams = HParams()):
+def create_and_run_network(params: HParams = HParams(), previous_model=None, learn=True):
     xs, ys, input_size, hidden_size, output_size, num_data = datasets.get_data(params)
 
-    boltzy = boltzmann_machine.BoltzmannMachine(input_size, hidden_size, output_size, params)
+    if previous_model is not None:
+        boltzy = previous_model # Use for training
+    else:
+        boltzy = boltzmann_machine.BoltzmannMachine(input_size, hidden_size, output_size, params)
 
     all_distances = []
     all_h_distances = []
@@ -66,9 +69,9 @@ def create_and_run_network(params: HParams = HParams()):
             distances.append(dist)
             h_distances.append(h_dist)
 
-            if params.epochs == 1:
-                assert False, "first epoch has no training to get baseline, needs more to be meaningful"
-            if epoch >= 1:
+            # if params.epochs == 1:
+            #     assert False, "first epoch has no training to get baseline, needs more to be meaningful"
+            if epoch >= 1 and learn:
                 boltzy.delta_rule_update_weights_matrix(acts_clamp_x, acts_clamp_y)
 
             # if epoch >= (params.epochs-1):
@@ -111,18 +114,35 @@ def create_and_run_network(params: HParams = HParams()):
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
         print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ", torch.Tensor(all_h_distances[-1]).mean().numpy())
         # print("End weights: ", boltzy.layer.weight)
+    val = None
     if params.score == "distance":
-        return final_score
-    if params.score == "distance_improvement":
-        return final_score - initial_score
-    if params.score == "h_distance":
-        return torch.Tensor(all_h_distances[0]).mean().numpy()
+        val = final_score
+    elif params.score == "distance_improvement":
+        val = final_score - initial_score
+    elif params.score == "h_distance":
+        val = torch.Tensor(all_h_distances[0]).mean().numpy()
     elif params.score == "perc_correct":
-        return final_percent_correct
+        val = final_percent_correct
     elif params.score == "convergence":
-        return first_correct_start_of_run
+        val = first_correct_start_of_run
     else:
         assert False, "Invalid params.score: " + params.score
+    return val, boltzy
+
+
+# TODO Unclear whether it's necessary to have two different params objects.
+def train_and_test(train_params: HParams, test_params: HParams):
+    if train_params.verbose >= 0:
+        print("\nTraining with params: ", train_params)
+    final_score, model = create_and_run_network(train_params)
+    if train_params.verbose > 0:
+        print("Training got", train_params.score, ": ", "%.2f" % final_score)
+    # TODO Disable learning
+    if test_params.verbose >= 0:
+        print("\nTesting with params: ", test_params)
+    final_score, _ = create_and_run_network(test_params, previous_model=model, learn=False)
+    if test_params.verbose > 0:
+        print("Testing got", test_params.score, ": ", "%.2f" % final_score)
 
 
 def run_many_times(params: HParams):
@@ -131,7 +151,7 @@ def run_many_times(params: HParams):
     scores = []
     number_runs = params.num_runs
     for ii in range(number_runs):
-        final_score = create_and_run_network(params)
+        final_score, _ = create_and_run_network(params)
         scores.append(final_score)
     total_score = sum(scores) / len(scores)
     confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else (float("nan"), float("nan")) # It prints an annoying warning if you give it a single element list

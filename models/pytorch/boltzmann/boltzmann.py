@@ -1,5 +1,6 @@
 import torch
 from runs_harness import run_many_times
+from runs_harness import train_and_test
 from hyperparams import HParams
 
 
@@ -7,10 +8,15 @@ if __name__ == '__main__':
     # torch.manual_seed(2) # For debugging purposes.
     torch.set_printoptions(precision=3, sci_mode=False)
     num_runs = 10
-    epochs = 100
+    epochs = 5
 
     # Only one run
-    run_many_times(HParams(epochs=epochs, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000))
+    # run_many_times(HParams(epochs=epochs, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000))
+
+    # Try Train and Test
+    train_and_test(
+        HParams(epochs=epochs, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000),
+        HParams(epochs=1, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000))
 
     # # Hypothesis: norm_weights=True improves performance only for high values of num_rnn_steps.
     # run_many_times(HParams(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, dataset="xor", verbose=1, norm_weights=False, score="convergence"))
