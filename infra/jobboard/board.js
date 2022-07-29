@@ -77,7 +77,7 @@ function toHtml(ji) {
         <td>${ji.search_id}</td>
         <td>${ji.time_added}</td>
         <td>${ji.note}
-          <button type="button" class="btn btn-notes" data-job_id="${ji.job_id}" data-toggle="modal" data-target="#notesModal">View</button>
+          <button type="button" class="btn btn-notes" data-job_id="${ji.job_id}" data-bs-toggle="modal" data-bs-target="#notesModal">Edit</button>
         </td>
         <td><button type="button" class="btn btn-cancel" data-job_id="${ji.job_id}">cancel</button></td>
        </tr>
@@ -158,12 +158,6 @@ function generateJobsTable(jobInfos) {
         const job_id = $(this).data('job_id');
         cancelJob(job_id);
     });
-
-    // handle view notes button
-    // $(".btn-notes").click(function () {
-    //     const job_id = $(this).data('job_id');
-    //     viewNotes(job_id);
-    // });
 }
 
 function cancelJob(job_id) {
@@ -173,16 +167,6 @@ function cancelJob(job_id) {
        console.log("remove job ", job_id, result);
        queryJobs();
     });
-}
-
-function viewNotes(job_id) {
-    console.log("view notes for job", job_id);
-    // TODO: launch modal to show notes
-    //const client = getClient();
-    // client.viewNotes(job_id, function (result) {
-    //     console.log("remove job ", job_id, result);
-    //     queryJobs();
-    // });
 }
 
 // TODO: pagination, fetch by user id, etc.
@@ -316,4 +300,16 @@ $(function() {
         runSql(sqlString);
     });
 
+    const tabHome = $('button[data-bs-toggle="tab"]');
+    tabHome.on('shown.bs.tab', function (event) {
+        if ($(event.target).data('bs-target') === '#home') {
+            // refresh the jobs table when navigating back to it
+            queryJobs();
+        }
+    });
+
+    // notes modal
+    $('#notesModal').on('shown.bs.modal', function (e) {
+        console.log("notes modal shown", e);
+    });
 });
