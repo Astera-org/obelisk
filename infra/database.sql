@@ -13,7 +13,7 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     world_id INT DEFAULT 0,
     agent_param VARCHAR(1024) DEFAULT "", world_param VARCHAR(1024) DEFAULT "",
     note VARCHAR(1024) DEFAULT "",
-    bail_threshold DOUBLE DEFAULT 0,
+    bail_threshold DOUBLE DEFAULT 0, 
     worker_name VARCHAR(10), instance_name VARCHAR(10),
     time_handed TIMESTAMP, seconds INT, steps INT,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
@@ -46,5 +46,3 @@ INSERT INTO binaries (name, version, package_hash, type, status) VALUES ("protob
 INSERT INTO binaries (name, version, package_hash, type, status) VALUES ("fworld", "1.0", "12345", 1, 0);
 INSERT INTO jobs (agent_id,world_id,agent_param,world_param) values (1,2,"GUI=false","GUI=false");
 
-INSERT INTO notes (job_id, user_id, note_text) VALUES (1, 0, "first note");
-INSERT INTO notes (job_id, user_id, note_text) VALUES (1, 0, "second note");
