@@ -1,6 +1,6 @@
-import random
 import torch
-import runs_harness
+from runs_harness import run_many_times
+from parameters import Parameters
 
 
 # TODO params should be an object so it can have defaults
@@ -11,55 +11,55 @@ if __name__ == '__main__':
     epochs = 100
 
     # Only one run
-    runs_harness.run_many_times({"epochs": epochs, "hidden_size": 2, "num_rnn_steps": 5, "num_runs": 1, "io": "xor", "verbose": 0, "norm_weights": True, "learning_rate": 0.1})
+    run_many_times(Parameters(epochs=epochs, hidden_size=2, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, learning_rate=0.1))
 
     # # Look at learning rate for large num_data
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 5, "num_runs": 5, "io": "random", "verbose": 0, "norm_weights": True, "input_size": 10, "output_size": 10, "learning_rate": 0.1, "num_data": 10})
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 5, "num_runs": 5, "io": "random", "verbose": 0, "norm_weights": False, "input_size": 10, "output_size": 10, "learning_rate": 0.01, "num_data": 10})
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, io="random", verbose=0, norm_weights=True, input_size=10, output_size=10, learning_rate=0.1, num_data=10))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, io="random", verbose=0, norm_weights=False, input_size=10, output_size=10, learning_rate=0.01, num_data=10))
 
     # # Try to solve random
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 5, "num_runs": num_runs, "io": "random"})
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 10, "num_runs": num_runs, "io": "random"})
-    # run_many_times({"epochs": epochs, "hidden_size": 20, "num_rnn_steps": 10, "num_runs": num_runs, "io": "random"})
-    # run_many_times({"epochs": epochs, "hidden_size": 20, "num_rnn_steps": 20, "num_runs": num_runs, "io": "random"})
-    # run_many_times({"epochs": epochs, "hidden_size": 50, "num_rnn_steps": 20, "num_runs": num_runs, "io": "random"})
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=10, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=10, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=20, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=50, num_rnn_steps=20, num_runs=num_runs, io="random"))
 
     # Test XOR
-    # run_many_times({"epochs":20,"epochs": epochs, "hidden_size": 4, "num_rnn_steps": 5, "num_runs": 1, "io": "random"})
-    # run_many_times({"epochs": 50, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": 1, "io": "xor"})
-    # run_many_times({"epochs": 50, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": 1, "io": "and"})
-    # run_many_times({"epochs": 50, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": 1, "io": "or"})
-    # #run_many_times({"epochs": 50, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": 1, "io": "random"})
-    # # run_many_times({"epochs": epochs, "hidden_size": 4, "num_rnn_steps": 5, "num_runs": 1, "io": "random"})
+    # run_many_times(Parameters("epochs":20,epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, io="random"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="xor"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="and"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="or"))
+    # #run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="random"))
+    # # run_many_times(Parameters(epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, io="random"))
 
     # # Test XOR
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "xor"})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "and"})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "or"})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "random"})
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="and"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="or"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random"))
 
     # # Test normalization in XOR
     # # First XOR has both
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "xor", "norm_weights": False})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "xor", "norm_act": False})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "xor", "norm_weights": False, "norm_act": False})
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_weights=False))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_act=False))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_weights=False, norm_act=False))
 
     # Test RNN averaging # This seems to not make a difference
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "random"})
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs, "io": "random", "average_window": 3})
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random", average_window=3))
 
-    # run_many_times({"epochs": epochs, "hidden_size": 0, "num_rnn_steps": 1, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 2, "num_rnn_steps": 1, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 1, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 1, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 0, "num_rnn_steps": 5, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 2, "num_rnn_steps": 5, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 5, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 5, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 0, "num_rnn_steps": 10, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 2, "num_rnn_steps": 10, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 5, "num_rnn_steps": 10, "num_runs": num_runs)
-    # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 10, "num_runs": num_runs)
+    # run_many_times({epochs=epochs, hidden_size=0, num_rnn_steps=1, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=2, num_rnn_steps=1, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=5, num_rnn_steps=1, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=10, num_rnn_steps=1, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=0, num_rnn_steps=5, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=2, num_rnn_steps=5, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=0, num_rnn_steps=10, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=2, num_rnn_steps=10, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=5, num_rnn_steps=10, num_runs=num_runs)
+    # run_many_times({epochs=epochs, hidden_size=10, num_rnn_steps=10, num_runs=num_runs)
 
 # NOTES
 # ☑️ Evaluate Y similarity in two cases
