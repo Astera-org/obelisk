@@ -298,4 +298,11 @@ $(function() {
         runSql(sqlString);
     });
 
+    const tabHome = $('button[data-bs-toggle="tab"]');
+    tabHome.on('shown.bs.tab', function (event) {
+        if ($(event.target).data('bs-target') === '#home') {
+            // refresh the jobs table when navigating back to it
+            queryJobs();
+        }
+    });
 });
