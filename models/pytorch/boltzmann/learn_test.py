@@ -38,6 +38,5 @@ if __name__ == '__main__':
     torch.manual_seed(0) # To make tests consistent
     torch.set_printoptions(precision=3, sci_mode=False)
 
-    # unittest.main()
     t = unittest.TestLoader().loadTestsFromTestCase(BoltzmannTest)
     unittest.TextTestRunner(verbosity=3).run(t)
