@@ -41,5 +41,5 @@ class HParams:
     # verbose is purely a logging option. Higher numbers mean more logging.
     verbose: int = 0
 
-    #put all the data into a single batch, we need to use dataloaders since this will not always be possible
+    # Put all the data from a single epoch into a single batch. In the future, for larger datasets, we will need to use dataloaders to accommodate this.
     batch_data: bool = False
