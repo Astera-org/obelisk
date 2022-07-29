@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	log "github.com/Astera-org/easylog"
 	"net"
 	"net/http"
 	"os"
 	"time"
+
+	log "github.com/Astera-org/easylog"
 
 	"github.com/Astera-org/obelisk/infra/common"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
@@ -62,8 +63,8 @@ func main() {
 	handler := RequestHandler{}
 	thriftServer := MakeThriftServer(handler)
 
-	log.Info("thrift server listening on ", gConfig.THRIFT_SERVER_ADDR)
-	log.Info("http server listening on ", gConfig.HTTP_SERVER_ADDR)
+	log.Info("thrift server listening on ", gConfig.THRIFT_PORT)
+	log.Info("http server listening on ", gConfig.HTTP_PORT)
 
 	go httpServer(&handler)
 	go thriftServer.Serve()
@@ -115,7 +116,7 @@ func httpServer(handler *RequestHandler) {
 
 	goji.Post("/jobczar", NewThriftHandlerFunc(processor, factory, factory))
 
-	listener, err := net.Listen("tcp", gConfig.HTTP_SERVER_ADDR)
+	listener, err := net.Listen("tcp", fmt.Sprint(":", gConfig.HTTP_PORT))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -124,7 +125,7 @@ func httpServer(handler *RequestHandler) {
 
 func MakeThriftServer(handler infra.JobCzar) *thrift.TSimpleServer {
 	transportFactory := thrift.NewTBufferedTransportFactory(8192)
-	transport, _ := thrift.NewTServerSocket(gConfig.THRIFT_SERVER_ADDR)
+	transport, _ := thrift.NewTServerSocket(fmt.Sprint(":", gConfig.THRIFT_PORT))
 	processor := infra.NewJobCzarProcessor(handler)
 	protocolFactory := thrift.NewTBinaryProtocolFactoryConf(nil)
 	server := thrift.NewTSimpleServer4(processor, transport, transportFactory, protocolFactory)
