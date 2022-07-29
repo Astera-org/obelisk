@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Parameters:
+class HParams:
     # What data set to use. See datasets.py for legal values.
     io: str = "xor"
 

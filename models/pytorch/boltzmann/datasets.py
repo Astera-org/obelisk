@@ -1,9 +1,9 @@
 import torch
-from parameters import Parameters
+from hyperparams import HParams
 import random
 
 
-def get_data(params: Parameters):
+def get_data(params: HParams):
 
     # Network
     input_size = 3
