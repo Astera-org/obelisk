@@ -1,12 +1,6 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
-import torch.optim as optim
-from scipy import spatial
-import statistics
-import scipy.stats as st
 from parameters import Parameters
 
 
@@ -77,7 +71,7 @@ class BoltzmannMachine(nn.Module):
         if self.params.norm_weights is True:
             F.normalize(self.layer.weight, p=2.0, dim=0, out=self.layer.weight) # Normalize inputs to neurons
 
-    def delta_rule_update_weights_matrix(self, minus_phase:torch.Tensor, plus_phase:torch.Tensor):
+    def delta_rule_update_weights_matrix(self, minus_phase: torch.Tensor, plus_phase: torch.Tensor):
         # Rule: delta_w = x'y' - xy # Primes taken from acts_x_y, normals taken from acts_x. x and y here don't correspond to the other x and y, they're the pre- and post-neurons, so it's for all pairs. Sorry for that notation.
         # print("Weights before adjustment: ", self.layer.weight)
         assert ((len(minus_phase.shape)) == 2) & (minus_phase.shape[0] == 1)

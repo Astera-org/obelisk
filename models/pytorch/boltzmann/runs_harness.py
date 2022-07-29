@@ -1,55 +1,20 @@
-import random
-
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
-import torch.optim as optim
-from scipy import spatial
-import statistics
 import scipy.stats as st
 import boltzmann_machine
 from parameters import Parameters
+import datasets
 
 
-def calc_nearest_example_index(predicted:torch.FloatTensor,possible_targets:torch.FloatTensor):
+def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: torch.FloatTensor):
     all_targets = torch.concat(possible_targets)
     min_index = torch.argmin((all_targets - predicted).abs().sum(dim=1))
     return min_index
 
 
+# Get data, create a network, and then run it, collecting a lot of performance data on the way.
 def create_and_run_network(params: Parameters = Parameters()):
-    # Network
-    input_size = 3
-    output_size = 2
-    hidden_size = params.hidden_size
-
-    # XOR (input and output sizes different)
-    xs = [torch.tensor([[0, 0, 1]]), torch.tensor([[0, 1, 1]]), torch.tensor([[1, 0, 1]]), torch.tensor([[1, 1, 1]])] # Third input is bias
-    ys = []
-    y_xor = [torch.tensor([[0, 0]]), torch.tensor([[1, 1]]), torch.tensor([[1, 1]]), torch.tensor([[0, 0]])] # This weird binumeral format helps with cosine similarity
-    y_and = [torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[1, 0]])]
-    y_or = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]])]
-    if params.io == "random":
-        num_data = 4 if "num_data" not in params else params.num_data
-        input_size = params.input_size if "input_size" in params else input_size
-        output_size = params.output_size if "output_size" in params else output_size
-        xs = [torch.rand(size=(1, input_size)) for _ in range(num_data)]
-        ys = [torch.rand(size=(1, output_size)) for _ in range(num_data)]
-    elif params.io == "xor":
-        ys = y_xor
-    elif params.io == "and":
-        ys = y_and
-    elif params.io == "or":
-        ys = y_or
-    elif params.io == "ra25":
-        num_data = 25
-        choose_n = 6
-        input_size = 25
-        output_size = 25
-        xs = [torch.tensor([random.sample([1] * choose_n + [0] * (input_size - choose_n), input_size)]) for _ in range(num_data)]
-        ys = [torch.tensor([random.sample([1] * choose_n + [0] * (output_size - choose_n), output_size)]) for _ in range(num_data)]
-    num_data = len(xs)
+    xs, ys, input_size, hidden_size, output_size, num_data = datasets.get_data(params)
 
     boltzy = boltzmann_machine.BoltzmannMachine(input_size, hidden_size, output_size, params)
 
@@ -63,12 +28,12 @@ def create_and_run_network(params: Parameters = Parameters()):
         h_distances = []
         classification = []
 
-        for data_row in range((num_data)):
+        for data_row in range(num_data):
             index = data_row % num_data
             x = xs[index]
             y = ys[index]
 
-            # TODO First 4 should have learning off. Michael: What does this mean?
+            # TODO First 4 should have learning off. Michael: What does this comment mean?
             acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)
 
             # Analytics
@@ -123,13 +88,13 @@ def create_and_run_network(params: Parameters = Parameters()):
 
     final_score = torch.Tensor(all_distances[-1]).mean().detach().numpy()
     if params.num_runs == 1:
-        print("End correct ", final_percent_correct, "Start correct",initial_percent_correct ,"End Dist: ", final_score, " compared to initial score: ", initial_score)
+        print("End correct ", final_percent_correct, "Start correct", initial_percent_correct, "End Dist: ", final_score, " compared to initial score: ", initial_score)
         if first_correct_start_of_run < params.epochs:
             print("Got first correct score in a run of at least 5 at timestep: ", first_correct_start_of_run)
         else:
             print("It never converged to 100% correct :(")
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
-        print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ",torch.Tensor(all_h_distances[-1]).mean().numpy())
+        print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ", torch.Tensor(all_h_distances[-1]).mean().numpy())
         # print("End weights: ", boltzy.layer.weight)
     return first_correct_start_of_run
 
