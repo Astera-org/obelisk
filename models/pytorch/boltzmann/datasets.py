@@ -1,5 +1,5 @@
 import torch
-from parameters import Parameters
+from hyperparams import HParams
 import random
 from torchvision import datasets as dts
 from torchvision.transforms import ToTensor
@@ -21,7 +21,7 @@ def get_mnist(params: Parameters):
     return 0,0
 
 
-def get_data(params: Parameters):
+def get_data(params: HParams):
 
     # Network
     input_size = 3

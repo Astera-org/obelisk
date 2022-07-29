@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import scipy.stats as st
 import boltzmann_machine
-from parameters import Parameters
+from hyperparams import HParams
 import datasets
 
 
@@ -16,7 +16,7 @@ def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: t
 
 
 # Get data, create a network, and then run it, collecting a lot of performance data on the way.
-def create_and_run_network(params: Parameters = Parameters()):
+def create_and_run_network(params: HParams = HParams()):
     xs, ys, input_size, hidden_size, output_size, num_data = datasets.get_data(params)
 
     boltzy = boltzmann_machine.BoltzmannMachine(input_size, hidden_size, output_size, params)
@@ -123,7 +123,7 @@ def create_and_run_network(params: Parameters = Parameters()):
         assert False, "Invalid params.score: " + params.score
 
 
-def run_many_times(params: Parameters):
+def run_many_times(params: HParams):
     if params.verbose >= 0:
         print("\nWith params: ", params)
     scores = []

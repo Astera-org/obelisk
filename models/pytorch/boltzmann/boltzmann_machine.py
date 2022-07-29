@@ -1,13 +1,26 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from parameters import Parameters
+from hyperparams import HParams
 
+def create_symmetric_weights(layer:torch.Tensor):
+    '''
+    make the weights symmetric, if we want to enforce this
+    '''
+    assert layer.shape[0] == layer.shape[1] #should be square
+    N = layer.shape[0]
+    with torch.no_grad():
+        vals = torch.triu(layer).flatten()[:int(N*(N+1)/2)]
+        new_mat = torch.zeros_like(layer)
+        i, j = torch.triu_indices(N, N)
+        new_mat[i, j] = vals
+        new_mat.T[i, j] = vals
+    return new_mat
 
 class BoltzmannMachine(nn.Module):
-    def __init__(self, input_size, hidden_size, output_size, params: Parameters):
+    def __init__(self, input_size, hidden_size, output_size, params: HParams):
         super().__init__()
-        self.params:Parameters = params
+        self.params:HParams = params
         self.layer_size = input_size + output_size + hidden_size
         self.input_size = input_size
         self.hidden_size = hidden_size
