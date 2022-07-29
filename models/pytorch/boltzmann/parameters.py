@@ -16,6 +16,9 @@ class Parameters:
     # num_rnn_steps governs how much recurrence occurs in the settling phase of the Boltzmann machine.
     num_rnn_steps: int = 5
 
+    # The learning rate used by the network.
+    learning_rate: float = 0.1
+
     # What sort of normalization should we do? By default, only normalize the hidden component of the activity vector, setting its L2 length to 1.
     norm_weights: bool = True
     norm_act: bool = False
@@ -26,13 +29,13 @@ class Parameters:
     input_size: int = 10
     output_size: int = 10
 
-    # The learning rate used by the network.
-    learning_rate: float = 0.1
-
     # Number of data points. This will be overwritten by some values of io.
     num_data: int = 10
 
-    # average_window lets you take a running average here, because full_act seems like it might alternate with period>1. It does not seem to make a difference.
+    # If the network gets 100% correct performance this many times in a row, it will halt.
+    stopping_success: int = 5
+
+    # average_window lets you take a running average over the last n steps of the rnn, rather than just use the final activity value, because full_act seems like it might alternate with period>1. If 0, no averaging occurs, and the final value is used. It does not seem to make a difference.
     average_window: int = 0
 
     # verbose is purely a logging option. Higher numbers mean more logging.
