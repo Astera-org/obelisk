@@ -76,8 +76,10 @@ function toHtml(ji) {
         <td>${toStatus(ji.status)}</td>
         <td>${ji.search_id}</td>
         <td>${ji.time_added}</td>
-        <td>${ji.note}</td>
-        <td><button type="button" class="btn" id="${ji.job_id}">cancel</button></td>
+        <td>${ji.note}
+          <button type="button" class="btn btn-notes" data-job_id="${ji.job_id}" data-toggle="modal" data-target="#notesModal">View</button>
+        </td>
+        <td><button type="button" class="btn btn-cancel" data-job_id="${ji.job_id}">cancel</button></td>
        </tr>
      `;
 }
@@ -152,10 +154,16 @@ function generateJobsTable(jobInfos) {
     });
 
     // handle cancel job click
-    table.on('click', 'button', function () {
-        const job_id = parseInt($(this).attr('id'));
+    $(".btn-cancel").click(function () {
+        const job_id = $(this).data('job_id');
         cancelJob(job_id);
     });
+
+    // handle view notes button
+    // $(".btn-notes").click(function () {
+    //     const job_id = $(this).data('job_id');
+    //     viewNotes(job_id);
+    // });
 }
 
 function cancelJob(job_id) {
@@ -165,6 +173,16 @@ function cancelJob(job_id) {
        console.log("remove job ", job_id, result);
        queryJobs();
     });
+}
+
+function viewNotes(job_id) {
+    console.log("view notes for job", job_id);
+    // TODO: launch modal to show notes
+    //const client = getClient();
+    // client.viewNotes(job_id, function (result) {
+    //     console.log("remove job ", job_id, result);
+    //     queryJobs();
+    // });
 }
 
 // TODO: pagination, fetch by user id, etc.

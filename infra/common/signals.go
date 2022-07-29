@@ -12,7 +12,8 @@ func SignalHandler() {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	// this happens when running in background and the stdin closes
-	// ERDAL: this doesn't work on Windows signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
+	// TODO: ask Randy and Jed is this a compile time issue?
+	signal.Ignore(syscall.SIGURG, syscall.SIGTTIN)
 
 	go func() {
 		for sig := range sigs {
