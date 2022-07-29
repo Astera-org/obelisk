@@ -1,6 +1,8 @@
 import random
 
-import torch, torch.nn as nn, torch.nn.functional as F
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 import torch.optim as optim
 from scipy import spatial
@@ -8,7 +10,7 @@ import statistics
 import scipy.stats as st
 
 
-class RecurrentNetwork(nn.Module):
+class BoltzmannMachine(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, params):
         super().__init__()
         self.params = params
@@ -100,7 +102,7 @@ class RecurrentNetwork(nn.Module):
             self.layer.weight[:] = self.layer.weight[:] + self.learning_rate * (plus_mult - minus_mult)
             self.norm_weights()
 
-    def y_similarity(self, act1, act2):
+    def y_distance(self, act1, act2):
         y1 = act1[0, self.input_size:self.input_size+self.output_size]
         y2 = act2[0, self.input_size:self.input_size+self.output_size]
         # print("Y clamp x:   ", y1)
@@ -108,11 +110,20 @@ class RecurrentNetwork(nn.Module):
         # return 1-spatial.distance.cosine(y1.detach().numpy(), y2.detach().numpy())
         return (y1 - y2).abs().sum().detach()
 
-    def h_similarity(self, act1, act2):
+    def h_distance(self, act1, act2):
         h1 = act1[0, self.input_size+self.output_size:]
         h2 = act2[0, self.input_size+self.output_size:]
         # return 1-spatial.distance.cosine(h1.detach().numpy(), h2.detach().numpy())
         return (h1 - h2).abs().sum().detach()
+
+    def run_minus_and_plus(self, x, y):
+        if "verbose" in self.params and self.params["verbose"] >= 5:
+            print("Starting Minus Phase")
+        acts_clamp_x = self(x, y, self.params["num_rnn_steps"], clamp_x=True) # Minus phase
+        if "verbose" in self.params and self.params["verbose"] >= 5:
+            print("Starting Plus Phase")
+        acts_clamp_y = self(x, y, self.params["num_rnn_steps"], clamp_x=True, clamp_y=True) # Plus phase
+        return acts_clamp_x, acts_clamp_y
 
 
 def calc_nearest_example_index(predicted:torch.FloatTensor,possible_targets:torch.FloatTensor):
@@ -133,9 +144,9 @@ def create_and_run_network(params=None):
     # XOR (input and output sizes different)
     xs = [torch.tensor([[0, 0, 1]]), torch.tensor([[0, 1, 1]]), torch.tensor([[1, 0, 1]]), torch.tensor([[1, 1, 1]])] # Third input is bias
     ys = []
-    yxor = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[0, 1]])] # This weird binumeral format helps with cosine similarity
-    yand = [torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[1, 0]])]
-    yor = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]])]
+    y_xor = [torch.tensor([[0, 0]]), torch.tensor([[1, 1]]), torch.tensor([[1, 1]]), torch.tensor([[0, 0]])] # This weird binumeral format helps with cosine similarity
+    y_and = [torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[1, 0]])]
+    y_or = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]])]
     if "io" not in params or params["io"] == "random":
         num_data = 4 if "num_data" not in params else params["num_data"]
         input_size = params["input_size"] if "input_size" in params else input_size
@@ -143,11 +154,11 @@ def create_and_run_network(params=None):
         xs = [torch.rand(size=(1, input_size)) for _ in range(num_data)]
         ys = [torch.rand(size=(1, output_size)) for _ in range(num_data)]
     elif params["io"] == "xor":
-        ys = yxor
+        ys = y_xor
     elif params["io"] == "and":
-        ys = yand
+        ys = y_and
     elif params["io"] == "or":
-        ys = yor
+        ys = y_or
     elif params["io"] == "ra25":
         num_data = 25
         choose_n = 6
@@ -157,16 +168,16 @@ def create_and_run_network(params=None):
         ys = [torch.tensor([random.sample([1] * choose_n + [0] * (output_size - choose_n), output_size)]) for _ in range(num_data)]
     num_data = len(xs)
 
-    recurrent_net = RecurrentNetwork(input_size, hidden_size, output_size, params)
+    boltzy = BoltzmannMachine(input_size, hidden_size, output_size, params)
 
-    all_similiarities = []
-    all_h_similarities = []
+    all_distances = []
+    all_h_distances = []
     all_classification = []
-    first_correct = min(params["epochs"]+1, 999999)
+    first_correct = max(params["epochs"]+1, 999999)
     first_correct_start_of_run = first_correct
     for epoch in range(params["epochs"]):
-        similarities = []
-        h_similarities = []
+        distances = []
+        h_distances = []
         classification = []
 
         for data_row in range((num_data)):
@@ -175,73 +186,68 @@ def create_and_run_network(params=None):
             y = ys[index]
 
             # TODO First 4 should have learning off. Michael: What does this mean?
-            if "verbose" in params and params["verbose"] >= 5:
-                print("Starting Minus Phase")
-            acts_clamp_x = recurrent_net(x, y, params["num_rnn_steps"], clamp_x=True) # Minus phase
-            if "verbose" in params and params["verbose"] >= 5:
-                print("Starting Plus Phase")
-            acts_clamp_y = recurrent_net(x, y, params["num_rnn_steps"], clamp_x=True, clamp_y=True) # Plus phase
+            acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)
 
             # Analytics
-            sim = recurrent_net.y_similarity(acts_clamp_x, acts_clamp_y) # For reporting, not used for training
-            h_sim = recurrent_net.h_similarity(acts_clamp_x, acts_clamp_y)
-            predicted_y = acts_clamp_x[0][recurrent_net.input_size:recurrent_net.input_size+recurrent_net.output_size]
-            predicted_index = calc_nearest_example_index(predicted_y,ys)
+            dist = boltzy.y_distance(acts_clamp_x, acts_clamp_y) # For reporting, not used for training
+            h_dist = boltzy.h_distance(acts_clamp_x, acts_clamp_y)
+            predicted_y = acts_clamp_x[0][boltzy.input_size:boltzy.input_size+boltzy.output_size]
+            predicted_index = calc_nearest_example_index(predicted_y, ys)
             correct = ((ys[predicted_index] - y).abs().sum() == 0) # same class predicted
             classification.append(correct)
             if "verbose" in params and params["verbose"] >= 5:
                 print("Clamp X:    ", acts_clamp_x.detach())
                 print("Clamp X, Y: ", acts_clamp_y.detach())
                 print("Correct? ", correct.item(), "\n")
-            # print("Y Similarity: ", sim)
-            # print("H Similarity: ", h_sim)
-            # print("Weights: ", recurrent_net.layer.weight)
-            similarities.append(sim)
-            h_similarities.append(h_sim)
+            # print("Y Distance: ", dist)
+            # print("H Distance: ", h_dist)
+            # print("Weights: ", boltzy.layer.weight)
+            distances.append(dist)
+            h_distances.append(h_dist)
 
             if params["epochs"] == 1:
                 assert False, "first epoch has no training to get baseline, needs more to be meaningful"
             if epoch >= 1:
-                recurrent_net.delta_rule_update_weights_matrix(acts_clamp_x, acts_clamp_y)
+                boltzy.delta_rule_update_weights_matrix(acts_clamp_x, acts_clamp_y)
 
             # if epoch >= (params["epochs"]-1):
             #     print("end",predicted_y.detach().numpy(),y)
             # elif epoch == 0:
             #     print("start",predicted_y.detach().numpy(), y)
-        all_similiarities.append(similarities)
+        all_distances.append(distances)
         all_classification.append(classification)
-        all_h_similarities.append(h_similarities)
+        all_h_distances.append(h_distances)
         percent_correct = (torch.Tensor(classification).sum()/len(classification)).detach().numpy()
         if percent_correct < 1.0:
-            first_correct = min(params["epochs"]+1, 999999)
+            first_correct = max(params["epochs"]+1, 999999)
         else:
             first_correct = min(first_correct, epoch)
             if epoch >= first_correct + 5:
                 first_correct_start_of_run = first_correct
-                print("Hooray! Got 5 successes in a row starting at time: ", first_correct)
+                if "verbose" in params and params["verbose"] >= 5:
+                    print("Hooray! Got 5 successes in a row starting at time: ", first_correct)
                 break
 
     # print("X: ", xs, " Y: ", ys)
-    # print("Weights: ", recurrent_net.layer.weight)
+    # print("Weights: ", boltzy.layer.weight)
 
     final_correct = torch.Tensor(all_classification[-1])
     initial_correct = torch.Tensor(all_classification[0])
 
     final_percent_correct = (final_correct.sum()/len(final_correct)).detach().numpy()
     initial_percent_correct = (initial_correct.sum()/len(initial_correct)).detach().numpy()
-    initial_score = torch.Tensor(all_similiarities[0]).mean().detach().numpy()
+    initial_score = torch.Tensor(all_distances[0]).mean().detach().numpy()
 
-    # print("Sims ", similarities)
-    final_score =torch.Tensor(all_similiarities[-1]).mean().detach().numpy()
+    final_score = torch.Tensor(all_distances[-1]).mean().detach().numpy()
     if params["num_runs"] == 1:
-        print("End correct ", final_percent_correct, "Start correct",initial_percent_correct ,"End Sim: ", final_score, " compared to initial score: ", initial_score)
+        print("End correct ", final_percent_correct, "Start correct",initial_percent_correct ,"End Dist: ", final_score, " compared to initial score: ", initial_score)
         if first_correct_start_of_run < params["epochs"]:
             print("Got first correct score in a run of at least 5 at timestep: ", first_correct_start_of_run)
         else:
             print("It never converged to 100% correct :(")
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
-        print("End H distance: ", torch.Tensor(all_h_similarities[0]).mean().numpy(), " compared to initial score: ",torch.Tensor(all_h_similarities[-1]).mean().numpy())
-        # print("End weights: ", recurrent_net.layer.weight)
+        print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ",torch.Tensor(all_h_distances[-1]).mean().numpy())
+        # print("End weights: ", boltzy.layer.weight)
     return first_correct_start_of_run
 
 
@@ -266,7 +272,7 @@ if __name__ == '__main__':
     epochs = 100
 
     # Only one run
-    run_many_times({"epochs": epochs, "hidden_size": 25, "num_rnn_steps": 5, "num_runs": 1, "io": "ra25", "verbose": 0, "norm_weights": True, "learning_rate": 0.1})
+    run_many_times({"epochs": epochs, "hidden_size": 2, "num_rnn_steps": 5, "num_runs": 1, "io": "xor", "verbose": 0, "norm_weights": True, "learning_rate": 0.1})
 
     # # Look at learning rate for large num_data
     # run_many_times({"epochs": epochs, "hidden_size": 10, "num_rnn_steps": 5, "num_runs": 5, "io": "random", "verbose": 0, "norm_weights": True, "input_size": 10, "output_size": 10, "learning_rate": 0.1, "num_data": 10})
