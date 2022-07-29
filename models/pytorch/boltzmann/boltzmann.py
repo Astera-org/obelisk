@@ -10,48 +10,48 @@ if __name__ == '__main__':
     epochs = 100
 
     # Only one run
-    run_many_times(Parameters(batch_data=True,epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=1, norm_weights=True, score="convergence"))
+    run_many_times(Parameters(batch_data=True,epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="mnist", verbose=1, norm_weights=True, score="convergence"))
 
     # # Hypothesis: norm_weights=True improves performance only for high values of num_rnn_steps.
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, io="xor", verbose=1, norm_weights=False, score="convergence"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, io="xor", verbose=1, norm_weights=True, score="convergence"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, io="xor", verbose=1, norm_weights=False, score="convergence"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, io="xor", verbose=1, norm_weights=True, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, dataset="xor", verbose=1, norm_weights=False, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, dataset="xor", verbose=1, norm_weights=True, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, dataset="xor", verbose=1, norm_weights=False, score="convergence"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=50, num_runs=20, dataset="xor", verbose=1, norm_weights=True, score="convergence"))
 
     # # Look at learning rate for large num_data
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, io="random", verbose=0, norm_weights=True, input_size=10, output_size=10, learning_rate=0.1, num_data=10))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, io="random", verbose=0, norm_weights=False, input_size=10, output_size=10, learning_rate=0.01, num_data=10))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, dataset="random", verbose=0, norm_weights=True, input_size=10, output_size=10, learning_rate=0.1, num_data=10))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=5, dataset="random", verbose=0, norm_weights=False, input_size=10, output_size=10, learning_rate=0.01, num_data=10))
 
     # # Try to solve random
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=num_runs, io="random"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=10, num_runs=num_runs, io="random"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=10, num_runs=num_runs, io="random"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=20, num_runs=num_runs, io="random"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=50, num_rnn_steps=20, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=num_runs, dataset="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=10, num_rnn_steps=10, num_runs=num_runs, dataset="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=10, num_runs=num_runs, dataset="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=20, num_rnn_steps=20, num_runs=num_runs, dataset="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=50, num_rnn_steps=20, num_runs=num_runs, dataset="random"))
 
     # Test XOR
-    # run_many_times(Parameters("epochs":20,epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, io="random"))
-    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="xor"))
-    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="and"))
-    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="or"))
-    # #run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, io="random"))
-    # # run_many_times(Parameters(epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, io="random"))
+    # run_many_times(Parameters("epochs":20,epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, dataset="random"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, dataset="xor"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, dataset="and"))
+    # run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, dataset="or"))
+    # #run_many_times(Parameters(epochs=50, hidden_size=5, num_rnn_steps=5, num_runs=1, dataset="random"))
+    # # run_many_times(Parameters(epochs=epochs, hidden_size=4, num_rnn_steps=5, num_runs=1, dataset="random"))
 
     # # Test XOR
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="and"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="or"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="xor"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="and"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="or"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="random"))
 
     # # Test normalization in XOR
     # # First XOR has both
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_weights=False))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_act=False))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="xor", norm_weights=False, norm_act=False))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="xor", norm_weights=False))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="xor", norm_act=False))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="xor", norm_weights=False, norm_act=False))
 
     # Test RNN averaging # This seems to not make a difference
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random"))
-    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, io="random", average_window=3))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="random"))
+    # run_many_times(Parameters(epochs=epochs, hidden_size=5, num_rnn_steps=5, num_runs=num_runs, dataset="random", average_window=3))
 
     # run_many_times({epochs=epochs, hidden_size=0, num_rnn_steps=1, num_runs=num_runs)
     # run_many_times({epochs=epochs, hidden_size=2, num_rnn_steps=1, num_runs=num_runs)

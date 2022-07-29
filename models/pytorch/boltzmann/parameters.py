@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Parameters:
     # What data set to use. See datasets.py for legal values.
-    io: str = "xor"
+    dataset: str = "xor"
 
     # What metric to report as the score.
     score: str = "perc_correct"
@@ -24,12 +24,12 @@ class Parameters:
     norm_act: bool = False
     norm_hidden: bool = True
 
-    # Network characteristics. Input and output size will be overwritten by some values of io.
+    # Network characteristics. Input and output size will be overwritten by some values of dataset.
     hidden_size: int = 10
     input_size: int = 10
     output_size: int = 10
 
-    # Number of data points. This will be overwritten by some values of io.
+    # Number of data points. This will be overwritten by some values of dataset.
     num_data: int = 10
 
     # If the network gets 100% correct performance this many times in a row, it will halt.

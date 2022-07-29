@@ -1,6 +1,24 @@
 import torch
 from parameters import Parameters
 import random
+from torchvision import datasets as dts
+from torchvision.transforms import ToTensor
+
+
+def get_mnist(params: Parameters):
+    train_dt=dts.MNIST(
+        root='data',
+        train=True,
+        transform=ToTensor(),
+        download=True,
+    )
+    test_dt=dts.MNIST(
+        root='data',
+        train=False,
+        transform=ToTensor()
+    )
+    print("cat")
+    return 0,0
 
 
 def get_data(params: Parameters):
@@ -16,19 +34,21 @@ def get_data(params: Parameters):
     y_xor = [torch.tensor([[0, 0]]), torch.tensor([[1, 1]]), torch.tensor([[1, 1]]), torch.tensor([[0, 0]])] # This weird binumeral format helps with cosine similarity
     y_and = [torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[1, 0]])]
     y_or = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]])]
-    if params.io == "random":
+    if params.dataset == "random":
         num_data = params.num_data
         input_size = params.input_size
         output_size = params.output_size
         xs = [torch.rand(size=(1, input_size)) for _ in range(num_data)]
         ys = [torch.rand(size=(1, output_size)) for _ in range(num_data)]
-    elif params.io == "xor":
+    elif params.dataset == "xor":
         ys = y_xor
-    elif params.io == "and":
+    elif params.dataset == "and":
         ys = y_and
-    elif params.io == "or":
+    elif params.dataset == "or":
         ys = y_or
-    elif params.io == "ra25":
+    elif params.dataset == "mnist":
+        ys, xs = get_mnist(params)
+    elif params.dataset == "ra25":
         num_data = 25
         choose_n = 6
         input_size = 25
