@@ -5,7 +5,7 @@ from torchvision import datasets as dts
 from torchvision.transforms import ToTensor
 
 
-def get_mnist(params: Parameters):
+def get_mnist(params: HParams):
     train_dt=dts.MNIST(
         root='data',
         train=True,

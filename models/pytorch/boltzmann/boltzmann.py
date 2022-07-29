@@ -10,7 +10,7 @@ if __name__ == '__main__':
     epochs = 100
 
     # Only one run
-    run_many_times(HParams(batch_data=True,epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="mnist", verbose=1, norm_weights=True, score="convergence"))
+    run_many_times(HParams(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=1, norm_weights=True, score="convergence"))
 
     # # Hypothesis: norm_weights=True improves performance only for high values of num_rnn_steps.
     # run_many_times(HParams(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, dataset="xor", verbose=1, norm_weights=False, score="convergence"))
