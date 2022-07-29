@@ -70,10 +70,10 @@ def create_and_run_network(params: Parameters = Parameters()):
             first_correct = max(params.epochs+1, 999999)
         else:
             first_correct = min(first_correct, epoch)
-            if epoch >= first_correct + 5:
+            if epoch >= first_correct + params.stopping_success:
                 first_correct_start_of_run = first_correct
-                if params.verbose >= 5:
-                    print("Hooray! Got 5 successes in a row starting at time: ", first_correct)
+                if params.verbose >= params.stopping_success:
+                    print("Hooray! Got", params.stopping_success, "successes in a row starting at time: ", first_correct)
                 break
 
     # print("X: ", xs, " Y: ", ys)
@@ -90,7 +90,7 @@ def create_and_run_network(params: Parameters = Parameters()):
     if params.num_runs == 1 and params.verbose > 0:
         print("End correct ", final_percent_correct, "Start correct", initial_percent_correct, "End Dist: ", final_score, " compared to initial score: ", initial_score)
         if first_correct_start_of_run < params.epochs:
-            print("Got first correct score in a run of at least 5 at timestep: ", first_correct_start_of_run)
+            print("Got first correct score in a run of at least", params.stopping_success, "at timestep: ", first_correct_start_of_run)
         else:
             print("It never converged to 100% correct :(")
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
@@ -111,13 +111,20 @@ def create_and_run_network(params: Parameters = Parameters()):
 
 
 def run_many_times(params: Parameters):
-    print("\nWith params: ", params)
+    if params.verbose >= 0:
+        print("\nWith params: ", params)
     scores = []
     number_runs = params.num_runs
     for ii in range(number_runs):
         final_score = create_and_run_network(params)
         scores.append(final_score)
     total_score = sum(scores) / len(scores)
-    print("All scores: ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in scores])
-    print("Got score: ", "%.2f" % total_score, " Confidence Bars: ", st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else "(nan, only one run)")
-    return total_score
+    confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else (float("nan"), float("nan")) # It prints an annoying warning if you give it a single element list
+    if params.verbose >= 0:
+        if params.verbose >= 1:
+            print("All scores: ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in scores])
+        if len(scores) > 1:
+            print("Got", params.score, ": ", "%.2f" % total_score, " Confidence Bars: ", confidence_bars)
+        else:
+            print("Got", params.score, ": ", "%.2f" % total_score)
+    return total_score, confidence_bars

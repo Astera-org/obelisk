@@ -17,9 +17,9 @@ def get_data(params: Parameters):
     y_and = [torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[0, 1]]), torch.tensor([[1, 0]])]
     y_or = [torch.tensor([[0, 1]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]]), torch.tensor([[1, 0]])]
     if params.io == "random":
-        num_data = 4 if "num_data" not in params else params.num_data
-        input_size = params.input_size if "input_size" in params else input_size
-        output_size = params.output_size if "output_size" in params else output_size
+        num_data = params.num_data
+        input_size = params.input_size
+        output_size = params.output_size
         xs = [torch.rand(size=(1, input_size)) for _ in range(num_data)]
         ys = [torch.rand(size=(1, output_size)) for _ in range(num_data)]
     elif params.io == "xor":
