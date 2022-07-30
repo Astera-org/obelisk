@@ -54,6 +54,20 @@ function addJob(agent_id, agent_param, world_id, world_param, note) {
     });
 }
 
+function updateNote(job_id, note) {
+    console.log("updateNote job_id:", job_id, "note:", note);
+    const client = getClient();
+    client.updateNote(job_id, note,function (result) {
+        console.log("updateNote result", result);
+        if (!result || result instanceof Error) {
+            errorAlert("updateNote server error: " + result);
+        } else {
+            successAlert("Success! Updated note for jod id: " + job_id);
+            queryJobs();
+        }
+    });
+}
+
 function getBinName(bin_id) {
     if (!gBinInfos)
         return ""
@@ -77,7 +91,7 @@ function toHtml(ji) {
         <td>${ji.search_id}</td>
         <td>${ji.time_added}</td>
         <td>${ji.note}
-          <button type="button" class="btn btn-notes" data-job_id="${ji.job_id}" data-bs-toggle="modal" data-bs-target="#notesModal">Edit</button>
+          <button type="button" class="btn btn-notes" data-job_id="${ji.job_id}" data-note="${ji.note}" data-bs-toggle="modal" data-bs-target="#notesModal">Edit</button>
         </td>
         <td><button type="button" class="btn btn-cancel" data-job_id="${ji.job_id}">cancel</button></td>
        </tr>
@@ -309,7 +323,29 @@ $(function() {
     });
 
     // notes modal
-    $('#notesModal').on('shown.bs.modal', function (e) {
-        console.log("notes modal shown", e);
+    $('#notesModal').on('shown.bs.modal', function (event) {
+        console.log("notes modal shown", event);
+        const button = $(event.relatedTarget); // Button that triggered the modal
+        const job_id = button.data('job_id');
+        const note = button.data('note');
+        const modal = $(event.target);
+        modal.find('.modal-title').text('Note for job ' + job_id);
+        modal.find('.modal-body textarea').val(note);
+        // save the job id and note for updating
+        const form = modal.find('#modal_update_note_form');
+        form.data("job_id", job_id);
+        form.data("note", note);
+    });
+
+    $("#modal_update_note_form").submit(function(event) {
+        event.preventDefault();
+        const form = $(event.target);
+        const prev_note = form.data("note");
+        const note = form.find('.modal-body textarea').val();
+        if (note !== prev_note) {
+            const job_id = form.data("job_id");
+            updateNote(job_id, note);
+            $('#notesModal').modal('hide');
+        }
     });
 });

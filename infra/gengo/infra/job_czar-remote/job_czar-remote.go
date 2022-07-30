@@ -26,7 +26,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "  bool submitResult(ResultJob result)")
   fmt.Fprintln(os.Stderr, "  i32 addJob(i32 agent_id, i32 world_id, string agent_param, string world_param, i32 priority, i32 user_id, string note)")
   fmt.Fprintln(os.Stderr, "  void fetchRunResults(i32 job_id)")
-  fmt.Fprintln(os.Stderr, "  void appendNote(i32 job_id, string note)")
+  fmt.Fprintln(os.Stderr, "  bool updateNote(i32 job_id, string note)")
   fmt.Fprintln(os.Stderr, "  BinInfo getBinInfo(i32 bin_id)")
   fmt.Fprintln(os.Stderr, "   getBinInfos(string filter_by)")
   fmt.Fprintln(os.Stderr, "   runSQL(string query)")
@@ -248,9 +248,9 @@ func main() {
     fmt.Print(client.FetchRunResults(context.Background(), value0))
     fmt.Print("\n")
     break
-  case "appendNote":
+  case "updateNote":
     if flag.NArg() - 1 != 2 {
-      fmt.Fprintln(os.Stderr, "AppendNote requires 2 args")
+      fmt.Fprintln(os.Stderr, "UpdateNote requires 2 args")
       flag.Usage()
     }
     tmp0, err55 := (strconv.Atoi(flag.Arg(1)))
@@ -262,7 +262,7 @@ func main() {
     value0 := argvalue0
     argvalue1 := flag.Arg(2)
     value1 := argvalue1
-    fmt.Print(client.AppendNote(context.Background(), value0, value1))
+    fmt.Print(client.UpdateNote(context.Background(), value0, value1))
     fmt.Print("\n")
     break
   case "getBinInfo":

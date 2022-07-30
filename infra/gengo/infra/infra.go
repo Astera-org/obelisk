@@ -1925,7 +1925,7 @@ type JobCzar interface {
   // Parameters:
   //  - JobID
   //  - Note
-  AppendNote(ctx context.Context, job_id int32, note string) (_err error)
+  UpdateNote(ctx context.Context, job_id int32, note string) (_r bool, _err error)
   // Parameters:
   //  - BinID
   GetBinInfo(ctx context.Context, bin_id int32) (_r *BinInfo, _err error)
@@ -2058,18 +2058,18 @@ func (p *JobCzarClient) FetchRunResults(ctx context.Context, job_id int32) (_err
 // Parameters:
 //  - JobID
 //  - Note
-func (p *JobCzarClient) AppendNote(ctx context.Context, job_id int32, note string) (_err error) {
-  var _args13 JobCzarAppendNoteArgs
+func (p *JobCzarClient) UpdateNote(ctx context.Context, job_id int32, note string) (_r bool, _err error) {
+  var _args13 JobCzarUpdateNoteArgs
   _args13.JobID = job_id
   _args13.Note = note
-  var _result15 JobCzarAppendNoteResult
+  var _result15 JobCzarUpdateNoteResult
   var _meta14 thrift.ResponseMeta
-  _meta14, _err = p.Client_().Call(ctx, "appendNote", &_args13, &_result15)
+  _meta14, _err = p.Client_().Call(ctx, "updateNote", &_args13, &_result15)
   p.SetLastResponseMeta_(_meta14)
   if _err != nil {
     return
   }
-  return nil
+  return _result15.GetSuccess(), nil
 }
 
 // Parameters:
@@ -2175,7 +2175,7 @@ func NewJobCzarProcessor(handler JobCzar) *JobCzarProcessor {
   self32.processorMap["submitResult"] = &jobCzarProcessorSubmitResult_{handler:handler}
   self32.processorMap["addJob"] = &jobCzarProcessorAddJob{handler:handler}
   self32.processorMap["fetchRunResults"] = &jobCzarProcessorFetchRunResults{handler:handler}
-  self32.processorMap["appendNote"] = &jobCzarProcessorAppendNote{handler:handler}
+  self32.processorMap["updateNote"] = &jobCzarProcessorUpdateNote{handler:handler}
   self32.processorMap["getBinInfo"] = &jobCzarProcessorGetBinInfo{handler:handler}
   self32.processorMap["getBinInfos"] = &jobCzarProcessorGetBinInfos{handler:handler}
   self32.processorMap["runSQL"] = &jobCzarProcessorRunSQL{handler:handler}
@@ -2514,17 +2514,17 @@ func (p *jobCzarProcessorFetchRunResults) Process(ctx context.Context, seqId int
   return true, err
 }
 
-type jobCzarProcessorAppendNote struct {
+type jobCzarProcessorUpdateNote struct {
   handler JobCzar
 }
 
-func (p *jobCzarProcessorAppendNote) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-  args := JobCzarAppendNoteArgs{}
+func (p *jobCzarProcessorUpdateNote) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+  args := JobCzarUpdateNoteArgs{}
   var err2 error
   if err2 = args.Read(ctx, iprot); err2 != nil {
     iprot.ReadMessageEnd(ctx)
     x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err2.Error())
-    oprot.WriteMessageBegin(ctx, "appendNote", thrift.EXCEPTION, seqId)
+    oprot.WriteMessageBegin(ctx, "updateNote", thrift.EXCEPTION, seqId)
     x.Write(ctx, oprot)
     oprot.WriteMessageEnd(ctx)
     oprot.Flush(ctx)
@@ -2558,21 +2558,24 @@ func (p *jobCzarProcessorAppendNote) Process(ctx context.Context, seqId int32, i
     }(tickerCtx, cancel)
   }
 
-  result := JobCzarAppendNoteResult{}
-  if err2 = p.handler.AppendNote(ctx, args.JobID, args.Note); err2 != nil {
+  result := JobCzarUpdateNoteResult{}
+  var retval bool
+  if retval, err2 = p.handler.UpdateNote(ctx, args.JobID, args.Note); err2 != nil {
     tickerCancel()
     if err2 == thrift.ErrAbandonRequest {
       return false, thrift.WrapTException(err2)
     }
-    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing appendNote: " + err2.Error())
-    oprot.WriteMessageBegin(ctx, "appendNote", thrift.EXCEPTION, seqId)
+    x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing updateNote: " + err2.Error())
+    oprot.WriteMessageBegin(ctx, "updateNote", thrift.EXCEPTION, seqId)
     x.Write(ctx, oprot)
     oprot.WriteMessageEnd(ctx)
     oprot.Flush(ctx)
     return true, thrift.WrapTException(err2)
+  } else {
+    result.Success = &retval
   }
   tickerCancel()
-  if err2 = oprot.WriteMessageBegin(ctx, "appendNote", thrift.REPLY, seqId); err2 != nil {
+  if err2 = oprot.WriteMessageBegin(ctx, "updateNote", thrift.REPLY, seqId); err2 != nil {
     err = thrift.WrapTException(err2)
   }
   if err2 = result.Write(ctx, oprot); err == nil && err2 != nil {
@@ -3965,24 +3968,24 @@ func (p *JobCzarFetchRunResultsResult) String() string {
 // Attributes:
 //  - JobID
 //  - Note
-type JobCzarAppendNoteArgs struct {
+type JobCzarUpdateNoteArgs struct {
   JobID int32 `thrift:"job_id,1" db:"job_id" json:"job_id"`
   Note string `thrift:"note,2" db:"note" json:"note"`
 }
 
-func NewJobCzarAppendNoteArgs() *JobCzarAppendNoteArgs {
-  return &JobCzarAppendNoteArgs{}
+func NewJobCzarUpdateNoteArgs() *JobCzarUpdateNoteArgs {
+  return &JobCzarUpdateNoteArgs{}
 }
 
 
-func (p *JobCzarAppendNoteArgs) GetJobID() int32 {
+func (p *JobCzarUpdateNoteArgs) GetJobID() int32 {
   return p.JobID
 }
 
-func (p *JobCzarAppendNoteArgs) GetNote() string {
+func (p *JobCzarUpdateNoteArgs) GetNote() string {
   return p.Note
 }
-func (p *JobCzarAppendNoteArgs) Read(ctx context.Context, iprot thrift.TProtocol) error {
+func (p *JobCzarUpdateNoteArgs) Read(ctx context.Context, iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(ctx); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
   }
@@ -4030,7 +4033,7 @@ func (p *JobCzarAppendNoteArgs) Read(ctx context.Context, iprot thrift.TProtocol
   return nil
 }
 
-func (p *JobCzarAppendNoteArgs)  ReadField1(ctx context.Context, iprot thrift.TProtocol) error {
+func (p *JobCzarUpdateNoteArgs)  ReadField1(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 1: ", err)
 } else {
@@ -4039,7 +4042,7 @@ func (p *JobCzarAppendNoteArgs)  ReadField1(ctx context.Context, iprot thrift.TP
   return nil
 }
 
-func (p *JobCzarAppendNoteArgs)  ReadField2(ctx context.Context, iprot thrift.TProtocol) error {
+func (p *JobCzarUpdateNoteArgs)  ReadField2(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 2: ", err)
 } else {
@@ -4048,8 +4051,8 @@ func (p *JobCzarAppendNoteArgs)  ReadField2(ctx context.Context, iprot thrift.TP
   return nil
 }
 
-func (p *JobCzarAppendNoteArgs) Write(ctx context.Context, oprot thrift.TProtocol) error {
-  if err := oprot.WriteStructBegin(ctx, "appendNote_args"); err != nil {
+func (p *JobCzarUpdateNoteArgs) Write(ctx context.Context, oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin(ctx, "updateNote_args"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
     if err := p.writeField1(ctx, oprot); err != nil { return err }
@@ -4062,7 +4065,7 @@ func (p *JobCzarAppendNoteArgs) Write(ctx context.Context, oprot thrift.TProtoco
   return nil
 }
 
-func (p *JobCzarAppendNoteArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
+func (p *JobCzarUpdateNoteArgs) writeField1(ctx context.Context, oprot thrift.TProtocol) (err error) {
   if err := oprot.WriteFieldBegin(ctx, "job_id", thrift.I32, 1); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field begin error 1:job_id: ", p), err) }
   if err := oprot.WriteI32(ctx, int32(p.JobID)); err != nil {
@@ -4072,7 +4075,7 @@ func (p *JobCzarAppendNoteArgs) writeField1(ctx context.Context, oprot thrift.TP
   return err
 }
 
-func (p *JobCzarAppendNoteArgs) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
+func (p *JobCzarUpdateNoteArgs) writeField2(ctx context.Context, oprot thrift.TProtocol) (err error) {
   if err := oprot.WriteFieldBegin(ctx, "note", thrift.STRING, 2); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write field begin error 2:note: ", p), err) }
   if err := oprot.WriteString(ctx, string(p.Note)); err != nil {
@@ -4082,21 +4085,35 @@ func (p *JobCzarAppendNoteArgs) writeField2(ctx context.Context, oprot thrift.TP
   return err
 }
 
-func (p *JobCzarAppendNoteArgs) String() string {
+func (p *JobCzarUpdateNoteArgs) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("JobCzarAppendNoteArgs(%+v)", *p)
+  return fmt.Sprintf("JobCzarUpdateNoteArgs(%+v)", *p)
 }
 
-type JobCzarAppendNoteResult struct {
+// Attributes:
+//  - Success
+type JobCzarUpdateNoteResult struct {
+  Success *bool `thrift:"success,0" db:"success" json:"success,omitempty"`
 }
 
-func NewJobCzarAppendNoteResult() *JobCzarAppendNoteResult {
-  return &JobCzarAppendNoteResult{}
+func NewJobCzarUpdateNoteResult() *JobCzarUpdateNoteResult {
+  return &JobCzarUpdateNoteResult{}
 }
 
-func (p *JobCzarAppendNoteResult) Read(ctx context.Context, iprot thrift.TProtocol) error {
+var JobCzarUpdateNoteResult_Success_DEFAULT bool
+func (p *JobCzarUpdateNoteResult) GetSuccess() bool {
+  if !p.IsSetSuccess() {
+    return JobCzarUpdateNoteResult_Success_DEFAULT
+  }
+return *p.Success
+}
+func (p *JobCzarUpdateNoteResult) IsSetSuccess() bool {
+  return p.Success != nil
+}
+
+func (p *JobCzarUpdateNoteResult) Read(ctx context.Context, iprot thrift.TProtocol) error {
   if _, err := iprot.ReadStructBegin(ctx); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T read error: ", p), err)
   }
@@ -4108,8 +4125,21 @@ func (p *JobCzarAppendNoteResult) Read(ctx context.Context, iprot thrift.TProtoc
       return thrift.PrependError(fmt.Sprintf("%T field %d read error: ", p, fieldId), err)
     }
     if fieldTypeId == thrift.STOP { break; }
-    if err := iprot.Skip(ctx, fieldTypeId); err != nil {
-      return err
+    switch fieldId {
+    case 0:
+      if fieldTypeId == thrift.BOOL {
+        if err := p.ReadField0(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    default:
+      if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+        return err
+      }
     }
     if err := iprot.ReadFieldEnd(ctx); err != nil {
       return err
@@ -4121,10 +4151,20 @@ func (p *JobCzarAppendNoteResult) Read(ctx context.Context, iprot thrift.TProtoc
   return nil
 }
 
-func (p *JobCzarAppendNoteResult) Write(ctx context.Context, oprot thrift.TProtocol) error {
-  if err := oprot.WriteStructBegin(ctx, "appendNote_result"); err != nil {
+func (p *JobCzarUpdateNoteResult)  ReadField0(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadBool(ctx); err != nil {
+  return thrift.PrependError("error reading field 0: ", err)
+} else {
+  p.Success = &v
+}
+  return nil
+}
+
+func (p *JobCzarUpdateNoteResult) Write(ctx context.Context, oprot thrift.TProtocol) error {
+  if err := oprot.WriteStructBegin(ctx, "updateNote_result"); err != nil {
     return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err) }
   if p != nil {
+    if err := p.writeField0(ctx, oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(ctx); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -4133,11 +4173,23 @@ func (p *JobCzarAppendNoteResult) Write(ctx context.Context, oprot thrift.TProto
   return nil
 }
 
-func (p *JobCzarAppendNoteResult) String() string {
+func (p *JobCzarUpdateNoteResult) writeField0(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if p.IsSetSuccess() {
+    if err := oprot.WriteFieldBegin(ctx, "success", thrift.BOOL, 0); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 0:success: ", p), err) }
+    if err := oprot.WriteBool(ctx, bool(*p.Success)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.success (0) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 0:success: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobCzarUpdateNoteResult) String() string {
   if p == nil {
     return "<nil>"
   }
-  return fmt.Sprintf("JobCzarAppendNoteResult(%+v)", *p)
+  return fmt.Sprintf("JobCzarUpdateNoteResult(%+v)", *p)
 }
 
 // Attributes:
