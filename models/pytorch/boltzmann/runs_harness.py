@@ -152,6 +152,7 @@ def train_and_test(train_params: HParams, test_params: HParams):
         test_params.input_size = train_params.input_size
         test_params.output_size = train_params.output_size
         test_params.batch_data = train_params.batch_data # Maybe should just be True?
+        test_params.self_connection_strength = train_params.self_connection_strength
         if test_params.verbose >= 0:
             print("\nTesting with params: ", test_params)
         final_score, _ = create_and_run_network(test_params, previous_model=model)
