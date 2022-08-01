@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from  torch.nn.functional import linear
 from hyperparams import HParams
 
 def create_symmetric_weights(weights:torch.Tensor):
@@ -45,7 +46,10 @@ class BoltzmannMachine(nn.Module):
                 self.layer.weight[:] = create_symmetric_weights(self.layer.weight)
 
         self._activation_strength_matrix = torch.zeros_like(self.layer.weight)
-        self.set_activation_strength(forward_strength=params.forward_connection_strength,backward_strength=params.backward_connection_strength,lateral_strength=params.lateral_connection_strength,self_connect_strength=params.self_connection_strength)
+        self.set_activation_strength(forward_strength=params.forward_connection_strength,
+                                     backward_strength=params.backward_connection_strength,
+                                     lateral_strength=params.lateral_connection_strength,
+                                     self_connect_strength=params.self_connection_strength)
 
 
     def set_activation_strength(self,forward_strength:float, backward_strength:float, lateral_strength:float, self_connect_strength:float):
@@ -71,6 +75,8 @@ class BoltzmannMachine(nn.Module):
         activation_strength_mat[end_output:end_hidden,end_output:end_hidden] = lateral_strength
         activation_strength_mat.fill_diagonal_(self_connect_strength)
 
+        assert (activation_strength_mat >=0).sum() == len(activation_strength_mat.flatten()), "all strengths are expected to be greater than 0"
+
 
     def forward(self, x, y, n, clamp_x=False, clamp_y=False):
         h: torch.Tensor = torch.zeros(size=(x.shape[0], self.hidden_size))
@@ -82,7 +88,9 @@ class BoltzmannMachine(nn.Module):
         if self.params.average_window > 0:
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
-            full_act = F.relu(self.layer(full_act))
+
+            modified_weights = self.layer.weight * self._activation_strength_matrix
+            full_act = F.relu(linear(full_act,modified_weights))
             if clamp_x:
                 full_act[:, 0:self.input_size] = x
             if clamp_y:
