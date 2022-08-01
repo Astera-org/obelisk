@@ -145,6 +145,7 @@ def train_and_test(train_params: HParams, test_params: HParams):
 
         # Test
         test_params.testing = True
+        test_params.epochs = 1
         # Some parameters need to be the same in testing
         test_params.num_rnn_steps = train_params.num_rnn_steps
         test_params.dataset = train_params.dataset
