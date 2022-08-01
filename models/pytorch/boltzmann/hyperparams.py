@@ -43,3 +43,6 @@ class HParams:
 
     # Put all the data from a single epoch into a single batch. In the future, for larger datasets, we will need to use dataloaders to accommodate this.
     batch_data: bool = False
+
+    # Train or test
+    testing: bool = False

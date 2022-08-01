@@ -8,27 +8,32 @@ from torchvision.transforms import ToTensor
 
 
 def get_mnist(params: HParams):
-    train_X=dts.MNIST(
+    train_x = dts.MNIST(
         root='data',
         train=True,
         transform=ToTensor(),
         download=True,
     )
-    test_dt=dts.MNIST(
+    test_x = dts.MNIST(
         root='data',
         train=False,
-        transform=ToTensor()
+        transform=ToTensor(),
+        download=True,
     )
-    x = train_X.data[15]
+    mnist_digits = train_x
+    if params.testing:
+        mnist_digits = test_x
     items = []
     labels = []
     size = int(math.sqrt(params.input_size))
     for _ in range(params.num_data):
-        sample = random.randint(0, len(train_X)-1)
-        number = train_X[sample][0]
-        samp = [[0 if number.data[0, int(j*28/size), int(i*28/size)] < .2 else 1 for i in range(size)] for j in range(size)] # Downsample
+        sample = random.randint(0, len(mnist_digits)-1)
+        number = mnist_digits[sample][0]
+        # TODO Torch has a one-liner for this
+        # TODO Don't binarize
+        samp = [[number.data[0, int(j*28/size), int(i*28/size)] for i in range(size)] for j in range(size)] # Downsample
         items.append(torch.tensor([[x for xs in samp for x in xs]]).float()) # Flatten and tensorize
-        label = train_X[sample][1]
+        label = mnist_digits[sample][1]
         labels.append(torch.Tensor([[1 if i == label else 0 for i in range(10)]]))
     return items, labels
 
