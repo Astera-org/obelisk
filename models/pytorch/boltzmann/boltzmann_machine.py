@@ -3,18 +3,28 @@ import torch.nn as nn
 import torch.nn.functional as F
 from hyperparams import HParams
 
-def create_symmetric_weights(layer:torch.Tensor):
+def create_symmetric_weights(weights:torch.Tensor):
     '''
     make the weights symmetric, if we want to enforce this
     '''
-    assert layer.shape[0] == layer.shape[1] #should be square
-    N = layer.shape[0]
+
+    # for ii in range(self.layer_size):
+    #     for jj in range(self.layer_size):
+    #         with torch.no_grad():
+    #             if ii < jj:
+    #                 self.layer.weight[ii, jj] = self.layer.weight[jj, ii] # Start symmetric # This seems to make it worse
+
+    assert weights.shape[0] == weights.shape[1], "expected square matrix" #should be square
+
+    N = weights.shape[0]
     with torch.no_grad():
-        vals = torch.triu(layer).flatten()[:int(N*(N+1)/2)]
-        new_mat = torch.zeros_like(layer)
+        vals = torch.triu(weights).flatten()[:int(N * (N + 1) / 2)]
+        new_mat = torch.zeros_like(weights)
         i, j = torch.triu_indices(N, N)
         new_mat[i, j] = vals
         new_mat.T[i, j] = vals
+
+    assert (new_mat.T == new_mat).sum() == len(weights.flatten()), "weights are not symmetric"
     return new_mat
 
 class BoltzmannMachine(nn.Module):
@@ -29,11 +39,12 @@ class BoltzmannMachine(nn.Module):
         self.layer = nn.Linear(self.layer_size, self.layer_size, bias=False)
         with torch.no_grad():
             self.layer.weight = self.layer.weight.fill_diagonal_(0) # No self connections
-        # for ii in range(self.layer_size):
-        #     for jj in range(self.layer_size):
-        #         with torch.no_grad():
-        #             if ii < jj:
-        #                 self.layer.weight[ii, jj] = self.layer.weight[jj, ii] # Start symmetric # This seems to make it worse
+
+            if params.weights_start_symmetric:
+                self.layer.weight[:] = create_symmetric_weights(self.layer.weight)
+
+
+
 
     def forward(self, x, y, n, clamp_x=False, clamp_y=False):
         h: torch.Tensor = torch.zeros(size=(x.shape[0], self.hidden_size))

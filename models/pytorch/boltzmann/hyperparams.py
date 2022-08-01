@@ -6,6 +6,8 @@ class HParams:
     # What data set to use. See datasets.py for legal values.
     dataset: str = "xor"
 
+    weights_start_symmetric: bool = False
+
     # What metric to report as the score.
     score: str = "perc_correct"
 
