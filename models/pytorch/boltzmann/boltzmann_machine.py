@@ -45,6 +45,7 @@ class BoltzmannMachine(nn.Module):
                 self.layer.weight[:] = create_symmetric_weights(self.layer.weight)
 
         self._activation_strength_matrix = torch.zeros_like(self.layer.weight)
+        self.set_activation_strength(forward_strength=params.forward_connection_strength,backward_strength=params.backward_connection_strength,lateral_strength=params.lateral_connection_strength,self_connect_strength=params.self_connection_strength)
 
 
     def set_activation_strength(self,forward_strength:float, backward_strength:float, lateral_strength:float, self_connect_strength:float):

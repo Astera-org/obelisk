@@ -62,6 +62,10 @@ class BoltzmannTest(unittest.TestCase):
         assert ((b2.layer.weight.T == b2.layer.weight).sum()) != len(b2.layer.weight.flatten()), "weights should not be symmetric"
 
 
+    def activation_modulation(self):
+        params:HParams = HParams(weights_start_symmetric=False,backward_connection_strength=1,
+                                 forward_connection_strength=1, self_connection_strength = 1)
+
 
 if __name__ == '__main__':
     torch.manual_seed(0) # To make tests consistent
