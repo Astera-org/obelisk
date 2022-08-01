@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # torch.manual_seed(2) # For debugging purposes.
     torch.set_printoptions(precision=3, sci_mode=False)
     num_runs = 10
-    epochs = 20
+    epochs = 200
 
     # Only one run
     # run_many_times(HParams(epochs=epochs, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000))

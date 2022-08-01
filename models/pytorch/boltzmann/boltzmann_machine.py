@@ -27,6 +27,9 @@ def create_symmetric_weights(weights:torch.Tensor):
     assert (new_mat.T == new_mat).sum() == len(weights.flatten()), "weights are not symmetric"
     return new_mat
 
+
+
+
 class BoltzmannMachine(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, params: HParams):
         super().__init__()
@@ -43,7 +46,31 @@ class BoltzmannMachine(nn.Module):
             if params.weights_start_symmetric:
                 self.layer.weight[:] = create_symmetric_weights(self.layer.weight)
 
+        self._activation_strength_matrix = torch.zeros_like(self.layer.weight)
 
+
+    def set_activation_strength(self,forward_strength:float, backward_strength:float, lateral_strength:float, self_connect_strength:float):
+        '''
+        used to vary how strong activation is dampened or strengthed based on the direction it is coming from
+        '''
+        activation_strength_mat = self._activation_strength_matrix
+        #note this assumes order is input, output, hidden connections
+        input_length, output_length, hidden_length = self.input_size,self.output_size,self.hidden_size
+        upper = torch.triu_indices(activation_strength_mat.shape[0],activation_strength_mat.shape[1])
+        lower = torch.tril_indices(activation_strength_mat.shape[0],activation_strength_mat.shape[1])
+
+
+        activation_strength_mat[upper[0],upper[1]] = forward_strength
+        activation_strength_mat [lower[0],lower[1]] = backward_strength
+
+        end_input = input_length
+        end_output = input_length + output_length
+        end_hidden = input_length + output_length + hidden_length #this is same as length as full layer size
+
+        activation_strength_mat[0:end_input,0:end_input] = lateral_strength
+        activation_strength_mat[end_input:end_output, end_input:end_output] = lateral_strength
+        activation_strength_mat[end_output:end_hidden,end_output:end_hidden] = lateral_strength
+        activation_strength_mat.fill_diagonal_(self_connect_strength)
 
 
     def forward(self, x, y, n, clamp_x=False, clamp_y=False):
@@ -115,7 +142,7 @@ class BoltzmannMachine(nn.Module):
         #         delta = (sender_plus * receiver_plus) - (sender_minus * receiver_minus)
         #         self.layer.weight[ii, jj] += self.learning_rate * delta
         with torch.no_grad():
-            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(0)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing
+            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(0)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing #division is to standardize size of batch relative to output
             plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(0)/plus_phase.shape[0]
             self.layer.weight[:] = self.layer.weight[:] + self.learning_rate * (plus_mult - minus_mult)
             self.norm_weights()

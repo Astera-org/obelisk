@@ -8,6 +8,11 @@ class HParams:
 
     weights_start_symmetric: bool = False
 
+    backward_connection_strength = 1.0
+    forward_connection_strength = 1.0
+    lateral_connection_strength = 1.0
+    self_connection_strength = 1.0
+
     # What metric to report as the score.
     score: str = "perc_correct"
 
