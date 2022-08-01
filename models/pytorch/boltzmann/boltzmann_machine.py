@@ -27,9 +27,6 @@ def create_symmetric_weights(weights:torch.Tensor):
     assert (new_mat.T == new_mat).sum() == len(weights.flatten()), "weights are not symmetric"
     return new_mat
 
-
-
-
 class BoltzmannMachine(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, params: HParams):
         super().__init__()
@@ -39,6 +36,7 @@ class BoltzmannMachine(nn.Module):
         self.hidden_size = hidden_size
         self.output_size = output_size
         self.learning_rate = params.learning_rate
+        self.self_connection_strength = params.self_connection_strength
         self.layer = nn.Linear(self.layer_size, self.layer_size, bias=False)
         with torch.no_grad():
             self.layer.weight = self.layer.weight.fill_diagonal_(0) # No self connections
@@ -96,6 +94,7 @@ class BoltzmannMachine(nn.Module):
                     full_act[:, self.input_size + self.output_size:] = hidden
             if record is not None:
                 record[ii % record.size(0), :] = full_act
+            # full_act = torch.where(full_act > 0.2, 1.0, 0.0) # Binarizing the vector. # TODO Run a test or something
             if self.params.verbose >= 5:
                 print("Normed vec: ", self.print_activity(full_act.detach()))
         # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
@@ -142,8 +141,8 @@ class BoltzmannMachine(nn.Module):
         #         delta = (sender_plus * receiver_plus) - (sender_minus * receiver_minus)
         #         self.layer.weight[ii, jj] += self.learning_rate * delta
         with torch.no_grad():
-            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(0)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing #division is to standardize size of batch relative to output
-            plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(0)/plus_phase.shape[0]
+            minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(self.self_connection_strength)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing
+            plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(self.self_connection_strength)/plus_phase.shape[0]
             self.layer.weight[:] = self.layer.weight[:] + self.learning_rate * (plus_mult - minus_mult)
             self.norm_weights()
 

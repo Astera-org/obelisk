@@ -132,31 +132,55 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
 
 # TODO Unclear whether it's necessary to have two different params objects.
 def train_and_test(train_params: HParams, test_params: HParams):
-    # Train
-    if train_params.verbose >= 0:
-        print("\nTraining with params: ", train_params)
-    final_score, model = create_and_run_network(train_params)
-    if train_params.verbose > 0:
-        print("Training got", train_params.score, ": ", "%.2f" % final_score)
+    train_scores = []
+    test_scores = []
+    for ii in range(train_params.num_runs):
+        # Train
+        if train_params.verbose >= 0:
+            print("\nTraining with params: ", train_params)
+        final_score, model = create_and_run_network(train_params)
+        if train_params.verbose > 0:
+            print("Training got", train_params.score, ": ", "%.2f" % final_score)
+        train_scores.append(final_score)
 
-    # Test
-    test_params.testing = True
-    # Some parameters need to be the same in testing
-    test_params.num_rnn_steps = train_params.num_rnn_steps
-    test_params.dataset = train_params.dataset
-    test_params.input_size = train_params.input_size
-    test_params.output_size = train_params.output_size
-    test_params.batch_data = train_params.batch_data # Maybe should just be True?
-    if test_params.verbose >= 0:
-        print("\nTesting with params: ", test_params)
-    # final_score, _ = create_and_run_network(test_params, previous_model=model)
-    final_score, _ = run_many_times(test_params, previous_model=model)
-    if test_params.verbose > 0:
-        print("Testing got", test_params.score, ": ", "%.2f" % final_score)
+        # Test
+        test_params.testing = True
+        test_params.epochs = 1
+        # Some parameters need to be the same in testing
+        test_params.num_rnn_steps = train_params.num_rnn_steps
+        test_params.dataset = train_params.dataset
+        test_params.input_size = train_params.input_size
+        test_params.output_size = train_params.output_size
+        test_params.batch_data = train_params.batch_data # Maybe should just be True?
+        test_params.self_connection_strength = train_params.self_connection_strength
+        if test_params.verbose >= 0:
+            print("\nTesting with params: ", test_params)
+        final_score, _ = create_and_run_network(test_params, previous_model=model)
+        if test_params.verbose > 0:
+            print("Testing got", test_params.score, ": ", "%.2f" % final_score)
+        test_scores.append(final_score)
+
+    # Analytics
+    train_total_score = sum(train_scores) / len(train_scores)
+    train_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(train_scores), scale=st.sem(train_scores)) if len(train_scores) > 1 else (float("nan"), float("nan")) # It prints an annoying warning if you give it a single element list
+    test_total_score = sum(test_scores) / len(test_scores)
+    test_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(test_scores), scale=st.sem(test_scores)) if len(test_scores) > 1 else (float("nan"), float("nan"))
+
+    if train_params.verbose >= 0:
+        if test_params.verbose >= 1:
+            print("Train all scores: ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in train_scores])
+        if test_params.verbose >= 1:
+            print("Test all scores:  ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in test_scores])
+        if len(train_scores) > 1:
+            print("Train got", train_params.score, ": ", "%.2f" % train_total_score, " Confidence Bars: ", train_confidence_bars)
+            print("Test got ", test_params.score, ": ", "%.2f" % test_total_score, " Confidence Bars: ", test_confidence_bars)
+        else:
+            print("Train got", train_params.score, ": ", "%.2f" % train_total_score)
+            print("Test got ", test_params.score, ": ", "%.2f" % test_total_score)
 
 
 def run_many_times(params: HParams, previous_model=None):
-    if params.verbose >= 0 and previous_model is not None:
+    if params.verbose >= 0:
         print("\nWith params: ", params)
     scores = []
     number_runs = params.num_runs

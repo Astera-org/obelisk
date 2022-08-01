@@ -8,16 +8,15 @@ if __name__ == '__main__':
     # torch.manual_seed(2) # For debugging purposes.
     torch.set_printoptions(precision=3, sci_mode=False)
     num_runs = 10
-    epochs = 200
+    epochs = 100
 
     # Only one run
     # run_many_times(HParams(epochs=epochs, hidden_size=1000, num_rnn_steps=5, num_runs=1, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="distance", num_data=1000))
 
     # Try Train and Test
     train_and_test(
-        HParams(epochs=epochs, hidden_size=100, num_rnn_steps=5, dataset="mnist", input_size=100, verbose=3, norm_weights=True, score="perc_correct", num_data=1000, batch_data=True, learning_rate=0.1),
-        # TODO Use num_runs here so we get stats
-        HParams(epochs=1, num_runs=3, verbose=3, score="perc_correct", num_data=1000))
+        HParams(num_runs=3, epochs=epochs, hidden_size=100, num_rnn_steps=5, dataset="mnist", input_size=100, verbose=1, norm_weights=True, score="perc_correct", num_data=1000, batch_data=True, learning_rate=0.1, self_connection_strength=1.0),
+        HParams(verbose=1, score="perc_correct", num_data=1000))
 
     # # Hypothesis: norm_weights=True improves performance only for high values of num_rnn_steps.
     # run_many_times(HParams(epochs=epochs, hidden_size=10, num_rnn_steps=5, num_runs=20, dataset="xor", verbose=1, norm_weights=False, score="convergence"))
