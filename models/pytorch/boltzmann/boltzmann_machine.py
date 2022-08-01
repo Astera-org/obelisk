@@ -58,6 +58,7 @@ class BoltzmannMachine(nn.Module):
                     full_act[:, self.input_size + self.output_size:] = hidden
             if record is not None:
                 record[ii % record.size(0), :] = full_act
+            # full_act = torch.where(full_act > 0.2, 1.0, 0.0) # Binarizing the vector. # TODO Run a test or something
             if self.params.verbose >= 5:
                 print("Normed vec: ", self.print_activity(full_act.detach()))
         # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
