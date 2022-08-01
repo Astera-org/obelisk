@@ -1,6 +1,7 @@
 import torch
 from runs_harness import run_many_times
 from hyperparams import HParams
+from boltzmann_machine import BoltzmannMachine
 import unittest
 
 # Verify that the network learns some basic tasks.
@@ -48,7 +49,18 @@ class BoltzmannTest(unittest.TestCase):
         self.assertLess(first_success, 60)
 
         score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="perc_correct", batch_data=True))
-        self.assertEqual(score, 1.0)
+
+    def test_weight_symmetry(self):
+
+        params = HParams(weights_start_symmetric=True)
+        b1 = BoltzmannMachine(2,2,2,params)
+        assert ((b1.layer.weight.T == b1.layer.weight).sum()) == len(b1.layer.weight.flatten()), "weights should be symmetric"
+
+        params = HParams(weights_start_symmetric=False)
+
+        b2 = BoltzmannMachine(2,2,2,params)
+        assert ((b2.layer.weight.T == b2.layer.weight).sum()) != len(b2.layer.weight.flatten()), "weights should not be symmetric"
+
 
 
 if __name__ == '__main__':
