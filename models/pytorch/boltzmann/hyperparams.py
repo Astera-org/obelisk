@@ -8,6 +8,11 @@ class HParams:
 
     weights_start_symmetric: bool = False
 
+    backward_connection_strength: float = 1.0
+    forward_connection_strength: float = 1.0
+    lateral_connection_strength: float = 1.0
+    self_connection_strength: float = 0.0
+
     # What metric to report as the score.
     score: str = "perc_correct"
 
@@ -30,7 +35,6 @@ class HParams:
     hidden_size: int = 10
     input_size: int = 10
     output_size: int = 10
-    self_connection_strength: float = 0.0
 
     # Number of data points. This will be overwritten by some values of dataset.
     num_data: int = 10

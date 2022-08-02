@@ -11,44 +11,44 @@ class BoltzmannTest(unittest.TestCase):
     def test_xor(self):
         torch.manual_seed(0)
         print("\nTesting XOR")
-        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="convergence", batch_data=False))
+        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="convergence", batch_data=False))
         self.assertLess(first_success, 50)
 
-        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="perc_correct", batch_data=False))
+        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="perc_correct", batch_data=False))
         self.assertEqual(score, 1.0)
 
     def test_random(self):
         torch.manual_seed(0)
         print("\nTesting Random")
-        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, io="random", verbose=0, norm_weights=True, score="perc_correct", batch_data=False))
+        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="random", verbose=0, norm_weights=True, score="perc_correct", batch_data=False))
         self.assertGreaterEqual(score, 0.65) # Pretty lenient
 
     def test_random_batch(self):
         torch.manual_seed(0)
         print("\nTesting Random Batch")
-        score, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, io="random", verbose=0, norm_weights=True, score="perc_correct", batch_data=True, learning_rate=.1))
+        score, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="random", verbose=0, norm_weights=True, score="perc_correct", batch_data=True, learning_rate=.1))
         self.assertGreaterEqual(score, 0.65) # Pretty lenient
 
     def test_ra25(self):
         print("\nTesting RA25")
-        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="convergence"))
+        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="convergence"))
         self.assertLess(first_success, 40)
 
-        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="perc_correct"))
+        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="perc_correct"))
         self.assertEqual(score, 1.0)
 
     def test_confidence(self):
         print("\nTesting Confidence Bounds")
-        first_success, (confidence_low, confidence_high) = run_many_times(HParams(epochs=30, hidden_size=3, num_rnn_steps=5, num_runs=10, io="and", verbose=1, norm_weights=True, score="convergence"))
+        first_success, (confidence_low, confidence_high) = run_many_times(HParams(epochs=30, hidden_size=3, num_rnn_steps=5, num_runs=10, dataset="and", verbose=1, norm_weights=True, score="convergence"))
         self.assertLess(confidence_low, confidence_high)
 
     def test_xor_batch(self):
         torch.manual_seed(0)
         print("\nTesting XOR Batch")
-        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="convergence", batch_data=True))
+        first_success, _ = run_many_times(HParams(epochs=100, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="convergence", batch_data=True))
         self.assertLess(first_success, 60)
 
-        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, io="xor", verbose=0, norm_weights=True, score="perc_correct", batch_data=True))
+        score, _ = run_many_times(HParams(epochs=50, hidden_size=10, num_rnn_steps=5, num_runs=1, dataset="xor", verbose=0, norm_weights=True, score="perc_correct", batch_data=True))
 
     def test_weight_symmetry(self):
 
@@ -60,6 +60,33 @@ class BoltzmannTest(unittest.TestCase):
 
         b2 = BoltzmannMachine(2,2,2,params)
         assert ((b2.layer.weight.T == b2.layer.weight).sum()) != len(b2.layer.weight.flatten()), "weights should not be symmetric"
+
+
+    def test_activation_modulation(self):
+        torch.set
+        params:HParams = HParams(weights_start_symmetric=False,backward_connection_strength=0,
+                                 forward_connection_strength=100, self_connection_strength = 0,
+                                 lateral_connection_strength =0 , norm_act=False,norm_weights=False,norm_hidden=False)
+
+        b2 = BoltzmannMachine(3,3,3,params)
+        with torch.no_grad():
+            x = torch.Tensor([1,1,1]).unsqueeze(0)
+            y = torch.Tensor([2,2,2]).unsqueeze(0)
+            b2.layer.weight[:] = 1.0
+            result = b2(x,y,2,True,False)
+            print(result)
+
+    params:HParams = HParams(weights_start_symmetric=False,backward_connection_strength=100,
+                             forward_connection_strength=0, self_connection_strength = 0,
+                             lateral_connection_strength =0 , norm_act=False,norm_weights=False,norm_hidden=False)
+
+    b3 = BoltzmannMachine(3,3,3,params)
+    with torch.no_grad():
+        x = torch.Tensor([1,1,1]).unsqueeze(0)
+        y = torch.Tensor([2,2,2]).unsqueeze(0)
+        b3.layer.weight[:] = 1.0
+        result = b3(x,y,2,True,False)
+        print(result)
 
 
 
