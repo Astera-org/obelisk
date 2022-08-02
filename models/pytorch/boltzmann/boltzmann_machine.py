@@ -1,13 +1,14 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from  torch.nn.functional import linear
+from torch.nn.functional import linear
 from hyperparams import HParams
 
-def create_symmetric_weights(weights:torch.Tensor):
-    '''
+
+def create_symmetric_weights(weights: torch.Tensor):
+    """
     make the weights symmetric, if we want to enforce this
-    '''
+    """
 
     # for ii in range(self.layer_size):
     #     for jj in range(self.layer_size):
@@ -15,7 +16,7 @@ def create_symmetric_weights(weights:torch.Tensor):
     #             if ii < jj:
     #                 self.layer.weight[ii, jj] = self.layer.weight[jj, ii] # Start symmetric # This seems to make it worse
 
-    assert weights.shape[0] == weights.shape[1], "expected square matrix" #should be square
+    assert weights.shape[0] == weights.shape[1], "expected square matrix"
 
     N = weights.shape[0]
     with torch.no_grad():
@@ -28,10 +29,11 @@ def create_symmetric_weights(weights:torch.Tensor):
     assert (new_mat.T == new_mat).sum() == len(weights.flatten()), "weights are not symmetric"
     return new_mat
 
+
 class BoltzmannMachine(nn.Module):
     def __init__(self, input_size, hidden_size, output_size, params: HParams):
         super().__init__()
-        self.params:HParams = params
+        self.params: HParams = params
         self.layer_size = input_size + output_size + hidden_size
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -46,37 +48,31 @@ class BoltzmannMachine(nn.Module):
                 self.layer.weight[:] = create_symmetric_weights(self.layer.weight)
 
         self._activation_strength_matrix = torch.zeros_like(self.layer.weight)
-        self.set_activation_strength(forward_strength=params.forward_connection_strength,
-                                     backward_strength=params.backward_connection_strength,
-                                     lateral_strength=params.lateral_connection_strength,
-                                     self_connect_strength=params.self_connection_strength)
+        self.set_activation_strength(forward_strength=params.forward_connection_strength, backward_strength=params.backward_connection_strength, lateral_strength=params.lateral_connection_strength, self_connect_strength=params.self_connection_strength)
 
-
-    def set_activation_strength(self,forward_strength:float, backward_strength:float, lateral_strength:float, self_connect_strength:float):
-        '''
+    def set_activation_strength(self, forward_strength: float, backward_strength: float, lateral_strength: float, self_connect_strength: float):
+        """
         used to vary how strong activation is dampened or strengthed based on the direction it is coming from
-        '''
+        """
         activation_strength_mat = self._activation_strength_matrix
-        #note this assumes order is input, output, hidden connections
-        input_length, output_length, hidden_length = self.input_size,self.output_size,self.hidden_size
-        upper = torch.triu_indices(activation_strength_mat.shape[0],activation_strength_mat.shape[1])
-        lower = torch.tril_indices(activation_strength_mat.shape[0],activation_strength_mat.shape[1])
+        # note this assumes order is input, output, hidden connections
+        input_length, output_length, hidden_length = self.input_size, self.output_size, self.hidden_size
+        upper = torch.triu_indices(activation_strength_mat.shape[0], activation_strength_mat.shape[1])
+        lower = torch.tril_indices(activation_strength_mat.shape[0], activation_strength_mat.shape[1])
 
-
-        activation_strength_mat[upper[0],upper[1]] = forward_strength
-        activation_strength_mat [lower[0],lower[1]] = backward_strength
+        activation_strength_mat[upper[0], upper[1]] = forward_strength
+        activation_strength_mat[lower[0], lower[1]] = backward_strength
 
         end_input = input_length
         end_output = input_length + output_length
-        end_hidden = input_length + output_length + hidden_length #this is same as length as full layer size
+        end_hidden = input_length + output_length + hidden_length # this is same as length as full layer size
 
-        activation_strength_mat[0:end_input,0:end_input] = lateral_strength
+        activation_strength_mat[0:end_input, 0:end_input] = lateral_strength
         activation_strength_mat[end_input:end_output, end_input:end_output] = lateral_strength
-        activation_strength_mat[end_output:end_hidden,end_output:end_hidden] = lateral_strength
+        activation_strength_mat[end_output:end_hidden, end_output:end_hidden] = lateral_strength
         activation_strength_mat.fill_diagonal_(self_connect_strength)
 
-        assert (activation_strength_mat >=0).sum() == len(activation_strength_mat.flatten()), "all strengths are expected to be greater than 0"
-
+        assert (activation_strength_mat >= 0).sum() == len(activation_strength_mat.flatten()), "all strengths are expected to be greater than 0"
 
     def forward(self, x, y, n, clamp_x=False, clamp_y=False):
         h: torch.Tensor = torch.zeros(size=(x.shape[0], self.hidden_size))
@@ -89,10 +85,9 @@ class BoltzmannMachine(nn.Module):
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
             with torch.no_grad():
-                modified_weights = self.layer.weight * self._activation_strength_matrix.T #since F linear is doing A.T
+                modified_weights = self.layer.weight * self._activation_strength_matrix.T # since F linear is doing A.T
 
-
-                full_act = F.relu(linear(full_act,modified_weights))
+                full_act = F.relu(linear(full_act, modified_weights))
                 if clamp_x:
                     full_act[:, 0:self.input_size] = x
                 if clamp_y:
@@ -110,12 +105,11 @@ class BoltzmannMachine(nn.Module):
                     print("Normed vec: ", self.print_activity(full_act.detach()))
             # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
         # print(torch.mean(record, 0))
-        if (self.params.average_window <=0):
+        if self.params.average_window <= 0:
             return full_act
         else:
-            # TODO Evaluate the benefit of this
-            return torch.mean(record, 0, True) #verify this is correct
-
+            # TODO(andrew) Evaluate the benefit of this
+            return torch.mean(record, 0, True) # TODO(michael): verify this is correct
 
     def print_activity(self, activity):
         s = "In: "
@@ -136,7 +130,7 @@ class BoltzmannMachine(nn.Module):
     def delta_rule_update_weights_matrix(self, minus_phase: torch.Tensor, plus_phase: torch.Tensor):
         # Rule: delta_w = x'y' - xy # Primes taken from acts_x_y, normals taken from acts_x. x and y here don't correspond to the other x and y, they're the pre- and post-neurons, so it's for all pairs. Sorry for that notation.
         # print("Weights before adjustment: ", self.layer.weight)
-        if self.params.batch_data == False:
+        if not self.params.batch_data:
             assert ((len(minus_phase.shape)) == 2) & (minus_phase.shape[0] == 1)
             assert ((len(plus_phase.shape)) == 2) & (plus_phase.shape[0] == 1)
         # Equivalent to this:
