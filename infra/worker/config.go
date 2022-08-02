@@ -42,8 +42,8 @@ func (config *Config) setDefaults() {
 	config.WINDOWS = false
 
 	config.JOBCZAR_IP = "127.0.0.1"
-	config.BINSERVER_URL = "127.0.0.1:9003"
-	config.JOBCZAR_PORT = 9001
+	config.BINSERVER_URL = "127.0.0.1:8080"
+	config.JOBCZAR_PORT = 9009
 	config.WORKER_BASE_PORT = 9100
 	config.CPU_FACTOR = 1
 }

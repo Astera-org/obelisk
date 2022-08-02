@@ -20,7 +20,7 @@ while getopts 's' flag; do
   esac
 done
 
-services=(jobczar worker)
+services=(jobczar binserver odpw worker)
 
 if [ $s_flag == true ] ; then
   echo "Stop all"
@@ -34,6 +34,7 @@ if [ $s_flag == true ] ; then
   exit
 fi
 
+pushd .
 cd ..
 
 for s in ${services[@]}
@@ -42,12 +43,15 @@ do
   # slash to avoid matching other processes (for example kworker)
   pkill -f "/$s"
   cd $s
-  go run . > /dev/null 2>&1 &
+  go run . 1>> ../scripts/start.log 2>> ../scripts/error.log &
   # without this the worker sometimes fails to connect to jobczar
   # that's probably a bug in thrift because it should attempt to reconnect
   sleep 5
   cd ..
 done
 
+popd
+
 # TODO: tail all service logs
-tail -f  worker/worker.log jobczar/jobczar.log
+tail -f  error.log start.log ../worker/worker.log ../jobczar/jobczar.log \
+    ../binserver/binserver.log ../odpw/odpw.log

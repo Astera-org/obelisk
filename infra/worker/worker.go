@@ -28,18 +28,18 @@ var gApp WorkerApp
 var VERSION string = "v0.1.0"
 
 func main() {
-	gConfig.Load()
-	if (gConfig.INSTANCE_ID == 0) && len(os.Args) > 0 {
-		v, _ := strconv.Atoi(os.Args[1])
-		gConfig.INSTANCE_ID = int32(v)
-	}
-
 	err := log.Init(
 		log.SetLevel(log.INFO),
 		log.SetFileName("worker.log"),
 	)
 	if err != nil {
 		panic(err)
+	}
+
+	gConfig.Load()
+	if (gConfig.INSTANCE_ID == 0) && len(os.Args) > 0 {
+		v, _ := strconv.Atoi(os.Args[1])
+		gConfig.INSTANCE_ID = int32(v)
 	}
 
 	gApp.Init()

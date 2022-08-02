@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/Astera-org/obelisk/infra/common"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	log "github.com/Astera-org/easylog"
 
@@ -19,8 +21,6 @@ var gApp BinServerApp
 var VERSION string = "v0.1.0"
 
 func main() {
-	gConfig.Load()
-
 	err := log.Init(
 		log.SetLevel(log.INFO),
 		log.SetFileName("binserver.log"),
@@ -28,6 +28,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	gConfig.Load()
 
 	gApp.Init()
 
@@ -43,11 +45,19 @@ func main() {
 	mux.HandleFunc("/completed/:id", handleCompleted)
 	//mux.HandleFunc("/binaries/", getFile)
 
-	go http.ListenAndServe(fmt.Sprint(":", gConfig.SERVER_PORT), mux)
+	var serverAddr = fmt.Sprint(":", gConfig.SERVER_PORT)
+	go common.StartHttpServer(serverAddr, mux)
+
+	common.SignalHandler()
 
 	for true {
 		var command string
 		fmt.Scan(&command)
+		if len(command) == 0 {
+			// this happens when we try to run the process in the background
+			time.Sleep(10 * time.Second)
+			continue
+		}
 		switch command {
 		case "q":
 			os.Exit(0)
