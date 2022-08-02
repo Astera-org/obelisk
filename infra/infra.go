@@ -16,12 +16,19 @@ import (
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 )
 
-func WriteResults(score float64, steps int32, seconds int32) {
+func WriteResults(finished bool, score float64, steps int32, seconds int32, maxSteps int32) {
+
+	var status int32 = 0
+	if finished {
+		status = 1
+	}
 
 	result := infra.ResultJob{
-		Seconds: seconds,
-		Steps:   steps,
-		Score:   score,
+		Status:      status,
+		Seconds:     seconds,
+		Steps:       steps,
+		Score:       score,
+		TargetSteps: maxSteps,
 	}
 
 	file, _ := json.MarshalIndent(result, "", " ")

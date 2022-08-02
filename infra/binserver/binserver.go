@@ -93,7 +93,7 @@ func handleCompleted(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, r.URL.Path)
 }
 
-// TODO: how does this put this in the right place?
+// LATER: how does this put this in the right place?
 func addBinary(w http.ResponseWriter, r *http.Request) {
 	// put the binary in a temp dir
 	// hash the binary
@@ -158,7 +158,7 @@ func addBinary(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintf(w, "Successfully Uploaded File\n")
 
-	// TODO:
+	// LATER:
 	// file name
 	// hash the binary
 	// make sure it isn't a duplicate

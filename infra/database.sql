@@ -14,7 +14,8 @@ create table jobs (job_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, user_id INT D
     agent_param VARCHAR(1024) DEFAULT "", world_param VARCHAR(1024) DEFAULT "",
     note VARCHAR(1024) DEFAULT "",
     bail_threshold DOUBLE DEFAULT 0, 
-    worker_name VARCHAR(10), instance_name VARCHAR(10),
+    worker_name VARCHAR(10), instance_id INT DEFAULT 0,
+    worker_ip VARCHAR(16),
     time_handed TIMESTAMP, seconds INT, steps INT,
     cycles INT, bailed BOOLEAN, score DOUBLE DEFAULT 0);
 
@@ -32,12 +33,16 @@ drop table if exists users;
 create table users (user_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10));
 
 
+create table search (search_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,user_id INT, 
+ status INT,
+ priority INT, time_start TIMESTAMP DEFAULT NOW(), agent_id INT DEFAULT 0, world_id INT DEFAULT 0 );
+
+
 
 ####################
 # LATER
 # create table cfgs (cfg_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, cfg VARCHAR(1024));
-# create table search (search_id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,user_id INT, status INT,
-#   priority INT, time_start TIMESTAMP DEFAULT NOW(), agent_id INT DEFAULT 0, world_id INT DEFAULT 0 );
+
 
 
 

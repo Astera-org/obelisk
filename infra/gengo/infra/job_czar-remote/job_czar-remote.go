@@ -22,7 +22,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "Usage of ", os.Args[0], " [-h host:port] [-u url] [-f[ramed]] function [arg1 [arg2...]]:")
   flag.PrintDefaults()
   fmt.Fprintln(os.Stderr, "\nFunctions:")
-  fmt.Fprintln(os.Stderr, "  Job fetchWork(string worker_name, string instance_name)")
+  fmt.Fprintln(os.Stderr, "  Job fetchWork(string worker_name, i32 instance_id)")
   fmt.Fprintln(os.Stderr, "  bool submitResult(ResultJob result)")
   fmt.Fprintln(os.Stderr, "  i32 addJob(i32 agent_id, i32 world_id, string agent_param, string world_param, i32 priority, i32 user_id, string note)")
   fmt.Fprintln(os.Stderr, "  void fetchRunResults(i32 job_id)")
@@ -32,6 +32,7 @@ func Usage() {
   fmt.Fprintln(os.Stderr, "   runSQL(string query)")
   fmt.Fprintln(os.Stderr, "  bool removeJob(i32 job_id)")
   fmt.Fprintln(os.Stderr, "   queryJobs(string filter_by)")
+  fmt.Fprintln(os.Stderr, "  void stopJob(i32 job_id)")
   fmt.Fprintln(os.Stderr)
   os.Exit(0)
 }
@@ -161,7 +162,12 @@ func main() {
     }
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
-    argvalue1 := flag.Arg(2)
+    tmp1, err43 := (strconv.Atoi(flag.Arg(2)))
+    if err43 != nil {
+      Usage()
+      return
+    }
+    argvalue1 := int32(tmp1)
     value1 := argvalue1
     fmt.Print(client.FetchWork(context.Background(), value0, value1))
     fmt.Print("\n")
@@ -171,19 +177,19 @@ func main() {
       fmt.Fprintln(os.Stderr, "SubmitResult_ requires 1 args")
       flag.Usage()
     }
-    arg41 := flag.Arg(1)
-    mbTrans42 := thrift.NewTMemoryBufferLen(len(arg41))
-    defer mbTrans42.Close()
-    _, err43 := mbTrans42.WriteString(arg41)
-    if err43 != nil {
+    arg44 := flag.Arg(1)
+    mbTrans45 := thrift.NewTMemoryBufferLen(len(arg44))
+    defer mbTrans45.Close()
+    _, err46 := mbTrans45.WriteString(arg44)
+    if err46 != nil {
       Usage()
       return
     }
-    factory44 := thrift.NewTJSONProtocolFactory()
-    jsProt45 := factory44.GetProtocol(mbTrans42)
+    factory47 := thrift.NewTJSONProtocolFactory()
+    jsProt48 := factory47.GetProtocol(mbTrans45)
     argvalue0 := infra.NewResultJob()
-    err46 := argvalue0.Read(context.Background(), jsProt45)
-    if err46 != nil {
+    err49 := argvalue0.Read(context.Background(), jsProt48)
+    if err49 != nil {
       Usage()
       return
     }
@@ -196,15 +202,15 @@ func main() {
       fmt.Fprintln(os.Stderr, "AddJob requires 7 args")
       flag.Usage()
     }
-    tmp0, err47 := (strconv.Atoi(flag.Arg(1)))
-    if err47 != nil {
+    tmp0, err50 := (strconv.Atoi(flag.Arg(1)))
+    if err50 != nil {
       Usage()
       return
     }
     argvalue0 := int32(tmp0)
     value0 := argvalue0
-    tmp1, err48 := (strconv.Atoi(flag.Arg(2)))
-    if err48 != nil {
+    tmp1, err51 := (strconv.Atoi(flag.Arg(2)))
+    if err51 != nil {
       Usage()
       return
     }
@@ -214,15 +220,15 @@ func main() {
     value2 := argvalue2
     argvalue3 := flag.Arg(4)
     value3 := argvalue3
-    tmp4, err51 := (strconv.Atoi(flag.Arg(5)))
-    if err51 != nil {
+    tmp4, err54 := (strconv.Atoi(flag.Arg(5)))
+    if err54 != nil {
       Usage()
       return
     }
     argvalue4 := int32(tmp4)
     value4 := argvalue4
-    tmp5, err52 := (strconv.Atoi(flag.Arg(6)))
-    if err52 != nil {
+    tmp5, err55 := (strconv.Atoi(flag.Arg(6)))
+    if err55 != nil {
       Usage()
       return
     }
@@ -238,8 +244,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "FetchRunResults requires 1 args")
       flag.Usage()
     }
-    tmp0, err54 := (strconv.Atoi(flag.Arg(1)))
-    if err54 != nil {
+    tmp0, err57 := (strconv.Atoi(flag.Arg(1)))
+    if err57 != nil {
       Usage()
       return
     }
@@ -253,8 +259,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "AppendNote requires 2 args")
       flag.Usage()
     }
-    tmp0, err55 := (strconv.Atoi(flag.Arg(1)))
-    if err55 != nil {
+    tmp0, err58 := (strconv.Atoi(flag.Arg(1)))
+    if err58 != nil {
       Usage()
       return
     }
@@ -270,8 +276,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "GetBinInfo requires 1 args")
       flag.Usage()
     }
-    tmp0, err57 := (strconv.Atoi(flag.Arg(1)))
-    if err57 != nil {
+    tmp0, err60 := (strconv.Atoi(flag.Arg(1)))
+    if err60 != nil {
       Usage()
       return
     }
@@ -305,8 +311,8 @@ func main() {
       fmt.Fprintln(os.Stderr, "RemoveJob requires 1 args")
       flag.Usage()
     }
-    tmp0, err60 := (strconv.Atoi(flag.Arg(1)))
-    if err60 != nil {
+    tmp0, err63 := (strconv.Atoi(flag.Arg(1)))
+    if err63 != nil {
       Usage()
       return
     }
@@ -323,6 +329,21 @@ func main() {
     argvalue0 := flag.Arg(1)
     value0 := argvalue0
     fmt.Print(client.QueryJobs(context.Background(), value0))
+    fmt.Print("\n")
+    break
+  case "stopJob":
+    if flag.NArg() - 1 != 1 {
+      fmt.Fprintln(os.Stderr, "StopJob requires 1 args")
+      flag.Usage()
+    }
+    tmp0, err65 := (strconv.Atoi(flag.Arg(1)))
+    if err65 != nil {
+      Usage()
+      return
+    }
+    argvalue0 := int32(tmp0)
+    value0 := argvalue0
+    fmt.Print(client.StopJob(context.Background(), value0))
     fmt.Print("\n")
     break
   case "":

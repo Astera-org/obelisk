@@ -34,10 +34,12 @@ const (
 )
 
 func (job *Job) fetchWork() error {
-	infraJob, err := gApp.jobCzar.FetchWork(gApp.context, gConfig.WORKER_NAME, gConfig.INSTANCE_NAME)
+	infraJob, err := gApp.jobCzar.FetchWork(gApp.context, gConfig.WORKER_NAME, gConfig.INSTANCE_ID)
 	if err != nil {
 		return err
 	}
+
+	gApp.statusString = "job fetched"
 
 	// this will download the binary if we don't have it locally
 	agentBinInfo := gApp.binCache.EnsureBinary(infraJob.AgentID)
@@ -109,7 +111,9 @@ func (job *Job) setCfgs() error {
 		job.Result.Status = jobFailed
 		return err
 	}
+
 	defer agentFile.Close()
+	agentFile.WriteString(fmt.Sprint("JOBID=\"", job.JobID, "\"\n"))
 	agentFile.WriteString("NAME=\"" + job.AgentName + "\"\n")
 	agentFile.WriteString("VERSION=\"" + job.AgentVersion + "\"\n")
 	dt := time.Now()
@@ -151,6 +155,8 @@ func (job *Job) returnResults() error {
 
 // need to bail from one process if the other dies
 func (job *Job) doJob() {
+	gApp.statusString = "job started"
+
 	agentCtx, agentCancel := context.WithCancel(context.Background())
 	defer agentCancel()
 	os.Chdir(job.AgentWorkingDir)
@@ -184,4 +190,11 @@ func (job *Job) doJob() {
 		job.Result.Status = jobFailed
 		return
 	}
+}
+
+func (job *Job) abort() {
+	// TODO
+	gApp.statusString = "aborting job"
+	log.Info("Aborting current job")
+
 }

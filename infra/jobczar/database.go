@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
 	_ "github.com/go-sql-driver/mysql"
@@ -83,7 +84,7 @@ func (db *Database) GetCallback(jobID int32) string {
 	return callback
 }
 
-func (db *Database) FetchWork(workerName, instanceName string) (*infra.Job, error) {
+func (db *Database) FetchWork(workerName string, instanceID int32) (*infra.Job, error) {
 	job := infra.Job{}
 	query := "SELECT job_id,agent_id,world_id,agent_param,world_param FROM jobs where status=0 order by priority desc LIMIT 1"
 	err := db.db.Get(&job, query)
@@ -96,8 +97,8 @@ func (db *Database) FetchWork(workerName, instanceName string) (*infra.Job, erro
 		return &job, errors.New("db error")
 	}
 
-	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_name='%s', time_handed=now() where job_id=%d",
-		workerName, instanceName, job.JobID)
+	sql := fmt.Sprintf("UPDATE jobs set status=1, worker_name='%s', instance_id=%d, time_handed=now() where job_id=%d",
+		workerName, instanceID, job.JobID)
 	_, err = db.db.Exec(sql)
 	if err != nil {
 		log.Error(err)
@@ -113,7 +114,7 @@ func (db *Database) UpdateGoodJob(result *infra.ResultJob) (sql.Result, error) {
 }
 
 func (db *Database) UpdateFailedJob(result *infra.ResultJob) (sql.Result, error) {
-	sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_name='' where job_id=%d", result.JobID)
+	sql := fmt.Sprintf("UPDATE jobs set status=0, worker_name='', instance_id=0 where job_id=%d", result.JobID)
 	return db.db.Exec(sql)
 }
 
