@@ -59,7 +59,6 @@ class BoltzmannMachine(nn.Module):
         """
         used to vary how strong activation is dampened or strengthed based on the direction it is coming from
         """
-        return
         activation_strength_mat = self._activation_strength_matrix
         # note this assumes order is input, output, hidden connections
         input_length, output_length, hidden_length = self.input_size, self.output_size, self.hidden_size
@@ -92,7 +91,7 @@ class BoltzmannMachine(nn.Module):
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
             with torch.no_grad():
-                modified_weights = self.layer.weight * self._activation_strength_matrix.T  # since F linear is doing A.T
+                modified_weights = self.layer.weight  # * self._activation_strength_matrix.T  # since F linear is doing A.T
 
                 full_act = F.relu(linear(full_act, modified_weights))
                 if clamp_x:
