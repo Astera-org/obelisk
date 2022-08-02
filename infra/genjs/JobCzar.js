@@ -12,13 +12,13 @@ if (typeof Int64 === 'undefined' && typeof require === 'function') {
 
 JobCzar_fetchWork_args = function(args) {
   this.worker_name = null;
-  this.instance_name = null;
+  this.instance_id = null;
   if (args) {
     if (args.worker_name !== undefined && args.worker_name !== null) {
       this.worker_name = args.worker_name;
     }
-    if (args.instance_name !== undefined && args.instance_name !== null) {
-      this.instance_name = args.instance_name;
+    if (args.instance_id !== undefined && args.instance_id !== null) {
+      this.instance_id = args.instance_id;
     }
   }
 };
@@ -41,8 +41,8 @@ JobCzar_fetchWork_args.prototype.read = function(input) {
       }
       break;
       case 2:
-      if (ftype == Thrift.Type.STRING) {
-        this.instance_name = input.readString().value;
+      if (ftype == Thrift.Type.I32) {
+        this.instance_id = input.readI32().value;
       } else {
         input.skip(ftype);
       }
@@ -63,9 +63,9 @@ JobCzar_fetchWork_args.prototype.write = function(output) {
     output.writeString(this.worker_name);
     output.writeFieldEnd();
   }
-  if (this.instance_name !== null && this.instance_name !== undefined) {
-    output.writeFieldBegin('instance_name', Thrift.Type.STRING, 2);
-    output.writeString(this.instance_name);
+  if (this.instance_id !== null && this.instance_id !== undefined) {
+    output.writeFieldBegin('instance_id', Thrift.Type.I32, 2);
+    output.writeI32(this.instance_id);
     output.writeFieldEnd();
   }
   output.writeFieldStop();
@@ -1152,6 +1152,81 @@ JobCzar_queryJobs_result.prototype.write = function(output) {
   return;
 };
 
+JobCzar_stopJob_args = function(args) {
+  this.job_id = null;
+  if (args) {
+    if (args.job_id !== undefined && args.job_id !== null) {
+      this.job_id = args.job_id;
+    }
+  }
+};
+JobCzar_stopJob_args.prototype = {};
+JobCzar_stopJob_args.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    var fid = ret.fid;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    switch (fid) {
+      case 1:
+      if (ftype == Thrift.Type.I32) {
+        this.job_id = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 0:
+        input.skip(ftype);
+        break;
+      default:
+        input.skip(ftype);
+    }
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_stopJob_args.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_stopJob_args');
+  if (this.job_id !== null && this.job_id !== undefined) {
+    output.writeFieldBegin('job_id', Thrift.Type.I32, 1);
+    output.writeI32(this.job_id);
+    output.writeFieldEnd();
+  }
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
+JobCzar_stopJob_result = function(args) {
+};
+JobCzar_stopJob_result.prototype = {};
+JobCzar_stopJob_result.prototype.read = function(input) {
+  input.readStructBegin();
+  while (true) {
+    var ret = input.readFieldBegin();
+    var ftype = ret.ftype;
+    if (ftype == Thrift.Type.STOP) {
+      break;
+    }
+    input.skip(ftype);
+    input.readFieldEnd();
+  }
+  input.readStructEnd();
+  return;
+};
+
+JobCzar_stopJob_result.prototype.write = function(output) {
+  output.writeStructBegin('JobCzar_stopJob_result');
+  output.writeFieldStop();
+  output.writeStructEnd();
+  return;
+};
+
 JobCzarClient = function(input, output) {
   this.input = input;
   this.output = (!output) ? input : output;
@@ -1159,17 +1234,17 @@ JobCzarClient = function(input, output) {
 };
 JobCzarClient.prototype = {};
 
-JobCzarClient.prototype.fetchWork = function(worker_name, instance_name, callback) {
-  this.send_fetchWork(worker_name, instance_name, callback); 
+JobCzarClient.prototype.fetchWork = function(worker_name, instance_id, callback) {
+  this.send_fetchWork(worker_name, instance_id, callback); 
   if (!callback) {
     return this.recv_fetchWork();
   }
 };
 
-JobCzarClient.prototype.send_fetchWork = function(worker_name, instance_name, callback) {
+JobCzarClient.prototype.send_fetchWork = function(worker_name, instance_id, callback) {
   var params = {
     worker_name: worker_name,
-    instance_name: instance_name
+    instance_id: instance_id
   };
   var args = new JobCzar_fetchWork_args(params);
   try {
@@ -1739,4 +1814,59 @@ JobCzarClient.prototype.recv_queryJobs = function() {
     return result.success;
   }
   throw 'queryJobs failed: unknown result';
+};
+
+JobCzarClient.prototype.stopJob = function(job_id, callback) {
+  this.send_stopJob(job_id, callback); 
+  if (!callback) {
+  this.recv_stopJob();
+  }
+};
+
+JobCzarClient.prototype.send_stopJob = function(job_id, callback) {
+  var params = {
+    job_id: job_id
+  };
+  var args = new JobCzar_stopJob_args(params);
+  try {
+    this.output.writeMessageBegin('stopJob', Thrift.MessageType.CALL, this.seqid);
+    args.write(this.output);
+    this.output.writeMessageEnd();
+    if (callback) {
+      var self = this;
+      this.output.getTransport().flush(true, function() {
+        var result = null;
+        try {
+          result = self.recv_stopJob();
+        } catch (e) {
+          result = e;
+        }
+        callback(result);
+      });
+    } else {
+      return this.output.getTransport().flush();
+    }
+  }
+  catch (e) {
+    if (typeof this.output.getTransport().reset === 'function') {
+      this.output.getTransport().reset();
+    }
+    throw e;
+  }
+};
+
+JobCzarClient.prototype.recv_stopJob = function() {
+  var ret = this.input.readMessageBegin();
+  var mtype = ret.mtype;
+  if (mtype == Thrift.MessageType.EXCEPTION) {
+    var x = new Thrift.TApplicationException();
+    x.read(this.input);
+    this.input.readMessageEnd();
+    throw x;
+  }
+  var result = new JobCzar_stopJob_result();
+  result.read(this.input);
+  this.input.readMessageEnd();
+
+  return;
 };
