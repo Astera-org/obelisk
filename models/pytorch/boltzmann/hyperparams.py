@@ -50,6 +50,11 @@ class HParams:
 
     # Put all the data from a single epoch into a single batch. In the future, for larger datasets, we will need to use dataloaders to accommodate this.
     batch_data: bool = False
+    batch_size: int = -1
 
     # Train or test
     testing: bool = False
+
+    def __post_init__(self):
+        if self.batch_data == False:
+            self.batch_size = 1

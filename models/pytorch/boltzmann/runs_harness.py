@@ -17,17 +17,17 @@ def calc_nearest_example_index(predicted: torch.FloatTensor, possible_targets: t
 
 # Get data, create a network, and then run it, collecting a lot of performance data on the way.
 def create_and_run_network(params: HParams = HParams(), previous_model=None):
-    xs, ys, input_size, hidden_size, output_size, num_data = datasets.get_data(params)
+    xs, ys, input_size, hidden_size, output_size, num_data, dataloader = datasets.get_data(params)
 
     if previous_model is not None:
-        boltzy = previous_model # Use for training
+        boltzy = previous_model  # Use for training
     else:
         boltzy = boltzmann_machine.BoltzmannMachine(input_size, hidden_size, output_size, params)
 
     all_distances = []
     all_h_distances = []
     all_classification = []
-    first_correct = max(params.epochs+1, 999999)
+    first_correct = max(params.epochs + 1, 999999)
     first_correct_start_of_run = first_correct
     for epoch in range(params.epochs):
         distances = []
@@ -35,7 +35,7 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
         classification = []
 
         if params.batch_data is True:
-            num_data = 1 # all data is run at once
+            num_data = 1  # all data is run at once
 
         for data_row in range(num_data):
             index = data_row % num_data
@@ -49,15 +49,16 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
             acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)
 
             # Analytics
-            dist = boltzy.y_distance(acts_clamp_x, acts_clamp_y) # For reporting, not used for training
+            dist = boltzy.y_distance(acts_clamp_x, acts_clamp_y)  # For reporting, not used for training
             h_dist = boltzy.h_distance(acts_clamp_x, acts_clamp_y)
-            predicted_ys = acts_clamp_x[:,boltzy.input_size:boltzy.input_size+boltzy.output_size]
+            predicted_ys = acts_clamp_x[:, boltzy.input_size:boltzy.input_size + boltzy.output_size]
 
             predicted_indices = calc_nearest_example_index(predicted_ys, ys)
 
-            correct = (((ys[(predicted_indices).long()] - y).abs().sum(dim=1)) == 0).sum()/len(predicted_indices) #so can handle batches
-            #correct = ((ys[predicted_index] - y).abs().sum() == 0) # same class predicted
-            #print(ys[(predicted_indices).long()])
+            correct = (((ys[(predicted_indices).long()] - y).abs().sum(dim=1)) == 0).sum() / len(
+                predicted_indices)  # so can handle batches
+            # correct = ((ys[predicted_index] - y).abs().sum() == 0) # same class predicted
+            # print(ys[(predicted_indices).long()])
             classification.append(correct)
             if params.verbose >= 5:
                 print("Clamp X:    ", acts_clamp_x.detach())
@@ -81,17 +82,18 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
         all_distances.append(distances)
         all_classification.append(classification)
         all_h_distances.append(h_distances)
-        percent_correct = (torch.Tensor(classification).sum()/len(classification)).detach().numpy()
+        percent_correct = (torch.Tensor(classification).sum() / len(classification)).detach().numpy()
         if params.verbose >= 3:
             print("In Epoch", epoch, "got percent correct: ", percent_correct)
         if percent_correct < 1.0:
-            first_correct = max(params.epochs+1, 999999)
+            first_correct = max(params.epochs + 1, 999999)
         else:
             first_correct = min(first_correct, epoch)
             if epoch >= first_correct + params.stopping_success:
                 first_correct_start_of_run = first_correct
                 if params.verbose >= 5:
-                    print("Hooray! Got", params.stopping_success, "successes in a row starting at time: ", first_correct)
+                    print("Hooray! Got", params.stopping_success, "successes in a row starting at time: ",
+                          first_correct)
                 break
 
     # print("X: ", xs, " Y: ", ys)
@@ -100,19 +102,22 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
     final_correct = torch.Tensor(all_classification[-1])
     initial_correct = torch.Tensor(all_classification[0])
 
-    final_percent_correct = (final_correct.sum()/len(final_correct)).detach().numpy()
-    initial_percent_correct = (initial_correct.sum()/len(initial_correct)).detach().numpy()
+    final_percent_correct = (final_correct.sum() / len(final_correct)).detach().numpy()
+    initial_percent_correct = (initial_correct.sum() / len(initial_correct)).detach().numpy()
     initial_score = torch.Tensor(all_distances[0]).mean().detach().numpy()
 
     final_score = torch.Tensor(all_distances[-1]).mean().detach().numpy()
     if params.num_runs == 1 and params.verbose > 0:
-        print("End correct ", final_percent_correct, "Start correct", initial_percent_correct, "End Dist: ", final_score, " compared to initial score: ", initial_score)
+        print("End correct ", final_percent_correct, "Start correct", initial_percent_correct, "End Dist: ",
+              final_score, " compared to initial score: ", initial_score)
         if first_correct_start_of_run < params.epochs:
-            print("Got first correct score in a run of at least", params.stopping_success, "at timestep: ", first_correct_start_of_run)
+            print("Got first correct score in a run of at least", params.stopping_success, "at timestep: ",
+                  first_correct_start_of_run)
         else:
             print("It never converged to 100% correct :(")
         print("End distance: ", final_score, " compared to initial score: ", initial_score)
-        print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ", torch.Tensor(all_h_distances[-1]).mean().numpy())
+        print("End H distance: ", torch.Tensor(all_h_distances[0]).mean().numpy(), " compared to initial score: ",
+              torch.Tensor(all_h_distances[-1]).mean().numpy())
         # print("End weights: ", boltzy.layer.weight)
     val = None
     if params.score == "distance":
@@ -151,7 +156,7 @@ def train_and_test(train_params: HParams, test_params: HParams):
         test_params.dataset = train_params.dataset
         test_params.input_size = train_params.input_size
         test_params.output_size = train_params.output_size
-        test_params.batch_data = train_params.batch_data # Maybe should just be True?
+        test_params.batch_data = train_params.batch_data  # Maybe should just be True?
         test_params.self_connection_strength = train_params.self_connection_strength
         if test_params.verbose >= 0:
             print("\nTesting with params: ", test_params)
@@ -162,9 +167,12 @@ def train_and_test(train_params: HParams, test_params: HParams):
 
     # Analytics
     train_total_score = sum(train_scores) / len(train_scores)
-    train_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(train_scores), scale=st.sem(train_scores)) if len(train_scores) > 1 else (float("nan"), float("nan")) # It prints an annoying warning if you give it a single element list
+    train_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(train_scores), scale=st.sem(train_scores)) if len(
+        train_scores) > 1 else (
+    float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
     test_total_score = sum(test_scores) / len(test_scores)
-    test_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(test_scores), scale=st.sem(test_scores)) if len(test_scores) > 1 else (float("nan"), float("nan"))
+    test_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(test_scores), scale=st.sem(test_scores)) if len(
+        test_scores) > 1 else (float("nan"), float("nan"))
 
     if train_params.verbose >= 0:
         if test_params.verbose >= 1:
@@ -172,8 +180,10 @@ def train_and_test(train_params: HParams, test_params: HParams):
         if test_params.verbose >= 1:
             print("Test all scores:  ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in test_scores])
         if len(train_scores) > 1:
-            print("Train got", train_params.score, ": ", "%.2f" % train_total_score, " Confidence Bars: ", train_confidence_bars)
-            print("Test got ", test_params.score, ": ", "%.2f" % test_total_score, " Confidence Bars: ", test_confidence_bars)
+            print("Train got", train_params.score, ": ", "%.2f" % train_total_score, " Confidence Bars: ",
+                  train_confidence_bars)
+            print("Test got ", test_params.score, ": ", "%.2f" % test_total_score, " Confidence Bars: ",
+                  test_confidence_bars)
         else:
             print("Train got", train_params.score, ": ", "%.2f" % train_total_score)
             print("Test got ", test_params.score, ": ", "%.2f" % test_total_score)
@@ -188,7 +198,8 @@ def run_many_times(params: HParams, previous_model=None):
         final_score, _ = create_and_run_network(params, previous_model=previous_model)
         scores.append(final_score)
     total_score = sum(scores) / len(scores)
-    confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else (float("nan"), float("nan")) # It prints an annoying warning if you give it a single element list
+    confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else (
+    float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
     if params.verbose >= 0:
         if params.verbose >= 1:
             print("All scores: ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in scores])

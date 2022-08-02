@@ -3,7 +3,6 @@ from runs_harness import run_many_times
 from runs_harness import train_and_test
 from hyperparams import HParams
 
-
 if __name__ == '__main__':
     # torch.manual_seed(2) # For debugging purposes.
     torch.set_printoptions(precision=3, sci_mode=False)
@@ -18,7 +17,9 @@ if __name__ == '__main__':
 
     # # Try Train and Test
     train_and_test(
-        HParams(num_runs=3, epochs=100, hidden_size=100, num_rnn_steps=5, dataset="mnist", input_size=100, verbose=1, norm_weights=True, score="perc_correct", num_data=1000, batch_data=True, learning_rate=0.1, self_connection_strength=1.0),
+        HParams(num_runs=1, epochs=2, hidden_size=100, num_rnn_steps=5, dataset="mnist", input_size=100, verbose=1,
+                norm_weights=True, score="perc_correct", num_data=1000, batch_data=True, learning_rate=0.1,
+                self_connection_strength=0),
         HParams(verbose=1, score="perc_correct", num_data=1000))
 
     # # Hypothesis: norm_weights=True improves performance only for high values of num_rnn_steps.
