@@ -37,14 +37,7 @@ def create_and_run_network(params: HParams = HParams(), previous_model=None):
         if params.batch_data is True:
             num_data = 1  # all data is run at once
 
-        for data_row in range(num_data):
-            index = data_row % num_data
-            if params.batch_data is False:
-                x = torch.unsqueeze(xs[index], dim=0)
-                y = torch.unsqueeze(ys[index], dim=0)
-            else:
-                x = xs
-                y = ys
+        for x, y in dataloader:
             # TODO First 4 should have learning off. Michael: What does this comment mean?
             acts_clamp_x, acts_clamp_y = boltzy.run_minus_and_plus(x, y)
 
@@ -169,7 +162,7 @@ def train_and_test(train_params: HParams, test_params: HParams):
     train_total_score = sum(train_scores) / len(train_scores)
     train_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(train_scores), scale=st.sem(train_scores)) if len(
         train_scores) > 1 else (
-    float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
+        float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
     test_total_score = sum(test_scores) / len(test_scores)
     test_confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(test_scores), scale=st.sem(test_scores)) if len(
         test_scores) > 1 else (float("nan"), float("nan"))
@@ -199,7 +192,7 @@ def run_many_times(params: HParams, previous_model=None):
         scores.append(final_score)
     total_score = sum(scores) / len(scores)
     confidence_bars = st.norm.interval(alpha=0.95, loc=np.mean(scores), scale=st.sem(scores)) if len(scores) > 1 else (
-    float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
+        float("nan"), float("nan"))  # It prints an annoying warning if you give it a single element list
     if params.verbose >= 0:
         if params.verbose >= 1:
             print("All scores: ", ["%.2f" % x.item() if hasattr(x, "item") else x for x in scores])

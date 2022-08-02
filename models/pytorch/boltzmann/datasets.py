@@ -7,6 +7,8 @@ from hyperparams import HParams
 import random
 from torchvision import datasets as dts
 from torchvision.transforms import ToTensor
+from torch.nn.functional import one_hot
+
 from torchvision import transforms
 from fworld_loader import get_fworld_data
 
@@ -29,6 +31,7 @@ class MnistDataset(Dataset):
     def __init__(self, train=True, max_sample=-1, size=10):
         self.train = train  # either train or test, no validate
         self.max_sample = max_sample
+        self.size = size
         self.setup()  # this typically shouldn't go here for runtime reasons, see pytorc hlightning
 
     def setup(self):
@@ -38,18 +41,18 @@ class MnistDataset(Dataset):
             transform=None,
             download=True
         )
-        apply_transforms = torch.nn.Sequential(transforms.Resize(size=10))
-        self.data = apply_transforms(train_x.data).float()
-        self.labels = train_x.targets.float()
+        apply_transforms = torch.nn.Sequential(transforms.Resize(size=self.size))
+        self.data = torch.clamp(apply_transforms(train_x.data).float(), 0.0, 1.0)
+        self.labels = one_hot(train_x.targets, num_classes=len(train_x.class_to_idx))  # one hot encoded
 
     def __len__(self):
-        if self.max_sample < 0:
+        if self.max_sample <= 0:
             return len(self.data)
         else:
             return self.max_sample
 
     def __getitem__(self, idx):
-        return self.data[idx], self.labels[idx]
+        return (self.data[idx].flatten(), self.labels[idx])
 
 
 def default_dataloader(x, y, batch_size=10, shuffle=False) -> DataLoader:
@@ -127,32 +130,33 @@ def get_data(params: HParams):
         output_size = params.output_size
         xs = [torch.rand(size=(1, input_size)) for _ in range(num_data)]
         ys = [torch.rand(size=(1, output_size)) for _ in range(num_data)]
-        xs, ys = torch.concat(xs), torch.concat(ys)
+
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     elif params.dataset == "xor":
         ys = y_xor
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     elif params.dataset == "and":
         ys = y_and
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     elif params.dataset == "or":
         ys = y_or
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     elif params.dataset == "mnist":
         input_size = params.input_size
         if params.batch_size == -1:
             params.batch_size = len(xs)
         output_size = 10  # 10 digits
         xs, ys = get_mnist(params)
-        d1, t1 = mnist_dataloader(size=input_size, batch_size=params.batch_size)
+        d1, t1 = mnist_dataloader(size=input_size, max_train=params.num_data, max_test=params.num_data,
+                                  batch_size=params.batch_size)
     elif params.dataset == "ra25":
         num_data = 25
         choose_n = 6
@@ -164,12 +168,12 @@ def get_data(params: HParams):
               range(num_data)]
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     elif params.dataset == "fworld":
         xs, ys, input_size, output_size = get_fworld_data(params)
         if params.batch_size == -1:
             params.batch_size = len(xs)
-        d1 = default_dataloader(xs, ys, batch_size=params.batch_size)
+        d1 = default_dataloader(torch.concat(xs), torch.concat(ys), batch_size=params.batch_size)
     num_data = len(xs)
 
     return torch.concat(xs), torch.concat(ys), input_size, hidden_size, output_size, num_data, d1
