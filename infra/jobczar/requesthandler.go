@@ -90,6 +90,10 @@ func (handler RequestHandler) GetBinInfos(ctx context.Context, filterBy string) 
 	return gDatabase.GetBinInfos(filterBy)
 }
 
+func (handler RequestHandler) UpdateNote(ctx context.Context, jobID int32, note string) (bool, error) {
+	return gDatabase.UpdateNote(jobID, note)
+}
+
 func (handler RequestHandler) RunSQL(ctx context.Context, query string) ([]map[string]string, error) {
 	rows, err := gDatabase.db.Query(query)
 	if err != nil {

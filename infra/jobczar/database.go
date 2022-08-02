@@ -143,3 +143,12 @@ func (db *Database) RemoveJob(jobID int32) (bool, error) {
 	}
 	return true, nil
 }
+
+func (db *Database) UpdateNote(jobID int32, note string) (bool, error) {
+	sql := fmt.Sprintf("UPDATE jobs set note='%s' where job_id=%d", note, jobID)
+	_, err := db.db.Exec(sql)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

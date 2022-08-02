@@ -78,7 +78,7 @@ service JobCzar {
 
     void fetchRunResults(1:i32 job_id);
 
-    void appendNote(1:i32 job_id, 2:string note);
+    bool updateNote(1:i32 job_id, 2:string note);
 
     BinInfo getBinInfo(1:i32 bin_id);
 
