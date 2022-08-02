@@ -45,12 +45,13 @@ struct JobInfo {
     13: double bail_threshold,
     14: optional string worker_name,
     15: optional i32 instance_id,
-    16: optional string time_handed,
-    17: optional i32 seconds,
-    18: optional i32 steps,
-    19: optional i32 cycles,
-    20: optional bool bailed,
-    21: double score
+    16: optional string worker_ip,
+    17: optional string time_handed,
+    18: optional i32 seconds,
+    19: optional i32 steps,
+    20: optional i32 cycles,
+    21: optional bool bailed,
+    22: double score
 }
 
 // basically a single row of the binaries table (see database.sql)

@@ -679,6 +679,7 @@ func (p *ResultJob) String() string {
 //  - BailThreshold
 //  - WorkerName
 //  - InstanceID
+//  - WorkerIP
 //  - TimeHanded
 //  - Seconds
 //  - Steps
@@ -701,12 +702,13 @@ type JobInfo struct {
   BailThreshold float64 `thrift:"bail_threshold,13" db:"bail_threshold" json:"bail_threshold"`
   WorkerName *string `thrift:"worker_name,14" db:"worker_name" json:"worker_name,omitempty"`
   InstanceID *int32 `thrift:"instance_id,15" db:"instance_id" json:"instance_id,omitempty"`
-  TimeHanded *string `thrift:"time_handed,16" db:"time_handed" json:"time_handed,omitempty"`
-  Seconds *int32 `thrift:"seconds,17" db:"seconds" json:"seconds,omitempty"`
-  Steps *int32 `thrift:"steps,18" db:"steps" json:"steps,omitempty"`
-  Cycles *int32 `thrift:"cycles,19" db:"cycles" json:"cycles,omitempty"`
-  Bailed *bool `thrift:"bailed,20" db:"bailed" json:"bailed,omitempty"`
-  Score float64 `thrift:"score,21" db:"score" json:"score"`
+  WorkerIP *string `thrift:"worker_ip,16" db:"worker_ip" json:"worker_ip,omitempty"`
+  TimeHanded *string `thrift:"time_handed,17" db:"time_handed" json:"time_handed,omitempty"`
+  Seconds *int32 `thrift:"seconds,18" db:"seconds" json:"seconds,omitempty"`
+  Steps *int32 `thrift:"steps,19" db:"steps" json:"steps,omitempty"`
+  Cycles *int32 `thrift:"cycles,20" db:"cycles" json:"cycles,omitempty"`
+  Bailed *bool `thrift:"bailed,21" db:"bailed" json:"bailed,omitempty"`
+  Score float64 `thrift:"score,22" db:"score" json:"score"`
 }
 
 func NewJobInfo() *JobInfo {
@@ -782,6 +784,13 @@ func (p *JobInfo) GetInstanceID() int32 {
   }
 return *p.InstanceID
 }
+var JobInfo_WorkerIP_DEFAULT string
+func (p *JobInfo) GetWorkerIP() string {
+  if !p.IsSetWorkerIP() {
+    return JobInfo_WorkerIP_DEFAULT
+  }
+return *p.WorkerIP
+}
 var JobInfo_TimeHanded_DEFAULT string
 func (p *JobInfo) GetTimeHanded() string {
   if !p.IsSetTimeHanded() {
@@ -831,6 +840,10 @@ func (p *JobInfo) IsSetWorkerName() bool {
 
 func (p *JobInfo) IsSetInstanceID() bool {
   return p.InstanceID != nil
+}
+
+func (p *JobInfo) IsSetWorkerIP() bool {
+  return p.WorkerIP != nil
 }
 
 func (p *JobInfo) IsSetTimeHanded() bool {
@@ -1027,7 +1040,7 @@ func (p *JobInfo) Read(ctx context.Context, iprot thrift.TProtocol) error {
         }
       }
     case 17:
-      if fieldTypeId == thrift.I32 {
+      if fieldTypeId == thrift.STRING {
         if err := p.ReadField17(ctx, iprot); err != nil {
           return err
         }
@@ -1057,7 +1070,7 @@ func (p *JobInfo) Read(ctx context.Context, iprot thrift.TProtocol) error {
         }
       }
     case 20:
-      if fieldTypeId == thrift.BOOL {
+      if fieldTypeId == thrift.I32 {
         if err := p.ReadField20(ctx, iprot); err != nil {
           return err
         }
@@ -1067,8 +1080,18 @@ func (p *JobInfo) Read(ctx context.Context, iprot thrift.TProtocol) error {
         }
       }
     case 21:
-      if fieldTypeId == thrift.DOUBLE {
+      if fieldTypeId == thrift.BOOL {
         if err := p.ReadField21(ctx, iprot); err != nil {
+          return err
+        }
+      } else {
+        if err := iprot.Skip(ctx, fieldTypeId); err != nil {
+          return err
+        }
+      }
+    case 22:
+      if fieldTypeId == thrift.DOUBLE {
+        if err := p.ReadField22(ctx, iprot); err != nil {
           return err
         }
       } else {
@@ -1230,16 +1253,16 @@ func (p *JobInfo)  ReadField16(ctx context.Context, iprot thrift.TProtocol) erro
   if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 16: ", err)
 } else {
-  p.TimeHanded = &v
+  p.WorkerIP = &v
 }
   return nil
 }
 
 func (p *JobInfo)  ReadField17(ctx context.Context, iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadI32(ctx); err != nil {
+  if v, err := iprot.ReadString(ctx); err != nil {
   return thrift.PrependError("error reading field 17: ", err)
 } else {
-  p.Seconds = &v
+  p.TimeHanded = &v
 }
   return nil
 }
@@ -1248,7 +1271,7 @@ func (p *JobInfo)  ReadField18(ctx context.Context, iprot thrift.TProtocol) erro
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 18: ", err)
 } else {
-  p.Steps = &v
+  p.Seconds = &v
 }
   return nil
 }
@@ -1257,23 +1280,32 @@ func (p *JobInfo)  ReadField19(ctx context.Context, iprot thrift.TProtocol) erro
   if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 19: ", err)
 } else {
-  p.Cycles = &v
+  p.Steps = &v
 }
   return nil
 }
 
 func (p *JobInfo)  ReadField20(ctx context.Context, iprot thrift.TProtocol) error {
-  if v, err := iprot.ReadBool(ctx); err != nil {
+  if v, err := iprot.ReadI32(ctx); err != nil {
   return thrift.PrependError("error reading field 20: ", err)
+} else {
+  p.Cycles = &v
+}
+  return nil
+}
+
+func (p *JobInfo)  ReadField21(ctx context.Context, iprot thrift.TProtocol) error {
+  if v, err := iprot.ReadBool(ctx); err != nil {
+  return thrift.PrependError("error reading field 21: ", err)
 } else {
   p.Bailed = &v
 }
   return nil
 }
 
-func (p *JobInfo)  ReadField21(ctx context.Context, iprot thrift.TProtocol) error {
+func (p *JobInfo)  ReadField22(ctx context.Context, iprot thrift.TProtocol) error {
   if v, err := iprot.ReadDouble(ctx); err != nil {
-  return thrift.PrependError("error reading field 21: ", err)
+  return thrift.PrependError("error reading field 22: ", err)
 } else {
   p.Score = v
 }
@@ -1305,6 +1337,7 @@ func (p *JobInfo) Write(ctx context.Context, oprot thrift.TProtocol) error {
     if err := p.writeField19(ctx, oprot); err != nil { return err }
     if err := p.writeField20(ctx, oprot); err != nil { return err }
     if err := p.writeField21(ctx, oprot); err != nil { return err }
+    if err := p.writeField22(ctx, oprot); err != nil { return err }
   }
   if err := oprot.WriteFieldStop(ctx); err != nil {
     return thrift.PrependError("write field stop error: ", err) }
@@ -1470,72 +1503,84 @@ func (p *JobInfo) writeField15(ctx context.Context, oprot thrift.TProtocol) (err
 }
 
 func (p *JobInfo) writeField16(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if p.IsSetTimeHanded() {
-    if err := oprot.WriteFieldBegin(ctx, "time_handed", thrift.STRING, 16); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 16:time_handed: ", p), err) }
-    if err := oprot.WriteString(ctx, string(*p.TimeHanded)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.time_handed (16) field write error: ", p), err) }
+  if p.IsSetWorkerIP() {
+    if err := oprot.WriteFieldBegin(ctx, "worker_ip", thrift.STRING, 16); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 16:worker_ip: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.WorkerIP)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.worker_ip (16) field write error: ", p), err) }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 16:time_handed: ", p), err) }
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 16:worker_ip: ", p), err) }
   }
   return err
 }
 
 func (p *JobInfo) writeField17(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if p.IsSetSeconds() {
-    if err := oprot.WriteFieldBegin(ctx, "seconds", thrift.I32, 17); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 17:seconds: ", p), err) }
-    if err := oprot.WriteI32(ctx, int32(*p.Seconds)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.seconds (17) field write error: ", p), err) }
+  if p.IsSetTimeHanded() {
+    if err := oprot.WriteFieldBegin(ctx, "time_handed", thrift.STRING, 17); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 17:time_handed: ", p), err) }
+    if err := oprot.WriteString(ctx, string(*p.TimeHanded)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.time_handed (17) field write error: ", p), err) }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 17:seconds: ", p), err) }
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 17:time_handed: ", p), err) }
   }
   return err
 }
 
 func (p *JobInfo) writeField18(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if p.IsSetSteps() {
-    if err := oprot.WriteFieldBegin(ctx, "steps", thrift.I32, 18); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 18:steps: ", p), err) }
-    if err := oprot.WriteI32(ctx, int32(*p.Steps)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.steps (18) field write error: ", p), err) }
+  if p.IsSetSeconds() {
+    if err := oprot.WriteFieldBegin(ctx, "seconds", thrift.I32, 18); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 18:seconds: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Seconds)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.seconds (18) field write error: ", p), err) }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 18:steps: ", p), err) }
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 18:seconds: ", p), err) }
   }
   return err
 }
 
 func (p *JobInfo) writeField19(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if p.IsSetCycles() {
-    if err := oprot.WriteFieldBegin(ctx, "cycles", thrift.I32, 19); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 19:cycles: ", p), err) }
-    if err := oprot.WriteI32(ctx, int32(*p.Cycles)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.cycles (19) field write error: ", p), err) }
+  if p.IsSetSteps() {
+    if err := oprot.WriteFieldBegin(ctx, "steps", thrift.I32, 19); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 19:steps: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Steps)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.steps (19) field write error: ", p), err) }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 19:cycles: ", p), err) }
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 19:steps: ", p), err) }
   }
   return err
 }
 
 func (p *JobInfo) writeField20(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if p.IsSetBailed() {
-    if err := oprot.WriteFieldBegin(ctx, "bailed", thrift.BOOL, 20); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field begin error 20:bailed: ", p), err) }
-    if err := oprot.WriteBool(ctx, bool(*p.Bailed)); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T.bailed (20) field write error: ", p), err) }
+  if p.IsSetCycles() {
+    if err := oprot.WriteFieldBegin(ctx, "cycles", thrift.I32, 20); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 20:cycles: ", p), err) }
+    if err := oprot.WriteI32(ctx, int32(*p.Cycles)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.cycles (20) field write error: ", p), err) }
     if err := oprot.WriteFieldEnd(ctx); err != nil {
-      return thrift.PrependError(fmt.Sprintf("%T write field end error 20:bailed: ", p), err) }
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 20:cycles: ", p), err) }
   }
   return err
 }
 
 func (p *JobInfo) writeField21(ctx context.Context, oprot thrift.TProtocol) (err error) {
-  if err := oprot.WriteFieldBegin(ctx, "score", thrift.DOUBLE, 21); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field begin error 21:score: ", p), err) }
+  if p.IsSetBailed() {
+    if err := oprot.WriteFieldBegin(ctx, "bailed", thrift.BOOL, 21); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field begin error 21:bailed: ", p), err) }
+    if err := oprot.WriteBool(ctx, bool(*p.Bailed)); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T.bailed (21) field write error: ", p), err) }
+    if err := oprot.WriteFieldEnd(ctx); err != nil {
+      return thrift.PrependError(fmt.Sprintf("%T write field end error 21:bailed: ", p), err) }
+  }
+  return err
+}
+
+func (p *JobInfo) writeField22(ctx context.Context, oprot thrift.TProtocol) (err error) {
+  if err := oprot.WriteFieldBegin(ctx, "score", thrift.DOUBLE, 22); err != nil {
+    return thrift.PrependError(fmt.Sprintf("%T write field begin error 22:score: ", p), err) }
   if err := oprot.WriteDouble(ctx, float64(p.Score)); err != nil {
-  return thrift.PrependError(fmt.Sprintf("%T.score (21) field write error: ", p), err) }
+  return thrift.PrependError(fmt.Sprintf("%T.score (22) field write error: ", p), err) }
   if err := oprot.WriteFieldEnd(ctx); err != nil {
-    return thrift.PrependError(fmt.Sprintf("%T write field end error 21:score: ", p), err) }
+    return thrift.PrependError(fmt.Sprintf("%T write field end error 22:score: ", p), err) }
   return err
 }
 
@@ -1574,6 +1619,12 @@ func (p *JobInfo) Equals(other *JobInfo) bool {
       return false
     }
     if (*p.InstanceID) != (*other.InstanceID) { return false }
+  }
+  if p.WorkerIP != other.WorkerIP {
+    if p.WorkerIP == nil || other.WorkerIP == nil {
+      return false
+    }
+    if (*p.WorkerIP) != (*other.WorkerIP) { return false }
   }
   if p.TimeHanded != other.TimeHanded {
     if p.TimeHanded == nil || other.TimeHanded == nil {

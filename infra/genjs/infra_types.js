@@ -310,6 +310,7 @@ JobInfo = function(args) {
   this.bail_threshold = null;
   this.worker_name = null;
   this.instance_id = null;
+  this.worker_ip = null;
   this.time_handed = null;
   this.seconds = null;
   this.steps = null;
@@ -361,6 +362,9 @@ JobInfo = function(args) {
     }
     if (args.instance_id !== undefined && args.instance_id !== null) {
       this.instance_id = args.instance_id;
+    }
+    if (args.worker_ip !== undefined && args.worker_ip !== null) {
+      this.worker_ip = args.worker_ip;
     }
     if (args.time_handed !== undefined && args.time_handed !== null) {
       this.time_handed = args.time_handed;
@@ -500,40 +504,47 @@ JobInfo.prototype.read = function(input) {
       break;
       case 16:
       if (ftype == Thrift.Type.STRING) {
-        this.time_handed = input.readString().value;
+        this.worker_ip = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 17:
-      if (ftype == Thrift.Type.I32) {
-        this.seconds = input.readI32().value;
+      if (ftype == Thrift.Type.STRING) {
+        this.time_handed = input.readString().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 18:
       if (ftype == Thrift.Type.I32) {
-        this.steps = input.readI32().value;
+        this.seconds = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 19:
       if (ftype == Thrift.Type.I32) {
-        this.cycles = input.readI32().value;
+        this.steps = input.readI32().value;
       } else {
         input.skip(ftype);
       }
       break;
       case 20:
+      if (ftype == Thrift.Type.I32) {
+        this.cycles = input.readI32().value;
+      } else {
+        input.skip(ftype);
+      }
+      break;
+      case 21:
       if (ftype == Thrift.Type.BOOL) {
         this.bailed = input.readBool().value;
       } else {
         input.skip(ftype);
       }
       break;
-      case 21:
+      case 22:
       if (ftype == Thrift.Type.DOUBLE) {
         this.score = input.readDouble().value;
       } else {
@@ -626,33 +637,38 @@ JobInfo.prototype.write = function(output) {
     output.writeI32(this.instance_id);
     output.writeFieldEnd();
   }
+  if (this.worker_ip !== null && this.worker_ip !== undefined) {
+    output.writeFieldBegin('worker_ip', Thrift.Type.STRING, 16);
+    output.writeString(this.worker_ip);
+    output.writeFieldEnd();
+  }
   if (this.time_handed !== null && this.time_handed !== undefined) {
-    output.writeFieldBegin('time_handed', Thrift.Type.STRING, 16);
+    output.writeFieldBegin('time_handed', Thrift.Type.STRING, 17);
     output.writeString(this.time_handed);
     output.writeFieldEnd();
   }
   if (this.seconds !== null && this.seconds !== undefined) {
-    output.writeFieldBegin('seconds', Thrift.Type.I32, 17);
+    output.writeFieldBegin('seconds', Thrift.Type.I32, 18);
     output.writeI32(this.seconds);
     output.writeFieldEnd();
   }
   if (this.steps !== null && this.steps !== undefined) {
-    output.writeFieldBegin('steps', Thrift.Type.I32, 18);
+    output.writeFieldBegin('steps', Thrift.Type.I32, 19);
     output.writeI32(this.steps);
     output.writeFieldEnd();
   }
   if (this.cycles !== null && this.cycles !== undefined) {
-    output.writeFieldBegin('cycles', Thrift.Type.I32, 19);
+    output.writeFieldBegin('cycles', Thrift.Type.I32, 20);
     output.writeI32(this.cycles);
     output.writeFieldEnd();
   }
   if (this.bailed !== null && this.bailed !== undefined) {
-    output.writeFieldBegin('bailed', Thrift.Type.BOOL, 20);
+    output.writeFieldBegin('bailed', Thrift.Type.BOOL, 21);
     output.writeBool(this.bailed);
     output.writeFieldEnd();
   }
   if (this.score !== null && this.score !== undefined) {
-    output.writeFieldBegin('score', Thrift.Type.DOUBLE, 21);
+    output.writeFieldBegin('score', Thrift.Type.DOUBLE, 22);
     output.writeDouble(this.score);
     output.writeFieldEnd();
   }
