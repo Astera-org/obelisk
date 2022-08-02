@@ -6,9 +6,9 @@ from hyperparams import HParams
 
 
 def create_symmetric_weights(weights: torch.Tensor):
-    '''
+    """
     make the weights symmetric, if we want to enforce this
-    '''
+    """
 
     # for ii in range(self.layer_size):
     #     for jj in range(self.layer_size):
@@ -18,11 +18,11 @@ def create_symmetric_weights(weights: torch.Tensor):
 
     assert weights.shape[0] == weights.shape[1], "expected square matrix"  # should be square
 
-    N = weights.shape[0]
+    n = weights.shape[0]
     with torch.no_grad():
-        vals = torch.triu(weights).flatten()[:int(N * (N + 1) / 2)]
+        vals = torch.triu(weights).flatten()[:int(n * (n + 1) / 2)]
         new_mat = torch.zeros_like(weights)
-        i, j = torch.triu_indices(N, N)
+        i, j = torch.triu_indices(n, n)
         new_mat[i, j] = vals
         new_mat.T[i, j] = vals
 
@@ -56,10 +56,9 @@ class BoltzmannMachine(nn.Module):
     # todo forward needs to be rewritten such that the order is  such that it is x,h,y instead of x,y,h
     def set_activation_strength(self, forward_strength: float, backward_strength: float, lateral_strength: float,
                                 self_connect_strength: float):
-
-        '''
+        """
         used to vary how strong activation is dampened or strengthed based on the direction it is coming from
-        '''
+        """
         return
         activation_strength_mat = self._activation_strength_matrix
         # note this assumes order is input, output, hidden connections
@@ -113,11 +112,11 @@ class BoltzmannMachine(nn.Module):
                     print("Normed vec: ", self.print_activity(full_act.detach()))
             # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
         # print(torch.mean(record, 0))
-        if (self.params.average_window <= 0):
+        if self.params.average_window <= 0:
             return full_act
         else:
-            # TODO Evaluate the benefit of this
-            return torch.mean(record, 0, True)  # verify this is correct
+            # TODO(andrew) Evaluate the benefit of this
+            return torch.mean(record, 0, True)  # TODO(michael): verify this is correct
 
     def print_activity(self, activity):
         s = "In: "
@@ -138,7 +137,7 @@ class BoltzmannMachine(nn.Module):
     def delta_rule_update_weights_matrix(self, minus_phase: torch.Tensor, plus_phase: torch.Tensor):
         # Rule: delta_w = x'y' - xy # Primes taken from acts_x_y, normals taken from acts_x. x and y here don't correspond to the other x and y, they're the pre- and post-neurons, so it's for all pairs. Sorry for that notation.
         # print("Weights before adjustment: ", self.layer.weight)
-        if self.params.batch_data == False:
+        if not self.params.batch_data:
             assert ((len(minus_phase.shape)) == 2) & (minus_phase.shape[0] == 1)
             assert ((len(plus_phase.shape)) == 2) & (plus_phase.shape[0] == 1)
         # Equivalent to this:
