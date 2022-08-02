@@ -24,5 +24,5 @@ func main() {
 	cycles := int32(rand.Intn(1000))
 	seconds := int32(rand.Intn(1000))
 
-	commonInfra.WriteResults(score, cycles, seconds)
+	commonInfra.WriteResults(true, score, cycles, seconds, cycles)
 }

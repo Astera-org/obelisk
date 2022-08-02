@@ -76,7 +76,7 @@ func (db *Database) GetBinInfos(filterBy string) ([]*infra.BinInfo, error) {
 
 func (db *Database) GetCallback(jobID int32) string {
 	var callback string = ""
-	sql := fmt.Sprint("SELECT callback from jobs where job_id =%d", jobID)
+	sql := fmt.Sprint("SELECT callback from jobs where job_id =", jobID)
 	err := db.db.Get(&callback, sql)
 	if err != nil {
 		log.Error(err)
