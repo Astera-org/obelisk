@@ -11,10 +11,12 @@ import (
 )
 
 type WorkerApp struct {
-	binCache BinCache
-	rootDir  string
-	jobCzar  *infra.JobCzarClient
-	context  context.Context
+	binCache     BinCache
+	rootDir      string
+	jobCzar      *infra.JobCzarClient
+	context      context.Context
+	job          *Job
+	statusString string
 }
 
 func (app *WorkerApp) Init() {
@@ -28,6 +30,14 @@ func (app *WorkerApp) Init() {
 
 	os.Mkdir(gConfig.BINDIR, 0755)
 	os.Mkdir(gConfig.JOBDIR, 0755)
+}
+
+func (app *WorkerApp) StopJob(jobID int32) {
+	if jobID == app.job.JobID {
+
+	} else {
+		log.Info("Asked to stop unknown job: ", jobID)
+	}
 }
 
 func MakeClient(addr string) *infra.JobCzarClient {

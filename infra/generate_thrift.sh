@@ -1,3 +1,7 @@
+# wiping the dirs first to avoid name changes leaving behind old generated code
+rm -rf gengo
+rm -rf genjs
+
 mkdir -p gengo
 mkdir -p genjs
 

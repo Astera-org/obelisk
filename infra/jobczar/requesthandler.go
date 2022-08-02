@@ -22,8 +22,8 @@ const (
 	malformedJob       = 2
 )
 
-func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceName string) (*infra.Job, error) {
-	return gDatabase.FetchWork(workerName, instanceName)
+func (handler RequestHandler) FetchWork(ctx context.Context, workerName string, instanceID int32) (*infra.Job, error) {
+	return gDatabase.FetchWork(workerName, instanceID)
 }
 
 // tell anyone that was waiting for this job to complete

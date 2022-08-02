@@ -9,16 +9,17 @@ import (
 )
 
 type Config struct {
-	WORKER_NAME   string
-	INSTANCE_NAME string
-	JOBDIR        string
-	JOBDIRPREFIX  string
-	BINDIR        string
-	JOBCZAR_IP    string
-	JOBCZAR_PORT  int32
-	BINSERVER_URL string
-	WINDOWS       bool
-	CPU_FACTOR    float32
+	WORKER_NAME      string
+	INSTANCE_ID      int32
+	WORKER_BASE_PORT int32
+	JOBDIR           string
+	JOBDIRPREFIX     string
+	BINDIR           string
+	JOBCZAR_IP       string
+	JOBCZAR_PORT     int32
+	BINSERVER_URL    string
+	WINDOWS          bool
+	CPU_FACTOR       float32
 }
 
 func (config *Config) Load() {
@@ -34,15 +35,16 @@ func (config *Config) Load() {
 
 func (config *Config) setDefaults() {
 	config.WORKER_NAME = ""
-	config.INSTANCE_NAME = "?"
+	config.INSTANCE_ID = 0
 	config.JOBDIR = "jobs"
 	config.JOBDIRPREFIX = "job"
 	config.BINDIR = "bins"
 	config.WINDOWS = false
 
 	config.JOBCZAR_IP = "127.0.0.1"
-	config.BINSERVER_URL = "127.0.0.1:8080"
-	config.JOBCZAR_PORT = 9009
+	config.BINSERVER_URL = "127.0.0.1:9003"
+	config.JOBCZAR_PORT = 9001
+	config.WORKER_BASE_PORT = 9100
 	config.CPU_FACTOR = 1
 }
 

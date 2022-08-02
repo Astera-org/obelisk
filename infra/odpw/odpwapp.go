@@ -48,7 +48,7 @@ func (app *OdpwApp) notifyAutorities(result *infra.ResultJob, message string) {
 		body += fmt.Sprintln("Cycles: ", result.Cycles)
 		body += fmt.Sprintln("Score: ", result.Score)
 		body += fmt.Sprintln("WorkerName: ", result.WorkerName)
-		body += fmt.Sprintln("InstanceName: ", result.InstanceName)
+		body += fmt.Sprintln("InstanceID: ", result.InstanceID)
 	}
 }
 

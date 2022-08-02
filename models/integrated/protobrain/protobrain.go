@@ -163,7 +163,7 @@ func (sim *Sim) OnStep(obs map[string]etensor.Tensor) map[string]agent.Action {
 	if sim.NumSteps >= gConfig.LIFETIME {
 		seconds := time.Since(sim.StartTime).Seconds()
 		log.Info("LIFETIME reached ", sim.NumSteps, " in ", seconds, " seconds")
-		commonInfra.WriteResults(float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds))
+		commonInfra.WriteResults(true, float64(sim.Score/float32(sim.NumSteps)), sim.NumSteps, int32(seconds), sim.NumSteps)
 		os.Exit(0)
 	}
 
