@@ -5,10 +5,11 @@ from hyperparams import HParams
 import random
 from torchvision import datasets as dts
 from torchvision.transforms import ToTensor
+from fworld_loader import get_fworld_data
 
 
 def get_mnist(params: HParams):
-    train_x = dts.MNIST(
+    train_x = dts.MNIST( # You could also use FashionMNIST, which is harder
         root='data',
         train=True,
         transform=ToTensor(),
@@ -73,6 +74,8 @@ def get_data(params: HParams):
         output_size = 25
         xs = [torch.tensor([random.sample([1] * choose_n + [0] * (input_size - choose_n), input_size)]) for _ in range(num_data)]
         ys = [torch.tensor([random.sample([1] * choose_n + [0] * (output_size - choose_n), output_size)]) for _ in range(num_data)]
+    elif params.dataset == "fworld":
+        xs, ys, input_size, output_size = get_fworld_data(params)
     num_data = len(xs)
 
     return torch.concat(xs), torch.concat(ys), input_size, hidden_size, output_size, num_data
