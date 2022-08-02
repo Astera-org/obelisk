@@ -39,8 +39,6 @@ func NewThriftHandlerFunc(processor thrift.TProcessor,
 }
 
 func main() {
-	gConfig.Load()
-
 	err := log.Init(
 		log.SetLevel(log.INFO),
 		log.SetFileName("jobczar.log"),
@@ -48,6 +46,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	gConfig.Load()
 
 	gDatabase.Connect()
 

@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Astera-org/obelisk/infra/common"
 	"net/http"
 	"os"
+	"time"
 
 	log "github.com/Astera-org/easylog"
 	"github.com/Astera-org/obelisk/infra/gengo/infra"
@@ -15,8 +17,6 @@ var gApp OdpwApp
 var VERSION string = "v0.1.0"
 
 func main() {
-	gConfig.Load()
-
 	err := log.Init(
 		log.SetLevel(log.INFO),
 		log.SetFileName("odpw.log"),
@@ -24,6 +24,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	gConfig.Load()
 
 	log.Info("Version: ", VERSION)
 	log.Info("Repo: ", gConfig.REPO_PATH)
@@ -35,12 +37,18 @@ func main() {
 	http.HandleFunc("/result", jobResult)
 	http.HandleFunc("/push", gitPush)
 	var serverAddr = fmt.Sprint(":", gConfig.SERVER_PORT)
-	log.Info("Listening on: ", gConfig.SERVER_PORT)
-	go http.ListenAndServe(serverAddr, nil)
+	go common.StartHttpServer(serverAddr, nil)
+
+	common.SignalHandler()
 
 	for true {
 		var command string
 		fmt.Scan(&command)
+		if len(command) == 0 {
+			// this happens when we try to run the process in the background
+			time.Sleep(10 * time.Second)
+			continue
+		}
 		switch command {
 		case "q":
 			os.Exit(0)
@@ -60,6 +68,7 @@ func printHelp() {
 	fmt.Println("Valid Commands:")
 	fmt.Println("q: quit")
 	fmt.Println("t: test")
+	fmt.Println("f: force start")
 	fmt.Println("v: print version")
 }
 
