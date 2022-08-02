@@ -88,25 +88,27 @@ class BoltzmannMachine(nn.Module):
         if self.params.average_window > 0:
             record = torch.zeros(size=(self.params.average_window, self.layer_size))
         for ii in range(n):
+            with torch.no_grad():
+                modified_weights = self.layer.weight * self._activation_strength_matrix.T #since F linear is doing A.T
 
-            modified_weights = self.layer.weight * self._activation_strength_matrix
-            full_act = F.relu(linear(full_act,modified_weights))
-            if clamp_x:
-                full_act[:, 0:self.input_size] = x
-            if clamp_y:
-                full_act[:, self.input_size:self.input_size+self.output_size] = y
-            # print("Act: ", full_act.detach())
-            if self.params.norm_hidden is True:
-                hidden = full_act[:, self.input_size + self.output_size:]
-                hidden = F.normalize(hidden, p=2.0, dim=1)
-                with torch.no_grad():
-                    full_act[:, self.input_size + self.output_size:] = hidden
-            if record is not None:
-                record[ii % record.size(0), :] = full_act
-            # full_act = torch.where(full_act > 0.2, 1.0, 0.0) # Binarizing the vector. # TODO Run a test or something
-            if self.params.verbose >= 5:
-                print("Normed vec: ", self.print_activity(full_act.detach()))
-        # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
+
+                full_act = F.relu(linear(full_act,modified_weights))
+                if clamp_x:
+                    full_act[:, 0:self.input_size] = x
+                if clamp_y:
+                    full_act[:, self.input_size:self.input_size+self.output_size] = y
+                # print("Act: ", full_act.detach())
+                if self.params.norm_hidden is True:
+                    hidden = full_act[:, self.input_size + self.output_size:]
+                    hidden = F.normalize(hidden, p=2.0, dim=1)
+                    with torch.no_grad():
+                        full_act[:, self.input_size + self.output_size:] = hidden
+                if record is not None:
+                    record[ii % record.size(0), :] = full_act
+                # full_act = torch.where(full_act > 0.2, 1.0, 0.0) # Binarizing the vector. # TODO Run a test or something
+                if self.params.verbose >= 5:
+                    print("Normed vec: ", self.print_activity(full_act.detach()))
+            # TODO Maybe take a running average here, because full_act seems like it might alternate with period>1
         # print(torch.mean(record, 0))
         if (self.params.average_window <=0):
             return full_act
@@ -152,7 +154,7 @@ class BoltzmannMachine(nn.Module):
         with torch.no_grad():
             minus_mult = torch.mm(minus_phase.T, minus_phase).fill_diagonal_(self.self_connection_strength)/minus_phase.shape[0] # no self correlation, multiply incoming times outgoing
             plus_mult = torch.mm(plus_phase.T, plus_phase).fill_diagonal_(self.self_connection_strength)/plus_phase.shape[0]
-            self.layer.weight[:] = self.layer.weight[:] + self.learning_rate * (plus_mult - minus_mult)
+            self.layer.weight[:] = self.layer.weight[:] + (self.learning_rate * (plus_mult - minus_mult))
             self.norm_weights()
 
     def y_distance(self, act1, act2):

@@ -63,6 +63,7 @@ class BoltzmannTest(unittest.TestCase):
 
 
     def test_activation_modulation(self):
+        torch.set
         params:HParams = HParams(weights_start_symmetric=False,backward_connection_strength=0,
                                  forward_connection_strength=100, self_connection_strength = 0,
                                  lateral_connection_strength =0 , norm_act=False,norm_weights=False,norm_hidden=False)
@@ -70,11 +71,22 @@ class BoltzmannTest(unittest.TestCase):
         b2 = BoltzmannMachine(3,3,3,params)
         with torch.no_grad():
             x = torch.Tensor([1,1,1]).unsqueeze(0)
-            y = torch.Tensor([1,1,1]).unsqueeze(0)
+            y = torch.Tensor([2,2,2]).unsqueeze(0)
             b2.layer.weight[:] = 1.0
-            result = b2(x,y,1,True,False)
-            print("OK")
+            result = b2(x,y,2,True,False)
+            print(result)
 
+    params:HParams = HParams(weights_start_symmetric=False,backward_connection_strength=100,
+                             forward_connection_strength=0, self_connection_strength = 0,
+                             lateral_connection_strength =0 , norm_act=False,norm_weights=False,norm_hidden=False)
+
+    b3 = BoltzmannMachine(3,3,3,params)
+    with torch.no_grad():
+        x = torch.Tensor([1,1,1]).unsqueeze(0)
+        y = torch.Tensor([2,2,2]).unsqueeze(0)
+        b3.layer.weight[:] = 1.0
+        result = b3(x,y,2,True,False)
+        print(result)
 
 
 
