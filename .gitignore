@@ -11,3 +11,8 @@ go.work
 *.log
 /.vscode/launch.json
 /worlds/integrated/fworld/world.tsv
+go.work.sum
+*.pt
+worlds/network.egg-info/*
+models/configs/bone_config_ra25.yaml
+models/pytorch/*/data/*
