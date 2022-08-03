@@ -13,6 +13,7 @@ from torchvision import transforms
 from fworld_loader import get_fworld_data
 
 from torch.utils.data import random_split, DataLoader, Dataset
+import math
 
 
 class DatasetDefault(Dataset):
@@ -41,7 +42,7 @@ class MnistDataset(Dataset):
             transform=None,
             download=True
         )
-        apply_transforms = torch.nn.Sequential(transforms.Resize(size=self.size))
+        apply_transforms = torch.nn.Sequential(transforms.Resize(size=int(math.sqrt(self.size))))  # assumes square
         self.data = torch.clamp(apply_transforms(train_x.data).float(), 0.0, 1.0)
         self.labels = one_hot(train_x.targets, num_classes=len(train_x.class_to_idx))  # one hot encoded
 
@@ -61,12 +62,12 @@ def default_dataloader(x, y, batch_size=10, shuffle=False) -> DataLoader:
     return train_dataloader
 
 
-def mnist_dataloader(size=10, max_train=-1, max_test=-1, shuffle=False, batch_size=10) -> (DataLoader, DataLoader):
+def mnist_dataloaders(size=100, max_amount=-1, shuffle=False, batch_size=10) -> (DataLoader, DataLoader):
     """
     returns data in terms of a dataloader
     """
-    train_dataset = MnistDataset(True, max_train, size)
-    test_dataset = MnistDataset(False, max_test, size)
+    train_dataset = MnistDataset(True, max_amount, size)
+    test_dataset = MnistDataset(False, max_amount, size)
     if batch_size == -1:
         train_batch_size = len(train_dataset)
         test_batch_size = len(test_dataset)
@@ -155,8 +156,11 @@ def get_data(params: HParams):
             params.batch_size = len(xs)
         output_size = 10  # 10 digits
         xs, ys = get_mnist(params)
-        d1, t1 = mnist_dataloader(size=input_size, max_train=params.num_data, max_test=params.num_data,
-                                  batch_size=params.batch_size)
+        d1, t1 = mnist_dataloaders(size=input_size, max_amount=params.num_data,
+                                   batch_size=params.batch_size)
+        if params.testing == True:
+            d1 = t1
+
     elif params.dataset == "ra25":
         num_data = 25
         choose_n = 6
